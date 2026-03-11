@@ -109,14 +109,13 @@ def main():
         seed=cfg["seed"],
         # SFTConfig 专属参数
         dataset_text_field="text",
-        max_seq_length=cfg["max_seq_length"],
-        dataset_num_proc=2,
     )
 
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=ds,
+        max_seq_length=cfg["max_seq_length"],
         args=train_args,
     )
 
