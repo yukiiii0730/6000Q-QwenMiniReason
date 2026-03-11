@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 训练输出（体积大，不上传）
+outputs/
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# 数据（原始数据不上传）
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# 评估结果图表
+eval/figures/
+eval/*.json
+eval/*.csv
+
+# 环境
+.env
+*.env
+venv/
+.venv/
+
+# macOS
+.DS_Store
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

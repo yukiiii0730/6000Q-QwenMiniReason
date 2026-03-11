@@ -1,0 +1,42 @@
+# SFT 训练配置（Unsloth + LoRA）
+model_name: "Qwen/Qwen3-1.7B"
+# 支持多数据集，直接从 HuggingFace Hub 加载
+datasets:
+  - name: "AI-MO/NuminaMath-CoT"     # 数学竞赛题 + CoT 推理过程
+    split: "train"
+    max_samples: 50000               # 完整集约 860k，按需裁剪
+  - name: "Magpie-Align/Magpie-Reasoning-150K"  # 蒸馏自 Llama-3.1-70B
+    split: "train"
+    max_samples: 50000
+output_dir: "outputs/sft"
+max_seq_length: 2048
+load_in_4bit: true
+seed: 42
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+train:
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8
+  warmup_steps: 50
+  max_steps: 1000
+  learning_rate: 2.0e-4
+  logging_steps: 10
+  save_steps: 100
+  eval_steps: 100
+  weight_decay: 0.01
+  lr_scheduler_type: "cosine"
+  optim: "paged_adamw_8bit"
+  fp16: false
+  bf16: true
