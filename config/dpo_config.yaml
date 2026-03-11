@@ -1,5 +1,5 @@
 # DPO 训练配置（Unsloth + TRL）
-model_name: "Qwen/Qwen3-1.7B"
+model_name: "Qwen/Qwen2.5-1.5B-Instruct"
 base_adapter_path: "outputs/sft"
 # 直接从 HuggingFace Hub 加载 Orca-Math-Pairs
 dataset:

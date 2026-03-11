@@ -1,5 +1,5 @@
 # SFT 训练配置（Unsloth + LoRA）
-model_name: "Qwen/Qwen3-1.7B"
+model_name: "Qwen/Qwen2.5-1.5B-Instruct"
 # 支持多数据集，直接从 HuggingFace Hub 加载
 datasets:
   - name: "AI-MO/NuminaMath-CoT"     # 数学竞赛题 + CoT 推理过程

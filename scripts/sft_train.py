@@ -79,9 +79,9 @@ def main():
         load_in_4bit=cfg["load_in_4bit"],
     )
 
-    # Unsloth 可能把 eos_token 覆盖为 LLaMA 风格的 <EOS_TOKEN>，这里还原 Qwen 正确的 token
+    # Unsloth 可能把 eos_token 覆盖为 LLaMA 风格的 <EOS_TOKEN>，这里还原 Qwen2.5 正确的 token
     if tokenizer.eos_token == "<EOS_TOKEN>" or tokenizer.eos_token not in tokenizer.get_vocab():
-        tokenizer.eos_token = "<|endoftext|>"
+        tokenizer.eos_token = "<|im_end|>"
     if tokenizer.pad_token is None or tokenizer.pad_token not in tokenizer.get_vocab():
         tokenizer.pad_token = tokenizer.eos_token
     print(f"✅ eos_token = {repr(tokenizer.eos_token)}, pad_token = {repr(tokenizer.pad_token)}")

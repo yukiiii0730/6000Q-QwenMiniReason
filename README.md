@@ -1,6 +1,6 @@
 # Qwen-Reasoning-Enhance
 
-基于 **Unsloth + TRL** 对 Qwen3-1.7B 进行两阶段微调（SFT → DPO），提升模型在数学推理（GSM8K）及综合推理（BBH）任务上的能力。
+基于 **Unsloth + TRL** 对 Qwen2.5-1.5B-Instruct 进行两阶段微调（SFT → DPO），提升模型在数学推理（GSM8K）及综合推理（BBH）任务上的能力。
 
 ---
 
@@ -181,7 +181,7 @@ python eval/visualize.py \
 
 | 模型阶段 | GSM8K Acc | BBH Avg |
 |---|---|---|
-| Qwen3-1.7B（基线） | ~55% | ~45% |
+| Qwen2.5-1.5B-Instruct（基线） | ~45% | ~40% |
 | + SFT | ~62% | ~50% |
 | + DPO | ~66% | ~53% |
 
@@ -234,7 +234,7 @@ drive.mount('/content/drive')
 !python scripts/sft_train.py --config config/sft_config.yaml
 ```
 
-> **Colab 免费版** 仅提供 T4（15GB），Qwen3-1.7B 的 4-bit 量化训练约占用 8-10GB，可以正常运行。
+> **Colab 免费版** 仅提供 T4（15GB），Qwen2.5-1.5B-Instruct 的 4-bit 量化训练约占用 6-8GB，可以正常运行。
 > **Colab Pro/Pro+** 可使用 A100，速度提升约 5-8×。
 
 ---
@@ -254,4 +254,4 @@ drive.mount('/content/drive')
 - [TRL DPOTrainer](https://huggingface.co/docs/trl/dpo_trainer)
 - [GSM8K Dataset](https://huggingface.co/datasets/gsm8k)
 - [BIG-Bench Hard (BBH)](https://huggingface.co/datasets/lukaemon/bbh)
-- [Qwen3-1.7B on HuggingFace](https://huggingface.co/Qwen/Qwen3-1.7B)
+- [Qwen2.5-1.5B-Instruct on HuggingFace](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
