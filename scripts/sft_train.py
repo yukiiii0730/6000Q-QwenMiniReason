@@ -1,8 +1,7 @@
 import argparse
 import yaml
 from datasets import load_dataset, concatenate_datasets
-from transformers import TrainingArguments
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 from unsloth import FastLanguageModel
 
 
@@ -92,7 +91,7 @@ def main():
     raw_ds = load_sft_datasets(cfg)
     ds = raw_ds.map(formatting_func, remove_columns=raw_ds.column_names)
 
-    train_args = TrainingArguments(
+    train_args = SFTConfig(
         output_dir=cfg["output_dir"],
         per_device_train_batch_size=cfg["train"]["per_device_train_batch_size"],
         gradient_accumulation_steps=cfg["train"]["gradient_accumulation_steps"],
@@ -101,7 +100,6 @@ def main():
         learning_rate=float(cfg["train"]["learning_rate"]),
         logging_steps=cfg["train"]["logging_steps"],
         save_steps=cfg["train"]["save_steps"],
-        eval_steps=cfg["train"]["eval_steps"],
         weight_decay=float(cfg["train"]["weight_decay"]),
         lr_scheduler_type=cfg["train"]["lr_scheduler_type"],
         optim=cfg["train"]["optim"],
@@ -109,14 +107,16 @@ def main():
         bf16=bool(cfg["train"]["bf16"]),
         report_to="none",
         seed=cfg["seed"],
+        # SFTConfig 专属参数
+        dataset_text_field="text",
+        max_seq_length=cfg["max_seq_length"],
+        dataset_num_proc=2,
     )
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=ds,
-        dataset_text_field="text",
-        max_seq_length=cfg["max_seq_length"],
         args=train_args,
     )
 
