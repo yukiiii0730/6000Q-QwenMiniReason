@@ -79,6 +79,13 @@ def main():
         load_in_4bit=cfg["load_in_4bit"],
     )
 
+    # Unsloth 可能把 eos_token 覆盖为 LLaMA 风格的 <EOS_TOKEN>，这里还原 Qwen 正确的 token
+    if tokenizer.eos_token == "<EOS_TOKEN>" or tokenizer.eos_token not in tokenizer.get_vocab():
+        tokenizer.eos_token = "<|endoftext|>"
+    if tokenizer.pad_token is None or tokenizer.pad_token not in tokenizer.get_vocab():
+        tokenizer.pad_token = tokenizer.eos_token
+    print(f"✅ eos_token = {repr(tokenizer.eos_token)}, pad_token = {repr(tokenizer.pad_token)}")
+
     model = FastLanguageModel.get_peft_model(
         model,
         r=cfg["lora"]["r"],
@@ -90,7 +97,11 @@ def main():
     )
 
     raw_ds = load_sft_datasets(cfg)
-    ds = raw_ds.map(formatting_func, remove_columns=raw_ds.column_names)
+    eos = tokenizer.eos_token
+    ds = raw_ds.map(
+        lambda ex: {"text": formatting_func(ex)["text"] + eos},
+        remove_columns=raw_ds.column_names
+    )
 
     # T4 / Turing GPU 不支持 bf16，强制降级为 fp16
     if torch.cuda.is_available():
