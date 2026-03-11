@@ -1,6 +1,5 @@
 import argparse
 import yaml
-import torch
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
 from unsloth import FastLanguageModel
@@ -91,14 +90,6 @@ def main():
 
     raw_ds = load_sft_datasets(cfg)
     ds = raw_ds.map(formatting_func, remove_columns=raw_ds.column_names)
-
-    # 自动检测 bf16 支持：T4 等旧 GPU 不支持 bf16，自动降级为 fp16
-    if cfg["train"].get("bf16") and not (
-        torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-    ):
-        print("⚠️  当前 GPU 不支持 bf16，自动切换为 fp16")
-        cfg["train"]["bf16"] = False
-        cfg["train"]["fp16"] = True
 
     train_args = SFTConfig(
         output_dir=cfg["output_dir"],
