@@ -111,11 +111,13 @@ def main():
         dataset_text_field="text",
     )
 
+    # 通过 tokenizer 控制最大序列长度（兼容各版本 TRL）
+    tokenizer.model_max_length = cfg["max_seq_length"]
+
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
         train_dataset=ds,
-        max_seq_length=cfg["max_seq_length"],
         args=train_args,
     )
 
