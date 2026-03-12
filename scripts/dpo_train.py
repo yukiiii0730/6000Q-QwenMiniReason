@@ -1,9 +1,8 @@
 import argparse
 import yaml
+from unsloth import FastLanguageModel          # ← 必须在 trl/transformers 之前导入
 from datasets import load_dataset
-from transformers import TrainingArguments
-from trl import DPOTrainer
-from unsloth import FastLanguageModel
+from trl import DPOTrainer, DPOConfig
 
 
 def load_config(path: str):
@@ -45,7 +44,7 @@ def load_dpo_dataset(cfg: dict):
     """从 HuggingFace Hub 加载 DPO 数据集，兼容旧版本本地 JSON 格式。"""
     if "dataset" in cfg:
         ds_cfg = cfg["dataset"]
-        ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"), trust_remote_code=True)
+        ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"))
         max_n = ds_cfg.get("max_samples")
         if max_n and max_n < len(ds):
             ds = ds.select(range(max_n))
@@ -63,6 +62,16 @@ def main():
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+
+    # 从 config 读取 HuggingFace Token
+    import os
+    hf_token = cfg.get("hf_token", "").strip()
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+        print("✅ HuggingFace Token 已加载")
+    else:
+        print("⚠️  未配置 hf_token，如需访问私有模型/数据集请先在 config/dpo_config.yaml 中填写")
 
     base_name = cfg.get("base_adapter_path") or cfg["model_name"]
     model, tokenizer = FastLanguageModel.from_pretrained(
@@ -83,7 +92,7 @@ def main():
 
     ds = load_dpo_dataset(cfg)
 
-    train_args = TrainingArguments(
+    train_args = DPOConfig(
         output_dir=cfg["output_dir"],
         per_device_train_batch_size=cfg["train"]["per_device_train_batch_size"],
         gradient_accumulation_steps=cfg["train"]["gradient_accumulation_steps"],
@@ -98,6 +107,9 @@ def main():
         optim=cfg["train"]["optim"],
         fp16=bool(cfg["train"]["fp16"]),
         bf16=bool(cfg["train"]["bf16"]),
+        beta=float(cfg["beta"]),
+        max_length=cfg["max_seq_length"],
+        max_prompt_length=min(1024, cfg["max_seq_length"] // 2),
         report_to="none",
         seed=cfg["seed"],
     )
@@ -106,11 +118,8 @@ def main():
         model=model,
         ref_model=None,
         args=train_args,
-        beta=float(cfg["beta"]),
         train_dataset=ds,
-        tokenizer=tokenizer,
-        max_length=cfg["max_seq_length"],
-        max_prompt_length=min(1024, cfg["max_seq_length"] // 2),
+        processing_class=tokenizer,
     )
 
     trainer.train()

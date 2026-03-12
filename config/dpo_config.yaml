@@ -1,41 +1,35 @@
-# DPO 训练配置（Unsloth + TRL）
-model_name: "Qwen/Qwen2.5-1.5B-Instruct"
-base_adapter_path: "outputs/sft"
-# 直接从 HuggingFace Hub 加载 Orca-Math-Pairs
-dataset:
-  name: "microsoft/orca-math-word-problems-200k"
-  split: "train"
-  max_samples: 50000          # 共 20 万条，按需裁剪
-output_dir: "outputs/dpo"
+hf_token: YOUR_HF_TOKEN_HERE
+model_name: Qwen/Qwen2.5-1.5B-Instruct
+base_adapter_path: outputs/sft
+output_dir: outputs/dpo
 max_seq_length: 2048
 load_in_4bit: true
 seed: 42
 beta: 0.1
-
 lora:
   r: 16
   alpha: 32
   dropout: 0.05
   target_modules:
-    - q_proj
-    - k_proj
-    - v_proj
-    - o_proj
-    - gate_proj
-    - up_proj
-    - down_proj
-
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
 train:
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 8
   warmup_steps: 50
-  max_steps: 800
-  learning_rate: 1.0e-5
+  max_steps: 30
+  learning_rate: 1.0e-05
   logging_steps: 10
   save_steps: 100
   eval_steps: 100
   weight_decay: 0.0
-  lr_scheduler_type: "cosine"
-  optim: "paged_adamw_8bit"
+  lr_scheduler_type: cosine
+  optim: paged_adamw_8bit
   fp16: false
   bf16: true
+dataset_path: data/processed/dpo_train.json

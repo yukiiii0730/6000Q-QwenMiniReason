@@ -12,7 +12,33 @@ def normalize(x: str) -> str:
     return " ".join(str(x).strip().lower().split())
 
 
-def generate(model, tokenizer, prompt: str, max_new_tokens: int = 128) -> str:
+def extract_answer(pred: str, gt: str) -> bool:
+    """从模型输出中提取答案，支持思维链输出。
+    优先匹配末尾最后一次出现的 gt（大小写不敏感），回退到全文任意位置匹配。
+    """
+    import re
+    gt_norm = normalize(gt)
+    pred_norm = normalize(pred)
+
+    # 1. 直接前缀匹配（原始逻辑，兼容直接输出答案的模型）
+    if pred_norm.startswith(gt_norm):
+        return True
+
+    # 2. 在输出末尾 200 字符内查找答案（CoT 模型把答案放在最后）
+    tail = pred_norm[-200:]
+    # 用词边界匹配，避免 "False" 误匹配 "Falsely"
+    pattern = r'(?<![\w])' + re.escape(gt_norm) + r'(?![\w])'
+    if re.search(pattern, tail):
+        return True
+
+    # 3. 全文搜索（最宽松，作为最后手段）
+    if re.search(pattern, pred_norm):
+        return True
+
+    return False
+
+
+def generate(model, tokenizer, prompt: str, max_new_tokens: int = 256) -> str:
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
         outputs = model.generate(**inputs, max_new_tokens=max_new_tokens, do_sample=False)
@@ -46,7 +72,7 @@ def main():
         prompt = f"{ex['input']}\n请只输出最终答案。"
         pred = generate(model, tokenizer, prompt)
         gt = ex["target"]
-        ok = normalize(pred).startswith(normalize(gt))
+        ok = extract_answer(pred, gt)
         correct += int(ok)
         details.append({"input": ex["input"], "pred": pred, "gt": gt, "correct": ok})
 

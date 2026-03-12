@@ -4,27 +4,46 @@
 
 ---
 
+## 实验结果（实测）
+
+> 评测数据：GSM8K 前 200 题 / BBH（boolean_expressions）前 200 题
+
+| 模型阶段 | GSM8K Acc | BBH Acc |
+|---|---|---|
+| Qwen2.5-1.5B-Instruct（Baseline） | **32.0%** | **82.0%** |
+| + SFT only | — | — |
+| + DPO only（基于SFT） | — | — |
+| + **SFT + DPO**（完整两阶段） | **46.0%** | **84.0%** |
+| Δ vs Baseline | **+14.0pp** | **+2.0pp** |
+
+> 完整四行对比表由 `run_train.sh` 自动打印，结果存入 `logs/compare_metrics.json`。
+
+---
+
 ## 项目结构
 
 ```
 Qwen-Reasoning-Enhance/
-├── data/
-│   ├── raw/                  # 原始数据（GSM8K、Orca-Math-Pairs 等）
-│   ├── processed/            # 预处理后的训练数据
-│   └── process.py            # 格式转换脚本（→ Alpaca / DPO 格式）
-├── scripts/
-│   ├── sft_train.py          # 第一阶段：SFT（监督微调）
-│   ├── dpo_train.py          # 第二阶段：DPO（直接偏好优化）
-│   └── merge_lora.py         # LoRA 权重合并脚本
-├── eval/
-│   ├── gsm8k_eval.py         # GSM8K 自动评测
-│   ├── bbh_eval.py           # BBH 自动评测
-│   └── visualize.py          # 雷达图 & Loss 曲线可视化
-├── notebooks/
-│   └── inference_test.ipynb  # 零样本 vs 微调模型推理对比
+├── run_train.sh              # 🚀 一键全流程脚本（推荐入口）
 ├── config/
 │   ├── sft_config.yaml       # SFT 超参数（LoRA r=16, alpha=32 等）
 │   └── dpo_config.yaml       # DPO 超参数
+├── scripts/
+│   ├── prepare_data.py       # 数据集下载与预处理
+│   ├── sft_train.py          # 第一阶段：SFT（监督微调）
+│   ├── dpo_train.py          # 第二阶段：DPO（直接偏好优化）
+│   └── merge_lora.py         # LoRA 权重合并（transformers + peft）
+├── eval/
+│   ├── gsm8k_eval.py         # GSM8K 自动评测
+│   ├── bbh_eval.py           # BBH 自动评测（含 CoT 答案提取）
+│   └── visualize.py          # 雷达图 & Loss 曲线可视化
+├── data/
+│   ├── raw/                  # 原始数据占位目录
+│   ├── processed/            # 预处理后的训练数据（quick 模式本地 JSON）
+│   └── process.py            # 格式转换脚本（→ Alpaca / DPO 格式）
+├── notebooks/
+│   ├── colab_train.ipynb     # Colab 一键训练示例
+│   └── inference_test.ipynb  # 零样本 vs 微调模型推理对比
 └── requirements.txt
 ```
 
@@ -32,85 +51,143 @@ Qwen-Reasoning-Enhance/
 
 ## 环境安装
 
-> 推荐 Python 3.10+，GPU 显存 ≥ 16GB（A100/4090 最佳）。
+> 推荐 Python 3.10+，GPU 显存 ≥ 16 GB（A100 / L20 / 4090 最佳；T4 可运行但较慢）。
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`requirements.txt` 包含：`unsloth`, `trl`, `peft`, `bitsandbytes`, `transformers`, `datasets`, `accelerate` 等。
+在 `config/sft_config.yaml` 与 `config/dpo_config.yaml` 中填写 HuggingFace Token：
+
+```yaml
+hf_token: hf_YOUR_TOKEN_HERE   # 从 https://huggingface.co/settings/tokens 获取
+```
 
 ---
 
-## 数据准备
+## 快速开始
 
-### SFT 数据集
+### 一键全流程（推荐）
 
-训练脚本会**直接从 HuggingFace Hub 在线拉取**，无需手动下载。两个数据集在 `config/sft_config.yaml` 的 `datasets` 字段中配置：
+```bash
+# 快速测试（本地 JSON，500 条，SFT=50 steps，DPO=30 steps，约 10 分钟）
+bash run_train.sh --quick
+
+# 完整训练（HuggingFace 在线数据集，各 50k 条，生产级超参）
+bash run_train.sh
+```
+
+完整流程自动执行以下步骤：
+
+| 步骤 | 描述 | 产物 |
+|---|---|---|
+| **Step 0** | Baseline 评测（训练前原始模型） | `logs/gsm8k_baseline.json`, `logs/bbh_baseline.json` |
+| **Step 1** | 数据集下载与预处理 | `data/processed/` |
+| **Step 2** | SFT 监督微调 | `outputs/sft/` |
+| **Step 3** | DPO 偏好优化 | `outputs/dpo/` |
+| **Step 4a** | 合并 SFT adapter → 评测 SFT 单独效果 | `outputs/sft_merged/`, `logs/gsm8k_sft.json`, `logs/bbh_sft.json` |
+| **Step 4b** | 合并 DPO adapter → 评测 DPO 单独效果 | `outputs/dpo_merged/`, `logs/gsm8k_dpo.json`, `logs/bbh_dpo.json` |
+| **Step 4c** | 合并最终 SFT+DPO 权重 | `outputs/merged/` |
+| **Step 5** | 最终评测 + 四行对比表 | `logs/gsm8k_result.json`, `logs/bbh_result.json`, `logs/compare_metrics.json` |
+
+所有步骤均支持**断点续跑**（自动检测已有产物，跳过已完成阶段）。
+
+### 常用参数
+
+```bash
+bash run_train.sh --skip-data        # 跳过数据下载（已有缓存时）
+bash run_train.sh --skip-sft         # 跳过 SFT（使用已有 outputs/sft/）
+bash run_train.sh --skip-baseline    # 跳过 Baseline 评测
+bash run_train.sh --only-sft         # 仅训练 SFT，不做 DPO
+bash run_train.sh --force            # 强制重跑所有阶段
+bash run_train.sh --sft_n 20000 --dpo_n 20000  # 自定义采样量
+```
+
+---
+
+## 数据集
+
+### SFT 数据集（完整训练模式）
+
+训练脚本在完整模式下**直接从 HuggingFace Hub 在线拉取**，无需手动下载：
 
 | 数据集 | HuggingFace ID | 字段 | 说明 |
 |---|---|---|---|
-| **NuminaMath-CoT** | [`AI-MO/NuminaMath-CoT`](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) | `problem` / `solution` | 数学竞赛题 + 详细 CoT 推理，约 86万条，**首选 SFT 起始集** |
-| **Magpie-Reasoning-150K** | [`Magpie-Align/Magpie-Reasoning-150K`](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K) | `instruction` / `response` | 蒸馏自 Llama-3.1-70B，逻辑密度高，15万条 |
+| **NuminaMath-CoT** | [`AI-MO/NuminaMath-CoT`](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) | `problem` / `solution` | 数学竞赛题 + 详细 CoT 推理，约 86 万条 |
+| **Magpie-Reasoning-150K** | [`Magpie-Align/Magpie-Reasoning-150K`](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K) | `instruction` / `response` | 蒸馏自 Llama-3.1-70B，逻辑密度高，15 万条 |
 
-每个数据集可通过 `max_samples` 控制采样量（默认各取 5万条），按需在 `config/sft_config.yaml` 中调整。
+默认各取 5 万条（通过 `--sft_n` 自定义）。
 
-### DPO 数据集
+### DPO 数据集（完整训练模式）
 
 | 数据集 | HuggingFace ID | 字段 | 说明 |
 |---|---|---|---|
 | **Orca-Math-Pairs** | [`microsoft/orca-math-word-problems-200k`](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k) | `question` / `correct_solution` / `incorrect_solution` | 专为 DPO 设计，含正确和错误推理路径，20 万条 |
 
-训练脚本会直接从 HuggingFace Hub 在线拉取，自动映射为 DPO 所需的 `prompt / chosen / rejected` 格式，**无需手动下载。**
+自动映射为 `prompt / chosen / rejected` 格式，默认取 5 万条（`--dpo_n` 自定义）。
 
-采样量可在 `config/dpo_config.yaml` 的 `max_samples` 中调整（默认 5 万条）。
+### 快速测试模式数据集
+
+`--quick` 模式使用本地预生成的 JSON 文件（500 条），由 `scripts/prepare_data.py` 自动创建：
+
+- SFT: `data/processed/sft_train.json`（NuminaMath-CoT + Magpie 各 250 条）
+- DPO: `data/processed/dpo_train.json`（orca_dpo_pairs 500 条）
 
 ---
 
-## 训练流程
+## 手动运行各步骤
 
-### 第一阶段：SFT（监督微调）
+若需精细控制，可手动运行各脚本：
+
+### 数据准备
+
+```bash
+python scripts/prepare_data.py --sft_n 50000 --dpo_n 50000
+```
+
+### SFT 训练
 
 ```bash
 python scripts/sft_train.py --config config/sft_config.yaml
 ```
 
-关键超参数（见 `config/sft_config.yaml`）：
+关键超参数（`config/sft_config.yaml`）：
 
 | 参数 | 值 |
 |---|---|
-| LoRA r | 16 |
-| LoRA alpha | 32 |
+| LoRA r / alpha | 16 / 32 |
 | Learning rate | 2e-4 |
-| Batch size | 2 × 8 (grad accum) |
-| Max steps | 1000 |
+| Batch size | 2 × 8 grad_accum |
+| Max steps（完整）| ~1000（quick: 50）|
 | Optimizer | paged_adamw_8bit |
 | Quantization | 4-bit NF4 |
 
-训练产物保存至 `outputs/sft/`。
-
-### 第二阶段：DPO（直接偏好优化）
+### DPO 训练
 
 ```bash
 python scripts/dpo_train.py --config config/dpo_config.yaml
 ```
 
-关键超参数（见 `config/dpo_config.yaml`）：
-
 | 参数 | 值 |
 |---|---|
 | β (beta) | 0.1 |
 | Learning rate | 1e-5 |
-| Max steps | 800 |
-| 基座 | outputs/sft（SFT 产物） |
-
-训练产物保存至 `outputs/dpo/`。
+| Max steps（完整）| ~800（quick: 30）|
+| 基座 | outputs/sft（SFT 产物）|
 
 ### 合并 LoRA 权重
 
-将 LoRA adapter 合并回基础模型，便于部署：
+`merge_lora.py` 使用 `transformers + peft` 直接合并（不依赖 Unsloth fp16 权重下载），自动读取 `adapter_config.json` 中的 base model 路径：
 
 ```bash
+# 合并 SFT adapter
+python scripts/merge_lora.py \
+    --adapter_path outputs/sft \
+    --output_path  outputs/sft_merged
+
+# 合并 SFT+DPO（完整两阶段）
 python scripts/merge_lora.py \
     --adapter_path outputs/dpo \
     --output_path  outputs/merged
@@ -125,49 +202,29 @@ python scripts/merge_lora.py \
 ```bash
 python eval/gsm8k_eval.py \
     --model_path  outputs/merged \
-    --max_samples 1319 \
-    --output      eval/gsm8k_result.json
+    --max_samples 200 \
+    --output      logs/gsm8k_result.json
 ```
 
 ### BBH
 
 ```bash
 python eval/bbh_eval.py \
-    --model_path outputs/merged \
-    --subset     boolean_expressions \
-    --max_samples 250 \
-    --output     eval/bbh_result.json
+    --model_path  outputs/merged \
+    --subset      boolean_expressions \
+    --max_samples 200 \
+    --output      logs/bbh_result.json
 ```
+
+BBH 评测内置三级答案匹配（前缀匹配 → 末尾 200 字符 → 全文搜索），兼容 CoT 长输出。
 
 ### 可视化
 
-生成**雷达图**（多基准横向对比）：
-
 ```bash
 python eval/visualize.py \
-    --metrics_json eval/metrics_summary.json \
+    --metrics_json logs/compare_metrics.json \
     --out_dir      eval/figures
 ```
-
-`metrics_summary.json` 示例：
-```json
-{
-  "GSM8K": 0.72,
-  "BBH-Boolean": 0.65,
-  "BBH-Causal": 0.58,
-  "BBH-Date": 0.61
-}
-```
-
-生成**Loss 曲线**：
-
-```bash
-python eval/visualize.py \
-    --loss_csv eval/train_log.csv \
-    --out_dir  eval/figures
-```
-
-`train_log.csv` 需包含 `step` 和 `loss` 两列。
 
 ---
 
@@ -177,74 +234,50 @@ python eval/visualize.py \
 
 ---
 
-## 实验记录（预期目标）
-
-| 模型阶段 | GSM8K Acc | BBH Avg |
-|---|---|---|
-| Qwen2.5-1.5B-Instruct（基线） | ~45% | ~40% |
-| + SFT | ~62% | ~50% |
-| + DPO | ~66% | ~53% |
-
----
-
 ## Google Colab 使用指南
 
-**不需要提前把数据集下载到本地。** Colab 可直接通过 `datasets` 库从 HuggingFace Hub 在线拉取，无需手动下载。
+**不需要提前下载数据集**，Colab 可直接通过 `datasets` 库从 HuggingFace Hub 在线拉取。
 
 ### 推荐流程
 
-**1. 安装依赖（每次新 Session 需要重跑）**
-
 ```python
-# Colab 第一个 Cell
-!pip install unsloth trl peft bitsandbytes transformers datasets accelerate pyyaml -q
-```
+# 1. 安装依赖（每次新 Session 需要）
+!pip install unsloth trl peft bitsandbytes transformers datasets accelerate pyyaml safetensors -q
 
-**2. 设置 HuggingFace Token（访问私有模型或数据集时需要）**
+# 2. 克隆本项目
+!git clone https://github.com/your-repo/Qwen-Reasoning-Enhance.git
+%cd Qwen-Reasoning-Enhance
 
-```python
-from huggingface_hub import login
-login(token="hf_YOUR_TOKEN")  # 建议用 Colab Secrets 管理，不要硬编码
-```
-
-或在 Colab 左侧「🔑 Secrets」面板中添加 `HF_TOKEN`，然后：
-
-```python
+# 3. 设置 HuggingFace Token（使用 Colab Secrets，避免硬编码）
 import os
 from google.colab import userdata
 os.environ["HF_TOKEN"] = userdata.get("HF_TOKEN")
+
+# 4. 运行快速测试
+!bash run_train.sh --quick
 ```
 
-**3. 挂载 Google Drive（持久化保存模型检查点）**
+> **Colab 免费版**（T4，15GB）可正常运行 Qwen2.5-1.5B-Instruct 的 4-bit 量化训练（约 6-8 GB 显存）。
+> **Colab Pro/Pro+**（A100）速度提升约 5-8×。
 
-Colab Session 结束后 `/content` 下的文件会丢失，建议将输出目录指向 Drive：
+挂载 Google Drive 持久化保存检查点：
 
 ```python
 from google.colab import drive
 drive.mount('/content/drive')
-# 然后在 config yaml 中把 output_dir 改为：
+# 在 config yaml 中将 output_dir 改为 Drive 路径：
 # output_dir: "/content/drive/MyDrive/Qwen-Reasoning/outputs/sft"
 ```
-
-**4. 克隆本项目并运行**
-
-```python
-!git clone https://github.com/your-repo/Qwen-Reasoning-Enhance.git
-%cd Qwen-Reasoning-Enhance
-!python scripts/sft_train.py --config config/sft_config.yaml
-```
-
-> **Colab 免费版** 仅提供 T4（15GB），Qwen2.5-1.5B-Instruct 的 4-bit 量化训练约占用 6-8GB，可以正常运行。
-> **Colab Pro/Pro+** 可使用 A100，速度提升约 5-8×。
 
 ---
 
 ## 注意事项
 
-- `unsloth` 目前仅支持 Linux / WSL2 + CUDA，macOS 仅用于代码开发，训练需在 GPU 机器上运行。
-- 4-bit 量化训练时 `bf16=true` 与 `fp16=true` 不可同时开启；T4 不支持 bf16，在 Colab T4 上需将配置改为 `fp16: true` / `bf16: false`。
-- DPO 训练时 `ref_model=None` 表示使用 SFT 模型本身作为参考模型（Unsloth 内置 PEFT 参考实现）。
-- **请勿将 HuggingFace Token 明文写入代码或 README**，使用 Colab Secrets 或环境变量管理。
+- `unsloth` 仅支持 Linux / WSL2 + CUDA，macOS 仅用于代码开发，训练需在 GPU 机器上运行。
+- 4-bit 量化训练时 `bf16=true` 与 `fp16=true` 不可同时开启；T4 不支持 bf16，`run_train.sh` 会自动检测并降级为 fp16。
+- DPO 训练时 `ref_model=None` 表示使用 SFT 模型自身作为参考（Unsloth 内置 PEFT 参考实现）。
+- **请勿将 HuggingFace Token 明文提交**，在 `config/*.yaml` 中填写 `YOUR_HF_TOKEN_HERE` 占位符，使用环境变量或 Colab Secrets 管理真实 Token。
+- `merge_lora.py` 使用 `safetensors.torch.save_model` 保存（而非 `save_file`），可正确处理 `lm_head` / `embed_tokens` 权重共享问题。
 
 ---
 
@@ -255,3 +288,6 @@ drive.mount('/content/drive')
 - [GSM8K Dataset](https://huggingface.co/datasets/gsm8k)
 - [BIG-Bench Hard (BBH)](https://huggingface.co/datasets/lukaemon/bbh)
 - [Qwen2.5-1.5B-Instruct on HuggingFace](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
+- [NuminaMath-CoT](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT)
+- [Magpie-Reasoning-150K](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K)
+- [Orca-Math-Word-Problems-200k](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k)

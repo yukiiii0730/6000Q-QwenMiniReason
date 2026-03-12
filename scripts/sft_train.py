@@ -1,9 +1,9 @@
 import argparse
 import yaml
 import torch
+from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
-from unsloth import FastLanguageModel
 
 
 PROMPT_TEMPLATE = """### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}"""
@@ -55,7 +55,7 @@ def load_sft_datasets(cfg: dict):
     if "datasets" in cfg:
         parts = []
         for ds_cfg in cfg["datasets"]:
-            ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"), trust_remote_code=True)
+            ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"))
             max_n = ds_cfg.get("max_samples")
             if max_n and max_n < len(ds):
                 ds = ds.select(range(max_n))
@@ -73,18 +73,21 @@ def main():
 
     cfg = load_config(args.config)
 
+    # 从 config 读取 HuggingFace Token
+    import os
+    hf_token = cfg.get("hf_token", "").strip()
+    if hf_token:
+        os.environ["HF_TOKEN"] = hf_token
+        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+        print("✅ HuggingFace Token 已加载")
+    else:
+        print("⚠️  未配置 hf_token，如需访问私有模型/数据集请先在 config/sft_config.yaml 中填写")
+
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=cfg["model_name"],
         max_seq_length=cfg["max_seq_length"],
         load_in_4bit=cfg["load_in_4bit"],
     )
-
-    # Unsloth 可能把 eos_token 覆盖为 LLaMA 风格的 <EOS_TOKEN>，这里还原 Qwen2.5 正确的 token
-    if tokenizer.eos_token == "<EOS_TOKEN>" or tokenizer.eos_token not in tokenizer.get_vocab():
-        tokenizer.eos_token = "<|im_end|>"
-    if tokenizer.pad_token is None or tokenizer.pad_token not in tokenizer.get_vocab():
-        tokenizer.pad_token = tokenizer.eos_token
-    print(f"✅ eos_token = {repr(tokenizer.eos_token)}, pad_token = {repr(tokenizer.pad_token)}")
 
     model = FastLanguageModel.get_peft_model(
         model,
