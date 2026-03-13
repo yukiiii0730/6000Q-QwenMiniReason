@@ -1,4 +1,3 @@
-# 凭据请在 .env 文件中配置（参考 .env.example）
 model_name: Qwen/Qwen2.5-1.5B-Instruct
 base_adapter_path: outputs/sft
 output_dir: outputs/dpo
@@ -22,7 +21,7 @@ train:
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 8
   warmup_steps: 50
-  max_steps: 30
+  max_steps: 800
   learning_rate: 1.0e-05
   logging_steps: 10
   save_steps: 100
@@ -34,9 +33,4 @@ train:
   bf16: true
   dataloader_num_workers: 4
   dataloader_pin_memory: true
-  group_by_length: true
 dataset_path: data/processed/dpo_train.json
-dataset:
-  name: microsoft/orca-math-word-problems-200k
-  split: train
-  max_samples: 50000

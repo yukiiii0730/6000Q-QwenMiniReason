@@ -154,7 +154,6 @@ def main():
         seed=cfg["seed"],
         dataloader_num_workers=int(cfg["train"].get("dataloader_num_workers", 4)),
         dataloader_pin_memory=bool(cfg["train"].get("dataloader_pin_memory", True)),
-        group_by_length=bool(cfg["train"].get("group_by_length", True)),
         # SFTConfig 专属参数
         dataset_text_field="text",
         packing=bool(cfg["train"].get("packing", True)),

@@ -269,6 +269,8 @@ if ! $FORCE; then
 fi
 
 BASELINE_N=50
+SFT_HQ_PER_SOURCE=15000
+SFT_HQ_PATH="data/processed/sft_train_hq_30k.json"
 
 # ── 快速测试：切换到本地 JSON，覆写 max_steps ────────────────────────────────
 # 全量模式：用 HuggingFace 数据集（yaml 中的 datasets / dataset 字段）
@@ -389,6 +391,52 @@ else
         --dpo_n "$DPO_N" \
         2>&1 | tee logs/prepare_data.log
     log "数据准备完成"
+fi
+
+# =============================================================================
+# Step 1.5：高质量子集筛选（仅 SFT: Numina 15k + Magpie 15k）
+# =============================================================================
+if $QUICK; then
+    warn "quick 模式跳过高质量子集筛选（直接使用本地小样本）"
+else
+    info "Step 1.5/6 — 构建高质量训练子集"
+
+    if $FORCE || [[ ! -s "$SFT_HQ_PATH" ]]; then
+        python scripts/build_hq_subsets.py \
+            --sft_in data/processed/sft_train.json \
+            --dpo_in data/processed/dpo_train.json \
+            --sft_out "$SFT_HQ_PATH" \
+            --dpo_out data/processed/dpo_train_hq_15k.json \
+            --sft_per_source "$SFT_HQ_PER_SOURCE" \
+            --dpo_n 15000 \
+            --seed 42 \
+            2>&1 | tee logs/hq_filter.log
+    else
+        warn "检测到高质量子集缓存，跳过构建（使用 --force 可重建）"
+    fi
+
+    # 将训练配置切换到高质量子集
+    python - <<EOF
+import yaml
+
+with open("config/sft_config.yaml", "r", encoding="utf-8") as f:
+    sft_cfg = yaml.safe_load(f)
+sft_cfg.pop("datasets", None)
+sft_cfg["dataset_path"] = "$SFT_HQ_PATH"
+with open("config/sft_config.yaml", "w", encoding="utf-8") as f:
+    yaml.dump(sft_cfg, f, allow_unicode=True, sort_keys=False)
+
+with open("config/dpo_config.yaml", "r", encoding="utf-8") as f:
+    dpo_cfg = yaml.safe_load(f)
+dpo_cfg.pop("dataset", None)
+dpo_cfg["dataset_path"] = "data/processed/dpo_train.json"
+with open("config/dpo_config.yaml", "w", encoding="utf-8") as f:
+    yaml.dump(dpo_cfg, f, allow_unicode=True, sort_keys=False)
+
+print("✅ 已更新训练数据路径")
+print("   SFT:", "$SFT_HQ_PATH")
+print("   DPO:", "data/processed/dpo_train.json")
+EOF
 fi
 
 # =============================================================================
