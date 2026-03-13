@@ -26,6 +26,14 @@
 # =============================================================================
 set -euo pipefail
 
+# ── 加载 .env 文件（如果存在）─────────────────────────────────────────────────
+if [[ -f ".env" ]]; then
+    set -a
+    # shellcheck source=.env
+    source .env
+    set +a
+fi
+
 # ── 颜色输出 ─────────────────────────────────────────────────────────────────
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 log()  { echo -e "${GREEN}[$(date '+%H:%M:%S')] ✅ $1${NC}"; }
@@ -92,20 +100,23 @@ PYTHON_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.versio
 info "Python $PYTHON_VER"
 
 # ── 读取并验证 HuggingFace Token ─────────────────────────────────────────────
-HF_TOKEN=$(python - <<'EOF'
+# 优先使用环境变量（来自 .env 或系统）；其次回退到 config/sft_config.yaml
+if [[ -z "${HF_TOKEN:-}" ]]; then
+    HF_TOKEN=$(python - <<'EOF'
 import yaml, sys
 try:
     with open("config/sft_config.yaml", "r") as f:
         cfg = yaml.safe_load(f)
     t = cfg.get("hf_token", "").strip()
     print(t)
-except Exception as e:
+except Exception:
     print("")
 EOF
 )
+fi
 
-if [[ -z "$HF_TOKEN" ]]; then
-    die "请先在 config/sft_config.yaml 中填写 hf_token 字段，再运行此脚本"
+if [[ -z "${HF_TOKEN:-}" ]]; then
+    die "请在 .env 中设置 HF_TOKEN=hf_xxx，或在 config/sft_config.yaml 中填写 hf_token"
 fi
 export HF_TOKEN
 export HUGGING_FACE_HUB_TOKEN="$HF_TOKEN"
@@ -355,8 +366,11 @@ print("\t".join([
 EOF
 )"
 
+    # 环境变量 DASHSCOPE_API_KEY 优先于 yaml 中的 api_key
+    [[ -n "${DASHSCOPE_API_KEY:-}" ]] && API_KEY="$DASHSCOPE_API_KEY"
+
     [[ -n "$API_BASE_URL" ]] || die "config/benchmark_models.yaml 中 api_evaluation.api_base_url 不能为空"
-    [[ -n "$API_KEY" ]] || die "config/benchmark_models.yaml 中 api_evaluation.api_key 不能为空"
+    [[ -n "$API_KEY" ]] || die "请在 .env 中设置 DASHSCOPE_API_KEY=sk-xxx，或在 config/benchmark_models.yaml 中填写 api_key"
     [[ -n "$API_MODEL_7B" ]] || die "config/benchmark_models.yaml 中 api_evaluation.reference_models.model_7b.model 不能为空"
     [[ -n "$API_MODEL_14B" ]] || die "config/benchmark_models.yaml 中 api_evaluation.reference_models.model_14b.model 不能为空"
 

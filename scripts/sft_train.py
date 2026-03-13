@@ -88,15 +88,15 @@ def main():
     cfg = load_config(args.config)
     optimize_torch_runtime()
 
-    # 从 config 读取 HuggingFace Token
+    # 优先使用环境变量 HF_TOKEN（来自 .env）；其次读取 config
     import os
-    hf_token = cfg.get("hf_token", "").strip()
+    hf_token = os.environ.get("HF_TOKEN") or cfg.get("hf_token", "").strip()
     if hf_token:
         os.environ["HF_TOKEN"] = hf_token
         os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
         print("✅ HuggingFace Token 已加载")
     else:
-        print("⚠️  未配置 hf_token，如需访问私有模型/数据集请先在 config/sft_config.yaml 中填写")
+        print("⚠️  未配置 HF_TOKEN，如需访问私有模型/数据集请在 .env 中设置 HF_TOKEN=hf_xxx")
 
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=cfg["model_name"],
