@@ -9,7 +9,7 @@ beta: 0.1
 lora:
   r: 16
   alpha: 32
-  dropout: 0.05
+  dropout: 0.0
   target_modules:
   - q_proj
   - k_proj

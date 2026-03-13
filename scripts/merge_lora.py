@@ -55,7 +55,7 @@ def main():
     dtype = torch.float16
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map="auto",
         token=hf_token or None,
     )
@@ -69,7 +69,7 @@ def main():
 
     print("🔀 合并 LoRA 权重...")
     model = model.merge_and_unload()
-    # 加载时已指定 torch_dtype=float16，无需再次转换
+    # 加载时已指定 dtype=float16，无需再次转换
 
     print(f"💾 保存合并模型 → {args.output_path}")
     os.makedirs(args.output_path, exist_ok=True)

@@ -89,6 +89,13 @@ def main():
         load_in_4bit=cfg["load_in_4bit"],
     )
 
+    # 显式设置 padding token，避免部分 Qwen 量化权重缺失 pad_token 的警告
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    if tokenizer.pad_token_id is None:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+    model.config.pad_token_id = tokenizer.pad_token_id
+
     model = FastLanguageModel.get_peft_model(
         model,
         r=cfg["lora"]["r"],
