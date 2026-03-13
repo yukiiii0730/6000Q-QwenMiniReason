@@ -1,153 +1,63 @@
 import argparse
 import yaml
 import torch
-from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
+import os
+from unsloth import FastLanguageModel
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
-
-
-PROMPT_TEMPLATE = """### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}"""
-
-DEFAULT_INSTRUCTION = "请先进行清晰的逐步推理，再给出最终答案。"
-
 
 def load_config(path: str):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+def get_last_checkpoint(output_dir):
+    if not os.path.exists(output_dir): return None
+    checkpoints = [os.path.join(output_dir, d) for d in os.listdir(output_dir) if d.startswith("checkpoint-") and os.path.isdir(os.path.join(output_dir, d))]
+    if not checkpoints: return None
+    last_cp = max(checkpoints, key=lambda x: int(x.split('-')[-1]))
+    if not os.path.exists(os.path.join(last_cp, "trainer_state.json")):
+        print(f"⚠️ Warning: {last_cp} is corrupted. Starting fresh.")
+        return None
+    return last_cp
+
+DEFAULT_INSTRUCTION = "请先进行清晰的逐步推理，再给出最终答案。"
+PROMPT_TEMPLATE = """### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}"""
 
 def normalize_example(example: dict) -> dict:
-    """将不同数据集的字段统一映射为 instruction / input / output。
-
-    NuminaMath-CoT : problem + solution
-    Magpie-Reasoning: instruction + response
-    通用 Alpaca    : instruction + input + output
-    """
-    if "problem" in example and "solution" in example:
-        return {
-            "instruction": DEFAULT_INSTRUCTION,
-            "input": str(example["problem"]).strip(),
-            "output": str(example["solution"]).strip(),
-        }
-    if "instruction" in example and "response" in example:
-        return {
-            "instruction": str(example["instruction"]).strip(),
-            "input": "",
-            "output": str(example["response"]).strip(),
-        }
-    # 通用 Alpaca 格式兜底
-    return {
-        "instruction": str(example.get("instruction", DEFAULT_INSTRUCTION)).strip(),
-        "input": str(example.get("input", "")).strip(),
-        "output": str(example.get("output", "")).strip(),
-    }
-
-
-def formatting_func(example):
-    normed = normalize_example(example)
-    text = PROMPT_TEMPLATE.format(**normed)
-    return {"text": text}
-
+    if "problem" in example and "solution" in example: return {"instruction": DEFAULT_INSTRUCTION, "input": str(example["problem"]).strip(), "output": str(example["solution"]).strip()}
+    if "instruction" in example and "response" in example: return {"instruction": str(example["instruction"]).strip(), "input": "", "output": str(example["response"]).strip()}
+    return {"instruction": str(example.get("instruction", DEFAULT_INSTRUCTION)).strip(), "input": str(example.get("input", "")).strip(), "output": str(example.get("output", "")).strip()}
 
 def load_sft_datasets(cfg: dict):
-    """从 HuggingFace Hub 加载并合并所有 SFT 数据集。"""
-    # 新格式：datasets 列表（在线加载）
-    if "datasets" in cfg:
-        parts = []
-        for ds_cfg in cfg["datasets"]:
-            ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"))
-            max_n = ds_cfg.get("max_samples")
-            if max_n and max_n < len(ds):
-                ds = ds.select(range(max_n))
-            parts.append(ds)
-        merged = concatenate_datasets(parts).shuffle(seed=42)
-        return merged
-    # 兼容旧格式：本地 JSON 文件
-    return load_dataset("json", data_files=cfg["dataset_path"], split="train")
-
+    if "dataset_path" in cfg: return load_dataset("json", data_files=cfg["dataset_path"], split="train")
+    parts = []
+    for ds_cfg in cfg["datasets"]:
+        ds = load_dataset(ds_cfg["name"], split=ds_cfg.get("split", "train"))
+        max_n = ds_cfg.get("max_samples")
+        if max_n and max_n < len(ds): ds = ds.select(range(max_n))
+        parts.append(ds)
+    return concatenate_datasets(parts).shuffle(seed=42)
 
 def main():
-    parser = argparse.ArgumentParser(description="SFT training with Unsloth")
+    parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config/sft_config.yaml")
     args = parser.parse_args()
-
     cfg = load_config(args.config)
-
-    # 从 config 读取 HuggingFace Token
-    import os
-    hf_token = cfg.get("hf_token", "").strip()
-    if hf_token:
-        os.environ["HF_TOKEN"] = hf_token
-        os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
-        print("✅ HuggingFace Token 已加载")
-    else:
-        print("⚠️  未配置 hf_token，如需访问私有模型/数据集请先在 config/sft_config.yaml 中填写")
-
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=cfg["model_name"],
-        max_seq_length=cfg["max_seq_length"],
-        load_in_4bit=cfg["load_in_4bit"],
-    )
-
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=cfg["lora"]["r"],
-        lora_alpha=cfg["lora"]["alpha"],
-        lora_dropout=cfg["lora"]["dropout"],
-        target_modules=cfg["lora"]["target_modules"],
-        use_gradient_checkpointing="unsloth",
-        random_state=cfg["seed"],
-    )
-
-    raw_ds = load_sft_datasets(cfg)
-    eos = tokenizer.eos_token
-    ds = raw_ds.map(
-        lambda ex: {"text": formatting_func(ex)["text"] + eos},
-        remove_columns=raw_ds.column_names
-    )
-
-    # T4 / Turing GPU 不支持 bf16，强制降级为 fp16
-    if torch.cuda.is_available():
-        gpu_name = torch.cuda.get_device_name(0)
-        if cfg["train"].get("bf16") and not torch.cuda.is_bf16_supported():
-            print(f"⚠️  {gpu_name} 不支持 bf16，自动切换为 fp16")
-            cfg["train"]["bf16"] = False
-            cfg["train"]["fp16"] = True
-
-    train_args = SFTConfig(
-        output_dir=cfg["output_dir"],
-        per_device_train_batch_size=cfg["train"]["per_device_train_batch_size"],
-        gradient_accumulation_steps=cfg["train"]["gradient_accumulation_steps"],
-        warmup_steps=cfg["train"]["warmup_steps"],
-        max_steps=cfg["train"]["max_steps"],
-        learning_rate=float(cfg["train"]["learning_rate"]),
-        logging_steps=cfg["train"]["logging_steps"],
-        save_steps=cfg["train"]["save_steps"],
-        weight_decay=float(cfg["train"]["weight_decay"]),
-        lr_scheduler_type=cfg["train"]["lr_scheduler_type"],
-        optim=cfg["train"]["optim"],
-        fp16=bool(cfg["train"]["fp16"]),
-        bf16=bool(cfg["train"]["bf16"]),
-        report_to="none",
-        seed=cfg["seed"],
-        # SFTConfig 专属参数
-        dataset_text_field="text",
-    )
-
-    # 通过 tokenizer 控制最大序列长度（兼容各版本 TRL）
-    tokenizer.model_max_length = cfg["max_seq_length"]
-
-    trainer = SFTTrainer(
-        model=model,
-        processing_class=tokenizer,
-        train_dataset=ds,
-        args=train_args,
-    )
-
-    trainer.train()
+    if cfg.get("hf_token"): os.environ["HF_TOKEN"] = cfg["hf_token"]
+    
+    model, tokenizer = FastLanguageModel.from_pretrained(model_name=cfg["model_name"], max_seq_length=cfg["max_seq_length"], load_in_4bit=cfg["load_in_4bit"])
+    if tokenizer.pad_token is None: tokenizer.pad_token = tokenizer.eos_token
+    
+    model = FastLanguageModel.get_peft_model(model, r=cfg["lora"]["r"], lora_alpha=cfg["lora"]["alpha"], lora_dropout=0, target_modules=cfg["lora"]["target_modules"], use_gradient_checkpointing="unsloth", random_state=cfg["seed"])
+    
+    ds = load_sft_datasets(cfg).map(lambda ex: {"text": PROMPT_TEMPLATE.format(**normalize_example(ex)) + tokenizer.eos_token}, remove_columns=load_sft_datasets(cfg).column_names)
+    
+    train_args = SFTConfig(output_dir=cfg["output_dir"], per_device_train_batch_size=cfg["train"]["per_device_train_batch_size"], gradient_accumulation_steps=cfg["train"]["gradient_accumulation_steps"], warmup_steps=cfg["train"]["warmup_steps"], max_steps=cfg["train"]["max_steps"], learning_rate=float(cfg["train"]["learning_rate"]), logging_steps=cfg["train"]["logging_steps"], save_steps=cfg["train"].get("save_steps", 100), save_total_limit=cfg["train"].get("save_total_limit", 3), weight_decay=float(cfg["train"]["weight_decay"]), fp16=not torch.cuda.is_bf16_supported(), bf16=torch.cuda.is_bf16_supported(), report_to="none", dataset_text_field="text")
+    
+    trainer = SFTTrainer(model=model, tokenizer=tokenizer, train_dataset=ds, args=train_args)
+    last_cp = get_last_checkpoint(cfg["output_dir"])
+    trainer.train(resume_from_checkpoint=last_cp)
     trainer.save_model(cfg["output_dir"])
-    tokenizer.save_pretrained(cfg["output_dir"])
-
 
 if __name__ == "__main__":
     main()
