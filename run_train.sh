@@ -348,7 +348,7 @@ else
     API_EVAL_CFG="config/benchmark_models.yaml"
     [[ -f "$API_EVAL_CFG" ]] || die "未找到 $API_EVAL_CFG，请先创建并填写 API 配置"
 
-    IFS=$'\t' read -r API_BASE_URL API_KEY API_MODEL_7B API_MODEL_14B API_TIMEOUT API_MAX_RETRIES <<< "$(python - <<'EOF'
+    IFS=$'\t' read -r API_BASE_URL API_MODEL_7B API_MODEL_14B API_TIMEOUT API_MAX_RETRIES <<< "$(python - <<'EOF'
 import yaml
 c = yaml.safe_load(open("config/benchmark_models.yaml", "r", encoding="utf-8")) or {}
 api = c.get("api_evaluation", {}) or {}
@@ -357,7 +357,6 @@ model_7b = (refs.get("model_7b", {}) or {}).get("model", "")
 model_14b = (refs.get("model_14b", {}) or {}).get("model", "")
 print("\t".join([
     str(api.get("api_base_url", "")).strip(),
-    str(api.get("api_key", "")).strip(),
     str(model_7b).strip(),
     str(model_14b).strip(),
     str(api.get("timeout", 90)).strip(),
@@ -366,8 +365,8 @@ print("\t".join([
 EOF
 )"
 
-    # 环境变量 DASHSCOPE_API_KEY 优先于 yaml 中的 api_key
-    [[ -n "${DASHSCOPE_API_KEY:-}" ]] && API_KEY="$DASHSCOPE_API_KEY"
+    # API Key 直接从 .env 环境变量读取
+    API_KEY="${DASHSCOPE_API_KEY:-}"
 
     [[ -n "$API_BASE_URL" ]] || die "config/benchmark_models.yaml 中 api_evaluation.api_base_url 不能为空"
     [[ -n "$API_KEY" ]] || die "请在 .env 中设置 DASHSCOPE_API_KEY=sk-xxx，或在 config/benchmark_models.yaml 中填写 api_key"
