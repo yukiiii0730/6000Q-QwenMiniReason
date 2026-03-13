@@ -1,4 +1,4 @@
-hf_token: YOUR_HF_TOKEN_HERE
+hf_token: ""  # 请在运行前填写你的 HuggingFace token，或通过环境变量 HF_TOKEN 传入
 model_name: Qwen/Qwen2.5-1.5B-Instruct
 base_adapter_path: outputs/sft
 output_dir: outputs/dpo
@@ -32,4 +32,11 @@ train:
   optim: paged_adamw_8bit
   fp16: false
   bf16: true
+  dataloader_num_workers: 4
+  dataloader_pin_memory: true
+  group_by_length: true
 dataset_path: data/processed/dpo_train.json
+dataset:
+  name: microsoft/orca-math-word-problems-200k
+  split: train
+  max_samples: 50000

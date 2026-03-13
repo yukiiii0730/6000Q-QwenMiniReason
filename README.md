@@ -6,13 +6,12 @@
 
 ## 实验结果（实测）
 
-> 评测数据：GSM8K 前 200 题 / BBH（boolean_expressions）前 200 题
+> 评测数据：GSM8K / BBH 各 50 条（固定 seed 的分层抽样）
 
 | 模型阶段 | GSM8K Acc | BBH Acc |
 |---|---|---|
 | Qwen2.5-1.5B-Instruct（Baseline） | **32.0%** | **82.0%** |
 | + SFT only | — | — |
-| + DPO only（基于SFT） | — | — |
 | + **SFT + DPO**（完整两阶段） | **46.0%** | **84.0%** |
 | Δ vs Baseline | **+14.0pp** | **+2.0pp** |
 
@@ -27,7 +26,8 @@ Qwen-Reasoning-Enhance/
 ├── run_train.sh              # 🚀 一键全流程脚本（推荐入口）
 ├── config/
 │   ├── sft_config.yaml       # SFT 超参数（LoRA r=16, alpha=32 等）
-│   └── dpo_config.yaml       # DPO 超参数
+│   ├── dpo_config.yaml       # DPO 超参数
+│   └── benchmark_models.yaml # 7B/14B 对照评测配置（本地+API）
 ├── scripts/
 │   ├── prepare_data.py       # 数据集下载与预处理
 │   ├── sft_train.py          # 第一阶段：SFT（监督微调）
@@ -36,6 +36,10 @@ Qwen-Reasoning-Enhance/
 ├── eval/
 │   ├── gsm8k_eval.py         # GSM8K 自动评测
 │   ├── bbh_eval.py           # BBH 自动评测（含 CoT 答案提取）
+│   ├── gsm8k_api_eval.py     # GSM8K API 评测（OpenAI-compatible）
+│   ├── bbh_api_eval.py       # BBH API 评测（OpenAI-compatible）
+│   ├── benchmark_open_models.py # 本地开源模型批量评测
+│   ├── compare_table.py      # 统一对比表输出
 │   └── visualize.py          # 雷达图 & Loss 曲线可视化
 ├── data/
 │   ├── raw/                  # 原始数据占位目录
@@ -65,6 +69,19 @@ pip install -r requirements.txt
 hf_token: hf_YOUR_TOKEN_HERE   # 从 https://huggingface.co/settings/tokens 获取
 ```
 
+并在 `config/benchmark_models.yaml` 中填写 7B/14B API 评测配置：
+
+```yaml
+api_evaluation:
+    api_base_url: https://your-openai-compatible-endpoint/v1
+    api_key: YOUR_API_KEY
+    reference_models:
+        model_7b:
+            model: your-7b-model-name
+        model_14b:
+            model: your-14b-model-name
+```
+
 ---
 
 ## 快速开始
@@ -83,13 +100,13 @@ bash run_train.sh
 
 | 步骤 | 描述 | 产物 |
 |---|---|---|
-| **Step 0** | Baseline 评测（训练前原始模型） | `logs/gsm8k_baseline.json`, `logs/bbh_baseline.json` |
+| **Step 0a** | Baseline 评测（训练前原始模型） | `logs/gsm8k_baseline.json`, `logs/bbh_baseline.json` |
+| **Step 0b** | 7B/14B 参考模型 API 评测 | `logs/gsm8k_qwen25_7b.json`, `logs/bbh_qwen25_7b.json`, `logs/gsm8k_qwen25_14b.json`, `logs/bbh_qwen25_14b.json` |
 | **Step 1** | 数据集下载与预处理 | `data/processed/` |
 | **Step 2** | SFT 监督微调 | `outputs/sft/` |
 | **Step 3** | DPO 偏好优化 | `outputs/dpo/` |
 | **Step 4a** | 合并 SFT adapter → 评测 SFT 单独效果 | `outputs/sft_merged/`, `logs/gsm8k_sft.json`, `logs/bbh_sft.json` |
-| **Step 4b** | 合并 DPO adapter → 评测 DPO 单独效果 | `outputs/dpo_merged/`, `logs/gsm8k_dpo.json`, `logs/bbh_dpo.json` |
-| **Step 4c** | 合并最终 SFT+DPO 权重 | `outputs/merged/` |
+| **Step 4b** | 合并最终 SFT+DPO 权重 | `outputs/merged/` |
 | **Step 5** | 最终评测 + 四行对比表 | `logs/gsm8k_result.json`, `logs/bbh_result.json`, `logs/compare_metrics.json` |
 
 所有步骤均支持**断点续跑**（自动检测已有产物，跳过已完成阶段）。
@@ -202,7 +219,7 @@ python scripts/merge_lora.py \
 ```bash
 python eval/gsm8k_eval.py \
     --model_path  outputs/merged \
-    --max_samples 200 \
+    --max_samples 50 \
     --output      logs/gsm8k_result.json
 ```
 
@@ -212,11 +229,28 @@ python eval/gsm8k_eval.py \
 python eval/bbh_eval.py \
     --model_path  outputs/merged \
     --subset      boolean_expressions \
-    --max_samples 200 \
+    --max_samples 50 \
     --output      logs/bbh_result.json
 ```
 
 BBH 评测内置三级答案匹配（前缀匹配 → 末尾 200 字符 → 全文搜索），兼容 CoT 长输出。
+
+为降低评测耗时，默认使用 `max_samples=50` + 固定 `seed=42` 的分层抽样（按题目长度分桶），比“前 50 条”更稳健、可复现。
+
+### 与 7B / 14B 开源模型做横向对照
+
+统一配置在 [config/benchmark_models.yaml](config/benchmark_models.yaml)：
+
+- `api_evaluation`：供 `run_train.sh` 的 Step 0b 使用（API 评测）
+- `evaluation + models`：供本地批量评测脚本使用
+
+本地批量评测运行方式：
+
+```bash
+python eval/benchmark_open_models.py --config config/benchmark_models.yaml
+```
+
+结果会写入 `logs/open_model_benchmarks/`。
 
 ### 可视化
 

@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import torch
+import os
 from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
@@ -66,12 +67,26 @@ def load_sft_datasets(cfg: dict):
     return load_dataset("json", data_files=cfg["dataset_path"], split="train")
 
 
+def optimize_torch_runtime():
+    """启用安全的运行时优化，提高 GPU 利用率与吞吐。"""
+    if torch.cuda.is_available():
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        try:
+            torch.set_float32_matmul_precision("high")
+        except Exception:
+            pass
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
+
+
 def main():
     parser = argparse.ArgumentParser(description="SFT training with Unsloth")
     parser.add_argument("--config", default="config/sft_config.yaml")
     args = parser.parse_args()
 
     cfg = load_config(args.config)
+    optimize_torch_runtime()
 
     # 从 config 读取 HuggingFace Token
     import os
@@ -137,8 +152,12 @@ def main():
         bf16=bool(cfg["train"]["bf16"]),
         report_to="none",
         seed=cfg["seed"],
+        dataloader_num_workers=int(cfg["train"].get("dataloader_num_workers", 4)),
+        dataloader_pin_memory=bool(cfg["train"].get("dataloader_pin_memory", True)),
+        group_by_length=bool(cfg["train"].get("group_by_length", True)),
         # SFTConfig 专属参数
         dataset_text_field="text",
+        packing=bool(cfg["train"].get("packing", True)),
     )
 
     # 通过 tokenizer 控制最大序列长度（兼容各版本 TRL）

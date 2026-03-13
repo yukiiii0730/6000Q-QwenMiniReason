@@ -3,7 +3,7 @@
 # run_train.sh — Qwen2.5-1.5B Reasoning 两阶段微调一键训练脚本
 #
 # 用法：
-#   bash run_train.sh                   # 完整流程（Baseline + 数据 + SFT + DPO + 合并 + 评测）
+#   bash run_train.sh                   # 完整流程（Baseline + 参考模型 + 数据 + SFT + DPO + 合并 + 评测）
 #   bash run_train.sh --quick           # 快速测试（本地 JSON，各 500 条，SFT=50 steps，DPO=30 steps）
 #   bash run_train.sh --skip-data       # 跳过数据下载（已有缓存时使用）
 #   bash run_train.sh --skip-sft        # 跳过 SFT（已训练时使用）
@@ -82,6 +82,11 @@ else
     die "未找到虚拟环境 $VENV_DIR，请先运行：\n  python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
 fi
 
+# ── 运行时优化环境变量（提升吞吐） ──────────────────────────────────────────
+export TOKENIZERS_PARALLELISM=true
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+export OMP_NUM_THREADS="$(nproc)"
+
 # ── 检查 Python ───────────────────────────────────────────────────────────────
 PYTHON_VER=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 info "Python $PYTHON_VER"
@@ -123,12 +128,122 @@ EOF
 mkdir -p outputs/sft outputs/dpo outputs/merged data/processed logs
 info "输出目录已准备"
 
+# ── GPU 监控（每 60 秒记录一次，训练结束自动汇总）─────────────────────────────
+GPU_MON_LOG="logs/gpu_usage.csv"
+GPU_MON_PID=""
+
+start_gpu_monitor() {
+    if command -v nvidia-smi >/dev/null 2>&1; then
+        nvidia-smi \
+            --query-gpu=timestamp,utilization.gpu,utilization.memory,memory.used,memory.total,power.draw,temperature.gpu \
+            --format=csv,noheader,nounits \
+            -l 60 > "$GPU_MON_LOG" 2>/dev/null &
+        GPU_MON_PID=$!
+        info "GPU 监控已启动（PID=$GPU_MON_PID，日志: $GPU_MON_LOG）"
+    fi
+}
+
+stop_gpu_monitor() {
+    if [[ -n "${GPU_MON_PID:-}" ]] && kill -0 "$GPU_MON_PID" 2>/dev/null; then
+        kill "$GPU_MON_PID" 2>/dev/null || true
+        wait "$GPU_MON_PID" 2>/dev/null || true
+        info "GPU 监控已停止"
+    fi
+}
+
+trap stop_gpu_monitor EXIT
+start_gpu_monitor
+
 # ── 自动检测已完成的阶段 ──────────────────────────────────────────────────────
 # 若输出目录下存在 adapter_config.json，则认为该阶段已完成
 stage_done() {
     local dir="$1"
     [[ -f "$dir/adapter_config.json" ]] && return 0
     return 1
+}
+
+run_eval_pair() {
+    local label="$1"
+    local model_path="$2"
+    local tag="$3"
+    local max_samples="$4"
+    shift 4
+    local extra_args=("$@")
+    local gsm8k_json="logs/gsm8k_${tag}.json"
+    local bbh_json="logs/bbh_${tag}.json"
+
+    if ! $FORCE && [[ -f "$gsm8k_json" ]] && [[ -f "$bbh_json" ]]; then
+        warn "已检测到 ${label} 评测结果，自动跳过（使用 --force 可强制重跑）"
+        return 0
+    fi
+
+    info "GSM8K 评测（${label}） → ${model_path}"
+    python eval/gsm8k_eval.py \
+        --model_path  "$model_path" \
+        --max_samples "$max_samples" \
+        --sampling_mode "stratified" \
+        --seed 42 \
+        --output      "$gsm8k_json" \
+        "${extra_args[@]}" \
+        2>&1 | tee "logs/gsm8k_${tag}.log"
+
+    info "BBH 评测（${label}） → ${model_path}"
+    python eval/bbh_eval.py \
+        --model_path  "$model_path" \
+        --max_samples "$max_samples" \
+        --sampling_mode "stratified" \
+        --seed 42 \
+        --output      "$bbh_json" \
+        "${extra_args[@]}" \
+        2>&1 | tee "logs/bbh_${tag}.log"
+
+    log "${label} 评测完成"
+}
+
+run_eval_pair_api() {
+    local label="$1"
+    local api_model="$2"
+    local tag="$3"
+    local max_samples="$4"
+    local api_base_url="$5"
+    local api_key="$6"
+    local timeout="$7"
+    local max_retries="$8"
+    local gsm8k_json="logs/gsm8k_${tag}.json"
+    local bbh_json="logs/bbh_${tag}.json"
+
+    if ! $FORCE && [[ -f "$gsm8k_json" ]] && [[ -f "$bbh_json" ]]; then
+        warn "已检测到 ${label} 评测结果，自动跳过（使用 --force 可强制重跑）"
+        return 0
+    fi
+
+    info "GSM8K API 评测（${label}） → ${api_model}"
+    python eval/gsm8k_api_eval.py \
+        --api_base_url "$api_base_url" \
+        --api_key "$api_key" \
+        --model "$api_model" \
+        --max_samples "$max_samples" \
+        --sampling_mode "stratified" \
+        --seed 42 \
+        --timeout "$timeout" \
+        --max_retries "$max_retries" \
+        --output "$gsm8k_json" \
+        2>&1 | tee "logs/gsm8k_${tag}.log"
+
+    info "BBH API 评测（${label}） → ${api_model}"
+    python eval/bbh_api_eval.py \
+        --api_base_url "$api_base_url" \
+        --api_key "$api_key" \
+        --model "$api_model" \
+        --max_samples "$max_samples" \
+        --sampling_mode "stratified" \
+        --seed 42 \
+        --timeout "$timeout" \
+        --max_retries "$max_retries" \
+        --output "$bbh_json" \
+        2>&1 | tee "logs/bbh_${tag}.log"
+
+    log "${label} API 评测完成"
 }
 
 if ! $FORCE; then
@@ -141,6 +256,8 @@ if ! $FORCE; then
         SKIP_DPO=true
     fi
 fi
+
+BASELINE_N=50
 
 # ── 快速测试：切换到本地 JSON，覆写 max_steps ────────────────────────────────
 # 全量模式：用 HuggingFace 数据集（yaml 中的 datasets / dataset 字段）
@@ -204,28 +321,47 @@ fi
 # =============================================================================
 if $SKIP_BASELINE; then
     warn "已跳过 Baseline 评测（--skip-baseline）"
-elif ! $FORCE && [[ -f "logs/gsm8k_baseline.json" ]] && [[ -f "logs/bbh_baseline.json" ]]; then
-    warn "已检测到 baseline 评测结果，自动跳过（使用 --force 可强制重跑）"
 else
-    info "Step 0/5 — Baseline 评测（原始模型，训练前）"
+    info "Step 0a/6 — Baseline 评测（原始模型，训练前）"
     BASE_MODEL=$(python -c "import yaml; c=yaml.safe_load(open('config/sft_config.yaml')); print(c['model_name'])")
-    BASELINE_N=200; $QUICK && BASELINE_N=50
+    run_eval_pair "Baseline（原始模型）" "$BASE_MODEL" "baseline" "$BASELINE_N"
+fi
 
-    info "GSM8K baseline → $BASE_MODEL"
-    python eval/gsm8k_eval.py \
-        --model_path  "$BASE_MODEL" \
-        --max_samples "$BASELINE_N" \
-        --output      logs/gsm8k_baseline.json \
-        2>&1 | tee logs/gsm8k_baseline.log
+# =============================================================================
+# Step 0b：参考开源模型评测（7B / 14B）
+# =============================================================================
+if $SKIP_BASELINE; then
+    warn "已跳过 7B/14B 参考模型评测（--skip-baseline）"
+else
+    info "Step 0b/6 — 参考开源模型 API 评测（7B / 14B）"
+    API_EVAL_CFG="config/benchmark_models.yaml"
+    [[ -f "$API_EVAL_CFG" ]] || die "未找到 $API_EVAL_CFG，请先创建并填写 API 配置"
 
-    info "BBH baseline → $BASE_MODEL"
-    python eval/bbh_eval.py \
-        --model_path  "$BASE_MODEL" \
-        --max_samples "$BASELINE_N" \
-        --output      logs/bbh_baseline.json \
-        2>&1 | tee logs/bbh_baseline.log
+    IFS=$'\t' read -r API_BASE_URL API_KEY API_MODEL_7B API_MODEL_14B API_TIMEOUT API_MAX_RETRIES <<< "$(python - <<'EOF'
+import yaml
+c = yaml.safe_load(open("config/benchmark_models.yaml", "r", encoding="utf-8")) or {}
+api = c.get("api_evaluation", {}) or {}
+refs = api.get("reference_models", {}) or {}
+model_7b = (refs.get("model_7b", {}) or {}).get("model", "")
+model_14b = (refs.get("model_14b", {}) or {}).get("model", "")
+print("\t".join([
+    str(api.get("api_base_url", "")).strip(),
+    str(api.get("api_key", "")).strip(),
+    str(model_7b).strip(),
+    str(model_14b).strip(),
+    str(api.get("timeout", 90)).strip(),
+    str(api.get("max_retries", 4)).strip(),
+]))
+EOF
+)"
 
-    log "Baseline 评测完成"
+    [[ -n "$API_BASE_URL" ]] || die "config/benchmark_models.yaml 中 api_evaluation.api_base_url 不能为空"
+    [[ -n "$API_KEY" ]] || die "config/benchmark_models.yaml 中 api_evaluation.api_key 不能为空"
+    [[ -n "$API_MODEL_7B" ]] || die "config/benchmark_models.yaml 中 api_evaluation.reference_models.model_7b.model 不能为空"
+    [[ -n "$API_MODEL_14B" ]] || die "config/benchmark_models.yaml 中 api_evaluation.reference_models.model_14b.model 不能为空"
+
+    run_eval_pair_api "7B 参考模型" "$API_MODEL_7B" "qwen25_7b" "$BASELINE_N" "$API_BASE_URL" "$API_KEY" "$API_TIMEOUT" "$API_MAX_RETRIES"
+    run_eval_pair_api "14B 参考模型" "$API_MODEL_14B" "qwen25_14b" "$BASELINE_N" "$API_BASE_URL" "$API_KEY" "$API_TIMEOUT" "$API_MAX_RETRIES"
 fi
 
 # =============================================================================
@@ -234,7 +370,7 @@ fi
 if $SKIP_DATA; then
     warn "已跳过数据下载（--skip-data）"
 else
-    info "Step 1/5 — 数据集下载与预处理"
+    info "Step 1/6 — 数据集下载与预处理"
     python scripts/prepare_data.py \
         --sft_n "$SFT_N" \
         --dpo_n "$DPO_N" \
@@ -248,7 +384,7 @@ fi
 if $SKIP_SFT; then
     warn "已跳过 SFT（--skip-sft 或已检测到产物）"
 else
-    info "Step 2/5 — SFT 监督微调"
+    info "Step 2/6 — SFT 监督微调"
     python scripts/sft_train.py \
         --config config/sft_config.yaml \
         2>&1 | tee logs/sft_train.log
@@ -266,7 +402,7 @@ fi
 if $SKIP_DPO; then
     warn "已跳过 DPO（--skip-dpo 或已检测到产物）"
 else
-    info "Step 3/5 — DPO 偏好优化"
+    info "Step 3/6 — DPO 偏好优化"
     python scripts/dpo_train.py \
         --config config/dpo_config.yaml \
         2>&1 | tee logs/dpo_train.log
@@ -279,7 +415,7 @@ fi
 if $SKIP_EVAL; then
     warn "已跳过 SFT 单独评测（--skip-eval）"
 else
-    EVAL_N=200; $QUICK && EVAL_N=50
+    EVAL_N=50
 
     if ! $FORCE && [[ -f "logs/gsm8k_sft.json" ]] && [[ -f "logs/bbh_sft.json" ]]; then
         warn "已检测到 SFT 评测结果，自动跳过（使用 --force 可强制重跑）"
@@ -312,40 +448,9 @@ else
 fi
 
 # =============================================================================
-# Step 4b：合并 DPO adapter → 评测 DPO 单独效果
+# Step 4b：DPO only 评测已移除
 # =============================================================================
-if $SKIP_EVAL; then
-    warn "已跳过 DPO 单独评测（--skip-eval）"
-else
-    if ! $FORCE && [[ -f "logs/gsm8k_dpo.json" ]] && [[ -f "logs/bbh_dpo.json" ]]; then
-        warn "已检测到 DPO 评测结果，自动跳过（使用 --force 可强制重跑）"
-    else
-        info "Step 4b — 合并 DPO LoRA adapter → outputs/dpo_merged"
-        mkdir -p outputs/dpo_merged
-        python scripts/merge_lora.py \
-            --adapter_path outputs/dpo \
-            --output_path  outputs/dpo_merged \
-            --config       config/dpo_config.yaml \
-            2>&1 | tee logs/merge_dpo.log
-        log "DPO 权重合并完成 → outputs/dpo_merged/"
-
-        info "Step 4b — GSM8K 评测（DPO only，前 $EVAL_N 条）"
-        python eval/gsm8k_eval.py \
-            --model_path  outputs/dpo_merged \
-            --max_samples "$EVAL_N" \
-            --output      logs/gsm8k_dpo.json \
-            2>&1 | tee logs/gsm8k_dpo_eval.log
-
-        info "Step 4b — BBH 评测（DPO only，前 $EVAL_N 条）"
-        python eval/bbh_eval.py \
-            --model_path  outputs/dpo_merged \
-            --max_samples "$EVAL_N" \
-            --output      logs/bbh_dpo.json \
-            2>&1 | tee logs/bbh_dpo_eval.log
-
-        log "DPO 单独评测完成"
-    fi
-fi
+warn "已移除 DPO only 单独评测阶段"
 
 # =============================================================================
 # Step 4c：合并最终 SFT+DPO 权重（DPO adapter 已在 SFT 基础上训练，即完整两阶段）
@@ -362,12 +467,12 @@ else
 fi
 
 # =============================================================================
-# Step 5：最终评测（SFT+DPO 完整两阶段）+ 四行对比表
+# Step 5：最终评测（SFT+DPO 完整两阶段）+ 对比表
 # =============================================================================
 if $SKIP_EVAL; then
     warn "已跳过最终评测（--skip-eval）"
 else
-    EVAL_N=200; $QUICK && EVAL_N=50
+    EVAL_N=50
 
     info "Step 5 — GSM8K 评测（SFT+DPO，前 $EVAL_N 条）"
     if ! $FORCE && [[ -f "logs/gsm8k_result.json" ]]; then
@@ -391,67 +496,56 @@ else
             2>&1 | tee logs/bbh_eval.log
     fi
 
-    # ── 四行对比表 ──────────────────────────────────────────────────────────
-    python - <<'EOF'
-import json, os
+    # ── 对比表 ──────────────────────────────────────────────────────────────
+    python eval/compare_table.py
+fi
 
-def load(path):
-    if os.path.exists(path):
-        with open(path) as f:
-            return json.load(f)
-    return None
+if [[ -f "$GPU_MON_LOG" ]]; then
+python - <<'EOF'
+import csv
+from statistics import mean
 
-base_gsm = load("logs/gsm8k_baseline.json")
-sft_gsm  = load("logs/gsm8k_sft.json")
-dpo_gsm  = load("logs/gsm8k_dpo.json")
-ft_gsm   = load("logs/gsm8k_result.json")
+path = "logs/gpu_usage.csv"
+rows = []
+with open(path, "r", encoding="utf-8") as f:
+    reader = csv.reader(f)
+    for r in reader:
+        if len(r) < 7:
+            continue
+        try:
+            rows.append({
+                "gpu": float(r[1].strip()),
+                "mem_util": float(r[2].strip()),
+                "mem_used": float(r[3].strip()),
+                "mem_total": float(r[4].strip()),
+                "power": float(r[5].strip()),
+                "temp": float(r[6].strip()),
+            })
+        except Exception:
+            pass
 
-base_bbh = load("logs/bbh_baseline.json")
-sft_bbh  = load("logs/bbh_sft.json")
-dpo_bbh  = load("logs/bbh_dpo.json")
-ft_bbh   = load("logs/bbh_result.json")
+if not rows:
+    print("⚠️  GPU 监控日志为空，跳过汇总")
+else:
+    avg_gpu = mean(x["gpu"] for x in rows)
+    p95_gpu = sorted(x["gpu"] for x in rows)[int(len(rows) * 0.95) - 1]
+    avg_mem_util = mean(x["mem_util"] for x in rows)
+    avg_mem_used = mean(x["mem_used"] for x in rows)
+    max_mem_used = max(x["mem_used"] for x in rows)
+    mem_total = rows[0]["mem_total"]
+    avg_power = mean(x["power"] for x in rows)
+    avg_temp = mean(x["temp"] for x in rows)
 
-def acc(r):
-    return r["accuracy"] if r else None
-
-def fmt(r):
-    a = acc(r)
-    return f"{a:>7.2%}" if a is not None else "   N/A "
-
-def delta(r, base):
-    a, b = acc(r), acc(base)
-    if a is None or b is None:
-        return "   N/A "
-    d = a - b
-    return f"{d:>+7.2%}"
-
-W = 30
-print()
-print("=" * 66)
-print(f"  {'模型':<{W}} {'GSM8K':>9}  {'BBH':>9}")
-print("=" * 66)
-print(f"  {'Baseline (原始模型)':<{W}} {fmt(base_gsm)}  {fmt(base_bbh)}")
-print(f"  {'SFT only':<{W}} {fmt(sft_gsm)}  {fmt(sft_bbh)}")
-print(f"  {'DPO only (基于SFT)':<{W}} {fmt(dpo_gsm)}  {fmt(dpo_bbh)}")
-print(f"  {'SFT + DPO':<{W}} {fmt(ft_gsm)}  {fmt(ft_bbh)}")
-print("-" * 66)
-print(f"  {'Δ vs Baseline (SFT only)':<{W}} {delta(sft_gsm,base_gsm)}  {delta(sft_bbh,base_bbh)}")
-print(f"  {'Δ vs Baseline (DPO only)':<{W}} {delta(dpo_gsm,base_gsm)}  {delta(dpo_bbh,base_bbh)}")
-print(f"  {'Δ vs Baseline (SFT+DPO)':<{W}} {delta(ft_gsm, base_gsm)}  {delta(ft_bbh, base_bbh)}")
-print("=" * 66)
-
-# 更新 compare_metrics.json
-metrics = {}
-for k, v in [
-    ("baseline_gsm8k", base_gsm), ("sft_gsm8k", sft_gsm),
-    ("dpo_gsm8k", dpo_gsm),       ("finetuned_gsm8k", ft_gsm),
-    ("baseline_bbh",  base_bbh),  ("sft_bbh",  sft_bbh),
-    ("dpo_bbh",  dpo_bbh),        ("finetuned_bbh",  ft_bbh),
-]:
-    if v:
-        metrics[k] = v["accuracy"]
-with open("logs/compare_metrics.json", "w") as f:
-    json.dump(metrics, f, indent=2)
+    print("\n================ GPU 资源利用汇总 ================")
+    print(f"平均 GPU 利用率      : {avg_gpu:.1f}%")
+    print(f"P95 GPU 利用率       : {p95_gpu:.1f}%")
+    print(f"平均显存利用率       : {avg_mem_util:.1f}%")
+    print(f"平均显存占用         : {avg_mem_used:.1f} MiB / {mem_total:.0f} MiB")
+    print(f"峰值显存占用         : {max_mem_used:.1f} MiB / {mem_total:.0f} MiB")
+    print(f"平均功耗             : {avg_power:.1f} W")
+    print(f"平均温度             : {avg_temp:.1f} °C")
+    print("GPU 监控日志          : logs/gpu_usage.csv")
+    print("=================================================\n")
 EOF
 fi
 
@@ -463,7 +557,6 @@ echo -e "${GREEN}============================================================${N
 echo "  SFT adapter      : outputs/sft/"
 echo "  SFT merged       : outputs/sft_merged/"
 echo "  DPO adapter      : outputs/dpo/"
-echo "  DPO merged       : outputs/dpo_merged/"
 echo "  SFT+DPO merged   : outputs/merged/"
 echo "  评测日志         : logs/"
 echo ""

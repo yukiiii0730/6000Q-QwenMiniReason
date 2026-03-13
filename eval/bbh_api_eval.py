@@ -1,12 +1,15 @@
 import argparse
 import json
+import os
 import random
+import re
+import time
+import urllib.error
+import urllib.request
 from typing import List
 
 from datasets import load_dataset
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import torch
 
 
 def normalize(x: str) -> str:
@@ -14,55 +17,65 @@ def normalize(x: str) -> str:
 
 
 def extract_answer(pred: str, gt: str) -> bool:
-    """从模型输出中提取答案，支持思维链输出。
-    优先匹配末尾最后一次出现的 gt（大小写不敏感），回退到全文任意位置匹配。
-    """
-    import re
     gt_norm = normalize(gt)
     pred_norm = normalize(pred)
-
-    # 1. 直接前缀匹配（原始逻辑，兼容直接输出答案的模型）
     if pred_norm.startswith(gt_norm):
         return True
-
-    # 2. 在输出末尾 200 字符内查找答案（CoT 模型把答案放在最后）
     tail = pred_norm[-200:]
-    # 用词边界匹配，避免 "False" 误匹配 "Falsely"
-    pattern = r'(?<![\w])' + re.escape(gt_norm) + r'(?![\w])'
+    pattern = r"(?<![\w])" + re.escape(gt_norm) + r"(?![\w])"
     if re.search(pattern, tail):
         return True
-
-    # 3. 全文搜索（最宽松，作为最后手段）
-    if re.search(pattern, pred_norm):
-        return True
-
-    return False
+    return re.search(pattern, pred_norm) is not None
 
 
-def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    if tokenizer.pad_token_id is None:
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-
-    model_kwargs = {
-        "device_map": "auto",
-        "trust_remote_code": True,
+def chat_completion(
+    base_url: str,
+    api_key: str,
+    model: str,
+    prompt: str,
+    max_tokens: int,
+    timeout: int,
+    max_retries: int,
+) -> str:
+    url = base_url.rstrip("/") + "/chat/completions"
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+        "max_tokens": max_tokens,
     }
-    if load_in_4bit:
-        model_kwargs["quantization_config"] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-        )
-    else:
-        model_kwargs["dtype"] = torch.float16 if torch.cuda.is_available() else torch.float32
+    data = json.dumps(payload).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}",
+    }
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs)
-    model.config.pad_token_id = tokenizer.pad_token_id
-    return model, tokenizer
+    last_error = ""
+    for i in range(max_retries):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+            return result["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as e:
+            body = ""
+            try:
+                body = e.read().decode("utf-8", errors="ignore")
+            except Exception:
+                pass
+            last_error = f"HTTP {e.code}: {body}"
+            if e.code in (429, 500, 502, 503, 504) and i < max_retries - 1:
+                time.sleep(1.5 * (2 ** i))
+                continue
+            break
+        except Exception as e:  # noqa: BLE001
+            last_error = str(e)
+            if i < max_retries - 1:
+                time.sleep(1.5 * (2 ** i))
+                continue
+            break
+
+    raise RuntimeError(f"API 请求失败: {last_error}")
 
 
 def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
@@ -81,7 +94,6 @@ def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
         indices = sorted(rng.sample(range(n), max_samples))
         return ds.select(indices), indices
 
-    # stratified: 按 input 长度分桶，分层抽样（确定性）
     inputs = ds["input"]
     lengths = [len(str(x)) for x in inputs]
     sorted_indices = sorted(range(n), key=lambda i: lengths[i])
@@ -106,31 +118,23 @@ def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
     return ds.select(indices), indices
 
 
-def generate(model, tokenizer, prompt: str, max_new_tokens: int = 256) -> str:
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=False,
-            pad_token_id=tokenizer.pad_token_id,
-        )
-    text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return text[len(prompt):].strip() if text.startswith(prompt) else text.strip()
-
-
 def main():
-    parser = argparse.ArgumentParser(description="BBH 评测")
-    parser.add_argument("--model_path", required=True)
+    parser = argparse.ArgumentParser(description="BBH API 评测（OpenAI-compatible）")
+    parser.add_argument("--api_base_url", required=True)
+    parser.add_argument("--api_key", default=os.environ.get("OPENAI_API_KEY", ""))
+    parser.add_argument("--model", required=True)
     parser.add_argument("--subset", default="boolean_expressions")
     parser.add_argument("--max_samples", type=int, default=50)
     parser.add_argument("--sampling_mode", choices=["first", "random", "stratified"], default="stratified")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--output", default="eval/bbh_result.json")
-    parser.add_argument("--load_in_4bit", action="store_true", help="使用 bitsandbytes 4bit 量化加载模型")
+    parser.add_argument("--max_new_tokens", type=int, default=256)
+    parser.add_argument("--timeout", type=int, default=90)
+    parser.add_argument("--max_retries", type=int, default=4)
+    parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
-    model, tokenizer = load_model_and_tokenizer(args.model_path, load_in_4bit=args.load_in_4bit)
+    if not args.api_key:
+        raise ValueError("缺少 API Key，请通过 --api_key 或 OPENAI_API_KEY 提供")
 
     ds = load_dataset("lukaemon/bbh", args.subset, split="test")
     ds, sample_indices = select_eval_subset(
@@ -140,11 +144,19 @@ def main():
         seed=args.seed,
     )
 
-    details: List[dict] = []
     correct = 0
-    for ex in tqdm(ds, desc=f"BBH-{args.subset}"):
+    details: List[dict] = []
+    for ex in tqdm(ds, desc=f"BBH-{args.model}"):
         prompt = f"{ex['input']}\n请只输出最终答案。"
-        pred = generate(model, tokenizer, prompt)
+        pred = chat_completion(
+            base_url=args.api_base_url,
+            api_key=args.api_key,
+            model=args.model,
+            prompt=prompt,
+            max_tokens=args.max_new_tokens,
+            timeout=args.timeout,
+            max_retries=args.max_retries,
+        )
         gt = ex["target"]
         ok = extract_answer(pred, gt)
         correct += int(ok)
@@ -152,6 +164,7 @@ def main():
 
     acc = correct / max(len(details), 1)
     result = {
+        "model": args.model,
         "subset": args.subset,
         "accuracy": acc,
         "total": len(details),
@@ -163,8 +176,7 @@ def main():
     }
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
-
-    print(f"BBH({args.subset}) Accuracy: {acc:.4f} ({correct}/{len(details)})")
+    print(f"BBH({args.subset}) Accuracy [{args.model}]: {acc:.4f} ({correct}/{len(details)})")
 
 
 if __name__ == "__main__":
