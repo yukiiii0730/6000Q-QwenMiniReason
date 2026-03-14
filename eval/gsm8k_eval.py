@@ -136,12 +136,21 @@ def main():
     details: List[dict] = []
     for ex in tqdm(ds, desc="Evaluating"):
         prompt = f"请解答以下数学题，并在最后给出数字答案。\n题目：{ex['question']}\n答案："
-        pred = generate_answer(model, tokenizer, prompt)
-        pred_num = extract_number(pred)
+        pred_raw = generate_answer(model, tokenizer, prompt)
+        pred_num = extract_number(pred_raw)
         gt_num = extract_number(ex["answer"])
         ok = pred_num == gt_num and pred_num != ""
         correct += int(ok)
-        details.append({"question": ex["question"], "pred": pred_num, "gt": gt_num, "correct": ok})
+        details.append(
+            {
+                "question": ex["question"],
+                "pred": pred_num,
+                "pred_raw": pred_raw,
+                "gt": gt_num,
+                "gt_raw": ex["answer"],
+                "correct": ok,
+            }
+        )
 
     acc = correct / max(len(details), 1)
     result = {

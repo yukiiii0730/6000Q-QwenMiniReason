@@ -15,7 +15,7 @@
 #   bash run_train.sh --sft_n 20000 --dpo_n 20000   # 自定义采样量
 #
 # 数据集：
-#   完整流程  SFT : AI-MO/NuminaMath-CoT + Magpie-Align/Magpie-Reasoning-150K（各 50k）
+#   完整流程  SFT : AI-MO/NuminaMath-CoT（单数据集，默认 50k）
 #   完整流程  DPO : microsoft/orca-math-word-problems-200k（50k）
 #   --quick   SFT : data/processed/sft_train.json（本地 500 条）
 #   --quick   DPO : data/processed/dpo_train.json（本地 500 条）
@@ -52,6 +52,7 @@ ONLY_SFT=false
 FORCE=false
 SFT_N=50000
 DPO_N=50000
+USE_HQ_MIXED_SFT=false
 
 # ── 解析参数 ──────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -195,159 +196,13 @@ write_stage_report() {
     shift 3
     local result_files=("$@")
 
-    python - "$stage" "$config_path" "$stage_log" "$RUN_ID" "$RUN_LOG_DIR" "${result_files[@]}" <<'PY'
-import json
-import os
-import re
-import sys
-from datetime import datetime
-from pathlib import Path
-
-stage, config_path, stage_log, run_id, run_log_dir, *result_files = sys.argv[1:]
-report_dir = Path(run_log_dir) / "reports"
-report_dir.mkdir(parents=True, exist_ok=True)
-
-def load_yaml(path: str):
-    if not path or not Path(path).exists():
-        return {}
-    try:
-        import yaml
-        with open(path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f) or {}
-    except Exception:
-        return {}
-
-def parse_training_log(path: str):
-    out = {
-        "train_runtime": None,
-        "train_steps_per_second": None,
-        "train_samples_per_second": None,
-        "train_loss": None,
-        "last_progress": None,
-    }
-    p = Path(path)
-    if not p.exists():
-        return out
-    text = p.read_text(encoding="utf-8", errors="ignore").replace("\r", "\n")
-
-    m = re.search(
-        r"\{'train_runtime':\s*'([^']+)',\s*'train_samples_per_second':\s*'([^']+)',\s*'train_steps_per_second':\s*'([^']+)',\s*'train_loss':\s*'([^']+)'",
-        text,
-    )
-    if m:
-        out["train_runtime"] = m.group(1)
-        out["train_samples_per_second"] = m.group(2)
-        out["train_steps_per_second"] = m.group(3)
-        out["train_loss"] = m.group(4)
-
-    prog = re.findall(r"\b(\d+/\d+)\b", text)
-    if prog:
-        out["last_progress"] = prog[-1]
-    return out
-
-def summarize_result_json(path: str):
-    p = Path(path)
-    if not p.exists():
-        return {"exists": False}
-    try:
-        data = json.loads(p.read_text(encoding="utf-8", errors="ignore"))
-    except Exception as e:
-        return {"exists": True, "parse_error": str(e)}
-
-    summary = {"exists": True}
-    if isinstance(data, dict):
-        common_keys = [
-            "accuracy", "acc", "exact_match", "score", "pass_rate",
-            "overall", "overall_accuracy", "final_score", "correct", "total"
-        ]
-        for k in common_keys:
-            v = data.get(k)
-            if isinstance(v, (int, float)):
-                summary[k] = v
-        if "summary" in data and isinstance(data["summary"], dict):
-            for k, v in data["summary"].items():
-                if isinstance(v, (int, float, str)):
-                    summary[f"summary.{k}"] = v
-    return summary
-
-cfg = load_yaml(config_path)
-train_cfg = cfg.get("train", {}) if isinstance(cfg, dict) else {}
-log_stats = parse_training_log(stage_log)
-
-result_summaries = {}
-for rf in result_files:
-    if rf:
-        result_summaries[rf] = summarize_result_json(rf)
-
-report = {
-    "stage": stage,
-    "run_id": run_id,
-    "generated_at": datetime.now().isoformat(timespec="seconds"),
-    "paths": {
-        "run_log_dir": run_log_dir,
-        "stage_log": stage_log,
-        "config": config_path,
-    },
-    "config": {
-        "model_name": cfg.get("model_name") if isinstance(cfg, dict) else None,
-        "dataset_path": cfg.get("dataset_path") if isinstance(cfg, dict) else None,
-        "max_seq_length": cfg.get("max_seq_length") if isinstance(cfg, dict) else None,
-        "load_in_4bit": cfg.get("load_in_4bit") if isinstance(cfg, dict) else None,
-        "beta": cfg.get("beta") if isinstance(cfg, dict) else None,
-        "lora": cfg.get("lora") if isinstance(cfg, dict) else None,
-        "train": train_cfg,
-    },
-    "training_log_summary": log_stats,
-    "result_files": result_summaries,
-}
-
-json_path = report_dir / f"{stage}_summary.json"
-md_path = report_dir / f"{stage}_summary.md"
-
-json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-
-lines = [
-    f"# {stage.upper()} 实验记录",
-    "",
-    f"- 生成时间: {report['generated_at']}",
-    f"- Run ID: {run_id}",
-    f"- 阶段日志: {stage_log}",
-    f"- 配置文件: {config_path}",
-    "",
-    "## 训练配置",
-    f"- model_name: {report['config']['model_name']}",
-    f"- dataset_path: {report['config']['dataset_path']}",
-    f"- max_seq_length: {report['config']['max_seq_length']}",
-    f"- load_in_4bit: {report['config']['load_in_4bit']}",
-]
-if report['config']['beta'] is not None:
-    lines.append(f"- beta: {report['config']['beta']}")
-
-for k, v in (report["config"]["train"] or {}).items():
-    lines.append(f"- train.{k}: {v}")
-
-lines.extend([
-    "",
-    "## 训练日志摘要",
-    f"- last_progress: {log_stats.get('last_progress')}",
-    f"- train_runtime: {log_stats.get('train_runtime')}",
-    f"- train_steps_per_second: {log_stats.get('train_steps_per_second')}",
-    f"- train_samples_per_second: {log_stats.get('train_samples_per_second')}",
-    f"- train_loss: {log_stats.get('train_loss')}",
-])
-
-if result_summaries:
-    lines.append("")
-    lines.append("## 结果摘要")
-    for rf, rs in result_summaries.items():
-        lines.append(f"- {rf}:")
-        for k, v in rs.items():
-            lines.append(f"  - {k}: {v}")
-
-md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-print(f"📝 已生成阶段报告: {md_path}")
-print(f"📝 已生成阶段报告: {json_path}")
-PY
+    python scripts/write_stage_report.py \
+        "$stage" \
+        "$config_path" \
+        "$stage_log" \
+        "$RUN_ID" \
+        "$RUN_LOG_DIR" \
+        "${result_files[@]}"
 }
 
 ensure_eval_result_pair() {
@@ -511,14 +366,9 @@ import yaml
 
 with open("config/sft_config.yaml") as f:
     cfg = yaml.safe_load(f)
-if "datasets" not in cfg:
-    cfg["datasets"] = [
-        {"name": "AI-MO/NuminaMath-CoT",             "split": "train", "max_samples": $SFT_N},
-        {"name": "Magpie-Align/Magpie-Reasoning-150K","split": "train", "max_samples": $SFT_N},
-    ]
-else:
-    for d in cfg["datasets"]:
-        d["max_samples"] = $SFT_N
+cfg["datasets"] = [
+    {"name": "AI-MO/NuminaMath-CoT", "split": "train", "max_samples": $SFT_N},
+]
 with open("config/sft_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
@@ -531,7 +381,7 @@ else:
 with open("config/dpo_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
-print(f"📦 全量模式：SFT 数据集 NuminaMath-CoT + Magpie-Reasoning-150K（各 $SFT_N 条）")
+print(f"📦 全量模式：SFT 数据集 NuminaMath-CoT（$SFT_N 条）")
 print(f"📦 全量模式：DPO 数据集 orca-math-word-problems-200k（$DPO_N 条）")
 EOF
 fi
@@ -605,12 +455,14 @@ else
 fi
 
 # =============================================================================
-# Step 1.5：高质量子集筛选（仅 SFT: Numina 15k + Magpie 15k）
+# Step 1.5：可选高质量子集筛选（默认关闭，避免混合源分布干扰）
 # =============================================================================
 if $QUICK; then
     warn "quick 模式跳过高质量子集筛选（直接使用本地小样本）"
+elif ! $USE_HQ_MIXED_SFT; then
+    warn "已关闭 mixed-HQ 子集筛选（USE_HQ_MIXED_SFT=false），保持 SFT 单数据集方案"
 else
-    info "Step 1.5/6 — 构建高质量训练子集"
+    info "Step 1.5/6 — 构建 mixed-HQ 训练子集（Numina + Magpie）"
 
     if $FORCE || [[ ! -s "$SFT_HQ_PATH" ]]; then
         python scripts/build_hq_subsets.py \
@@ -660,6 +512,12 @@ else
     python scripts/sft_train.py \
         --config config/sft_config.yaml \
         2>&1 | tee "$RUN_LOG_DIR/sft_train.log"
+    if [[ -f "outputs/sft/trainer_log_history.jsonl" ]]; then
+        cp -f "outputs/sft/trainer_log_history.jsonl" "$RUN_LOG_DIR/sft_trainer_log_history.jsonl"
+    fi
+    if [[ -f "outputs/sft/trainer_log_history.csv" ]]; then
+        cp -f "outputs/sft/trainer_log_history.csv" "$RUN_LOG_DIR/sft_trainer_log_history.csv"
+    fi
     log "SFT 训练完成，产物保存至 outputs/sft/"
     write_stage_report "sft" "config/sft_config.yaml" "$RUN_LOG_DIR/sft_train.log"
 fi
@@ -679,6 +537,12 @@ else
     python scripts/dpo_train.py \
         --config config/dpo_config.yaml \
         2>&1 | tee "$RUN_LOG_DIR/dpo_train.log"
+    if [[ -f "outputs/dpo/trainer_log_history.jsonl" ]]; then
+        cp -f "outputs/dpo/trainer_log_history.jsonl" "$RUN_LOG_DIR/dpo_trainer_log_history.jsonl"
+    fi
+    if [[ -f "outputs/dpo/trainer_log_history.csv" ]]; then
+        cp -f "outputs/dpo/trainer_log_history.csv" "$RUN_LOG_DIR/dpo_trainer_log_history.csv"
+    fi
     log "DPO 训练完成，产物保存至 outputs/dpo/"
     write_stage_report "dpo" "config/dpo_config.yaml" "$RUN_LOG_DIR/dpo_train.log"
 fi

@@ -1,4 +1,6 @@
 import argparse
+import csv
+import json
 import yaml
 import torch
 import os
@@ -141,6 +143,35 @@ def find_latest_checkpoint(output_dir: str):
     return str(ckpts[-1][1])
 
 
+def export_trainer_metrics(trainer, output_dir: str):
+    """导出训练过程指标（loss / rewards / lr 等），便于后续分析。"""
+    history = list(getattr(trainer.state, "log_history", []) or [])
+    if not history:
+        print("⚠️  未检测到 trainer.log_history，跳过指标导出")
+        return
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    jsonl_path = out_dir / "trainer_log_history.jsonl"
+    csv_path = out_dir / "trainer_log_history.csv"
+
+    with jsonl_path.open("w", encoding="utf-8") as f:
+        for row in history:
+            if isinstance(row, dict):
+                f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+    keys = sorted({k for row in history if isinstance(row, dict) for k in row.keys()})
+    with csv_path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=keys)
+        writer.writeheader()
+        for row in history:
+            if isinstance(row, dict):
+                writer.writerow({k: row.get(k) for k in keys})
+
+    print(f"📝 已导出训练指标: {jsonl_path}")
+    print(f"📝 已导出训练指标: {csv_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="DPO training with Unsloth")
     parser.add_argument("--config", default="config/dpo_config.yaml")
@@ -239,6 +270,7 @@ def main():
         trainer.train(resume_from_checkpoint=resume_ckpt)
     else:
         trainer.train()
+    export_trainer_metrics(trainer, cfg["output_dir"])
     trainer.save_model(cfg["output_dir"])
     tokenizer.save_pretrained(cfg["output_dir"])
 
