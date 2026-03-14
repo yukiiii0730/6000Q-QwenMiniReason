@@ -2,6 +2,7 @@ import argparse
 import yaml
 import torch
 import os
+from pathlib import Path
 from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
@@ -78,6 +79,24 @@ def optimize_torch_runtime():
         except Exception:
             pass
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
+
+
+def find_latest_checkpoint(output_dir: str):
+    out = Path(output_dir)
+    if not out.exists():
+        return None
+    ckpts = []
+    for p in out.glob("checkpoint-*"):
+        if p.is_dir():
+            try:
+                step = int(p.name.split("-")[-1])
+                ckpts.append((step, p))
+            except ValueError:
+                continue
+    if not ckpts:
+        return None
+    ckpts.sort(key=lambda x: x[0])
+    return str(ckpts[-1][1])
 
 
 def main():
@@ -169,7 +188,12 @@ def main():
         args=train_args,
     )
 
-    trainer.train()
+    resume_ckpt = find_latest_checkpoint(cfg["output_dir"])
+    if resume_ckpt:
+        print(f"♻️  检测到断点，继续训练: {resume_ckpt}")
+        trainer.train(resume_from_checkpoint=resume_ckpt)
+    else:
+        trainer.train()
     trainer.save_model(cfg["output_dir"])
     tokenizer.save_pretrained(cfg["output_dir"])
 

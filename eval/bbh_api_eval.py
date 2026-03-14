@@ -6,6 +6,7 @@ import re
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import List
 
 from datasets import load_dataset
@@ -118,6 +119,22 @@ def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
     return ds.select(indices), indices
 
 
+def resolve_badcase_output(output_path: str, badcase_output: str) -> str:
+    if badcase_output:
+        return badcase_output
+    p = Path(output_path)
+    return str(p.with_name(f"{p.stem}_badcases.jsonl"))
+
+
+def write_badcases(details: List[dict], output_path: str) -> int:
+    badcases = [d for d in details if not d.get("correct", False)]
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        for item in badcases:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    return len(badcases)
+
+
 def main():
     parser = argparse.ArgumentParser(description="BBH API 评测（OpenAI-compatible）")
     parser.add_argument("--api_base_url", required=True)
@@ -131,6 +148,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--max_retries", type=int, default=4)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--badcase_output", default="", help="badcase 输出路径（默认跟随 output 自动生成 *_badcases.jsonl）")
     args = parser.parse_args()
 
     if not args.api_key:
@@ -176,7 +194,12 @@ def main():
     }
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
+
+    badcase_output = resolve_badcase_output(args.output, args.badcase_output)
+    badcase_count = write_badcases(details, badcase_output)
+
     print(f"BBH({args.subset}) Accuracy [{args.model}]: {acc:.4f} ({correct}/{len(details)})")
+    print(f"BBH({args.subset}) Badcases [{args.model}]: {badcase_count} -> {badcase_output}")
 
 
 if __name__ == "__main__":

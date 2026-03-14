@@ -139,8 +139,23 @@ EOF
 mkdir -p outputs/sft outputs/dpo outputs/merged data/processed logs
 info "输出目录已准备"
 
+# ── 每次运行独立日志目录（防覆盖）────────────────────────────────────────────
+RUN_ID="$(date '+%Y%m%d_%H%M%S')"
+RUN_LOG_DIR="logs/runs/$RUN_ID"
+mkdir -p "$RUN_LOG_DIR"
+ln -sfn "runs/$RUN_ID" logs/latest
+
+# 同时保存完整控制台日志（每次运行独立文件）
+RUN_CONSOLE_LOG="$RUN_LOG_DIR/run_train.log"
+exec > >(tee -a "$RUN_CONSOLE_LOG") 2>&1
+info "本次运行日志目录：$RUN_LOG_DIR"
+info "完整控制台日志：$RUN_CONSOLE_LOG"
+
+RESULTS_DIR="$RUN_LOG_DIR/results"
+mkdir -p "$RESULTS_DIR"
+
 # ── GPU 监控（每 60 秒记录一次，训练结束自动汇总）─────────────────────────────
-GPU_MON_LOG="logs/gpu_usage.csv"
+GPU_MON_LOG="$RUN_LOG_DIR/gpu_usage.csv"
 GPU_MON_PID=""
 
 start_gpu_monitor() {
@@ -173,6 +188,190 @@ stage_done() {
     return 1
 }
 
+write_stage_report() {
+    local stage="$1"
+    local config_path="$2"
+    local stage_log="$3"
+    shift 3
+    local result_files=("$@")
+
+    python - "$stage" "$config_path" "$stage_log" "$RUN_ID" "$RUN_LOG_DIR" "${result_files[@]}" <<'PY'
+import json
+import os
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+stage, config_path, stage_log, run_id, run_log_dir, *result_files = sys.argv[1:]
+report_dir = Path(run_log_dir) / "reports"
+report_dir.mkdir(parents=True, exist_ok=True)
+
+def load_yaml(path: str):
+    if not path or not Path(path).exists():
+        return {}
+    try:
+        import yaml
+        with open(path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+def parse_training_log(path: str):
+    out = {
+        "train_runtime": None,
+        "train_steps_per_second": None,
+        "train_samples_per_second": None,
+        "train_loss": None,
+        "last_progress": None,
+    }
+    p = Path(path)
+    if not p.exists():
+        return out
+    text = p.read_text(encoding="utf-8", errors="ignore").replace("\r", "\n")
+
+    m = re.search(
+        r"\{'train_runtime':\s*'([^']+)',\s*'train_samples_per_second':\s*'([^']+)',\s*'train_steps_per_second':\s*'([^']+)',\s*'train_loss':\s*'([^']+)'",
+        text,
+    )
+    if m:
+        out["train_runtime"] = m.group(1)
+        out["train_samples_per_second"] = m.group(2)
+        out["train_steps_per_second"] = m.group(3)
+        out["train_loss"] = m.group(4)
+
+    prog = re.findall(r"\b(\d+/\d+)\b", text)
+    if prog:
+        out["last_progress"] = prog[-1]
+    return out
+
+def summarize_result_json(path: str):
+    p = Path(path)
+    if not p.exists():
+        return {"exists": False}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8", errors="ignore"))
+    except Exception as e:
+        return {"exists": True, "parse_error": str(e)}
+
+    summary = {"exists": True}
+    if isinstance(data, dict):
+        common_keys = [
+            "accuracy", "acc", "exact_match", "score", "pass_rate",
+            "overall", "overall_accuracy", "final_score", "correct", "total"
+        ]
+        for k in common_keys:
+            v = data.get(k)
+            if isinstance(v, (int, float)):
+                summary[k] = v
+        if "summary" in data and isinstance(data["summary"], dict):
+            for k, v in data["summary"].items():
+                if isinstance(v, (int, float, str)):
+                    summary[f"summary.{k}"] = v
+    return summary
+
+cfg = load_yaml(config_path)
+train_cfg = cfg.get("train", {}) if isinstance(cfg, dict) else {}
+log_stats = parse_training_log(stage_log)
+
+result_summaries = {}
+for rf in result_files:
+    if rf:
+        result_summaries[rf] = summarize_result_json(rf)
+
+report = {
+    "stage": stage,
+    "run_id": run_id,
+    "generated_at": datetime.now().isoformat(timespec="seconds"),
+    "paths": {
+        "run_log_dir": run_log_dir,
+        "stage_log": stage_log,
+        "config": config_path,
+    },
+    "config": {
+        "model_name": cfg.get("model_name") if isinstance(cfg, dict) else None,
+        "dataset_path": cfg.get("dataset_path") if isinstance(cfg, dict) else None,
+        "max_seq_length": cfg.get("max_seq_length") if isinstance(cfg, dict) else None,
+        "load_in_4bit": cfg.get("load_in_4bit") if isinstance(cfg, dict) else None,
+        "beta": cfg.get("beta") if isinstance(cfg, dict) else None,
+        "lora": cfg.get("lora") if isinstance(cfg, dict) else None,
+        "train": train_cfg,
+    },
+    "training_log_summary": log_stats,
+    "result_files": result_summaries,
+}
+
+json_path = report_dir / f"{stage}_summary.json"
+md_path = report_dir / f"{stage}_summary.md"
+
+json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+lines = [
+    f"# {stage.upper()} 实验记录",
+    "",
+    f"- 生成时间: {report['generated_at']}",
+    f"- Run ID: {run_id}",
+    f"- 阶段日志: {stage_log}",
+    f"- 配置文件: {config_path}",
+    "",
+    "## 训练配置",
+    f"- model_name: {report['config']['model_name']}",
+    f"- dataset_path: {report['config']['dataset_path']}",
+    f"- max_seq_length: {report['config']['max_seq_length']}",
+    f"- load_in_4bit: {report['config']['load_in_4bit']}",
+]
+if report['config']['beta'] is not None:
+    lines.append(f"- beta: {report['config']['beta']}")
+
+for k, v in (report["config"]["train"] or {}).items():
+    lines.append(f"- train.{k}: {v}")
+
+lines.extend([
+    "",
+    "## 训练日志摘要",
+    f"- last_progress: {log_stats.get('last_progress')}",
+    f"- train_runtime: {log_stats.get('train_runtime')}",
+    f"- train_steps_per_second: {log_stats.get('train_steps_per_second')}",
+    f"- train_samples_per_second: {log_stats.get('train_samples_per_second')}",
+    f"- train_loss: {log_stats.get('train_loss')}",
+])
+
+if result_summaries:
+    lines.append("")
+    lines.append("## 结果摘要")
+    for rf, rs in result_summaries.items():
+        lines.append(f"- {rf}:")
+        for k, v in rs.items():
+            lines.append(f"  - {k}: {v}")
+
+md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+print(f"📝 已生成阶段报告: {md_path}")
+print(f"📝 已生成阶段报告: {json_path}")
+PY
+}
+
+ensure_eval_result_pair() {
+    local tag="$1"
+    local gsm8k_run="$RESULTS_DIR/gsm8k_${tag}.json"
+    local bbh_run="$RESULTS_DIR/bbh_${tag}.json"
+    local gsm8k_latest="logs/gsm8k_${tag}.json"
+    local bbh_latest="logs/bbh_${tag}.json"
+
+    if [[ -f "$gsm8k_run" ]] && [[ -f "$bbh_run" ]]; then
+        return 0
+    fi
+
+    if [[ -f "$gsm8k_latest" ]] && [[ -f "$bbh_latest" ]]; then
+        mkdir -p "$RESULTS_DIR"
+        cp -f "$gsm8k_latest" "$gsm8k_run"
+        cp -f "$bbh_latest" "$bbh_run"
+        info "检测到历史评测结果，已复用到本次运行目录（tag=${tag}）"
+        return 0
+    fi
+
+    return 1
+}
+
 run_eval_pair() {
     local label="$1"
     local model_path="$2"
@@ -180,10 +379,10 @@ run_eval_pair() {
     local max_samples="$4"
     shift 4
     local extra_args=("$@")
-    local gsm8k_json="logs/gsm8k_${tag}.json"
-    local bbh_json="logs/bbh_${tag}.json"
+    local gsm8k_json="$RESULTS_DIR/gsm8k_${tag}.json"
+    local bbh_json="$RESULTS_DIR/bbh_${tag}.json"
 
-    if ! $FORCE && [[ -f "$gsm8k_json" ]] && [[ -f "$bbh_json" ]]; then
+    if ! $FORCE && ensure_eval_result_pair "$tag"; then
         warn "已检测到 ${label} 评测结果，自动跳过（使用 --force 可强制重跑）"
         return 0
     fi
@@ -196,7 +395,7 @@ run_eval_pair() {
         --seed 42 \
         --output      "$gsm8k_json" \
         "${extra_args[@]}" \
-        2>&1 | tee "logs/gsm8k_${tag}.log"
+        2>&1 | tee "$RUN_LOG_DIR/gsm8k_${tag}.log"
 
     info "BBH 评测（${label}） → ${model_path}"
     python eval/bbh_eval.py \
@@ -206,7 +405,11 @@ run_eval_pair() {
         --seed 42 \
         --output      "$bbh_json" \
         "${extra_args[@]}" \
-        2>&1 | tee "logs/bbh_${tag}.log"
+        2>&1 | tee "$RUN_LOG_DIR/bbh_${tag}.log"
+
+    mkdir -p logs
+    cp -f "$gsm8k_json" "logs/gsm8k_${tag}.json"
+    cp -f "$bbh_json" "logs/bbh_${tag}.json"
 
     log "${label} 评测完成"
 }
@@ -220,10 +423,10 @@ run_eval_pair_api() {
     local api_key="$6"
     local timeout="$7"
     local max_retries="$8"
-    local gsm8k_json="logs/gsm8k_${tag}.json"
-    local bbh_json="logs/bbh_${tag}.json"
+    local gsm8k_json="$RESULTS_DIR/gsm8k_${tag}.json"
+    local bbh_json="$RESULTS_DIR/bbh_${tag}.json"
 
-    if ! $FORCE && [[ -f "$gsm8k_json" ]] && [[ -f "$bbh_json" ]]; then
+    if ! $FORCE && ensure_eval_result_pair "$tag"; then
         warn "已检测到 ${label} 评测结果，自动跳过（使用 --force 可强制重跑）"
         return 0
     fi
@@ -239,7 +442,7 @@ run_eval_pair_api() {
         --timeout "$timeout" \
         --max_retries "$max_retries" \
         --output "$gsm8k_json" \
-        2>&1 | tee "logs/gsm8k_${tag}.log"
+        2>&1 | tee "$RUN_LOG_DIR/gsm8k_${tag}.log"
 
     info "BBH API 评测（${label}） → ${api_model}"
     python eval/bbh_api_eval.py \
@@ -252,7 +455,11 @@ run_eval_pair_api() {
         --timeout "$timeout" \
         --max_retries "$max_retries" \
         --output "$bbh_json" \
-        2>&1 | tee "logs/bbh_${tag}.log"
+        2>&1 | tee "$RUN_LOG_DIR/bbh_${tag}.log"
+
+    mkdir -p logs
+    cp -f "$gsm8k_json" "logs/gsm8k_${tag}.json"
+    cp -f "$bbh_json" "logs/bbh_${tag}.json"
 
     log "${label} API 评测完成"
 }
@@ -346,6 +553,9 @@ fi
 if $SKIP_BASELINE; then
     warn "已跳过 7B/14B 参考模型评测（--skip-baseline）"
 else
+    if ! $FORCE && ensure_eval_result_pair "qwen25_7b" && ensure_eval_result_pair "qwen25_14b"; then
+        warn "已检测到 7B/14B 参考模型评测结果，自动跳过（使用 --force 可强制重跑）"
+    else
     info "Step 0b/6 — 参考开源模型 API 评测（7B / 14B）"
     API_EVAL_CFG="config/benchmark_models.yaml"
     [[ -f "$API_EVAL_CFG" ]] || die "未找到 $API_EVAL_CFG，请先创建并填写 API 配置"
@@ -377,6 +587,7 @@ EOF
 
     run_eval_pair_api "7B 参考模型" "$API_MODEL_7B" "qwen25_7b" "$BASELINE_N" "$API_BASE_URL" "$API_KEY" "$API_TIMEOUT" "$API_MAX_RETRIES"
     run_eval_pair_api "14B 参考模型" "$API_MODEL_14B" "qwen25_14b" "$BASELINE_N" "$API_BASE_URL" "$API_KEY" "$API_TIMEOUT" "$API_MAX_RETRIES"
+    fi
 fi
 
 # =============================================================================
@@ -389,7 +600,7 @@ else
     python scripts/prepare_data.py \
         --sft_n "$SFT_N" \
         --dpo_n "$DPO_N" \
-        2>&1 | tee logs/prepare_data.log
+        2>&1 | tee "$RUN_LOG_DIR/prepare_data.log"
     log "数据准备完成"
 fi
 
@@ -410,7 +621,7 @@ else
             --sft_per_source "$SFT_HQ_PER_SOURCE" \
             --dpo_n 15000 \
             --seed 42 \
-            2>&1 | tee logs/hq_filter.log
+            2>&1 | tee "$RUN_LOG_DIR/hq_filter.log"
     else
         warn "检测到高质量子集缓存，跳过构建（使用 --force 可重建）"
     fi
@@ -448,8 +659,9 @@ else
     info "Step 2/6 — SFT 监督微调"
     python scripts/sft_train.py \
         --config config/sft_config.yaml \
-        2>&1 | tee logs/sft_train.log
+        2>&1 | tee "$RUN_LOG_DIR/sft_train.log"
     log "SFT 训练完成，产物保存至 outputs/sft/"
+    write_stage_report "sft" "config/sft_config.yaml" "$RUN_LOG_DIR/sft_train.log"
 fi
 
 if $ONLY_SFT; then
@@ -466,8 +678,9 @@ else
     info "Step 3/6 — DPO 偏好优化"
     python scripts/dpo_train.py \
         --config config/dpo_config.yaml \
-        2>&1 | tee logs/dpo_train.log
+        2>&1 | tee "$RUN_LOG_DIR/dpo_train.log"
     log "DPO 训练完成，产物保存至 outputs/dpo/"
+    write_stage_report "dpo" "config/dpo_config.yaml" "$RUN_LOG_DIR/dpo_train.log"
 fi
 
 # =============================================================================
@@ -477,8 +690,10 @@ if $SKIP_EVAL; then
     warn "已跳过 SFT 单独评测（--skip-eval）"
 else
     EVAL_N=50
+    SFT_GSM8K_JSON="$RESULTS_DIR/gsm8k_sft.json"
+    SFT_BBH_JSON="$RESULTS_DIR/bbh_sft.json"
 
-    if ! $FORCE && [[ -f "logs/gsm8k_sft.json" ]] && [[ -f "logs/bbh_sft.json" ]]; then
+    if ! $FORCE && ensure_eval_result_pair "sft"; then
         warn "已检测到 SFT 评测结果，自动跳过（使用 --force 可强制重跑）"
     else
         info "Step 4a — 合并 SFT LoRA adapter → outputs/sft_merged"
@@ -487,24 +702,29 @@ else
             --adapter_path outputs/sft \
             --output_path  outputs/sft_merged \
             --config       config/sft_config.yaml \
-            2>&1 | tee logs/merge_sft.log
+            2>&1 | tee "$RUN_LOG_DIR/merge_sft.log"
         log "SFT 权重合并完成 → outputs/sft_merged/"
 
         info "Step 4a — GSM8K 评测（SFT only，前 $EVAL_N 条）"
         python eval/gsm8k_eval.py \
             --model_path  outputs/sft_merged \
             --max_samples "$EVAL_N" \
-            --output      logs/gsm8k_sft.json \
-            2>&1 | tee logs/gsm8k_sft_eval.log
+            --output      "$SFT_GSM8K_JSON" \
+            2>&1 | tee "$RUN_LOG_DIR/gsm8k_sft_eval.log"
 
         info "Step 4a — BBH 评测（SFT only，前 $EVAL_N 条）"
         python eval/bbh_eval.py \
             --model_path  outputs/sft_merged \
             --max_samples "$EVAL_N" \
-            --output      logs/bbh_sft.json \
-            2>&1 | tee logs/bbh_sft_eval.log
+            --output      "$SFT_BBH_JSON" \
+            2>&1 | tee "$RUN_LOG_DIR/bbh_sft_eval.log"
+
+        mkdir -p logs
+        cp -f "$SFT_GSM8K_JSON" "logs/gsm8k_sft.json"
+        cp -f "$SFT_BBH_JSON" "logs/bbh_sft.json"
 
         log "SFT 单独评测完成"
+        write_stage_report "sft_eval" "config/sft_config.yaml" "$RUN_LOG_DIR/gsm8k_sft_eval.log" "$SFT_GSM8K_JSON" "$SFT_BBH_JSON"
     fi
 fi
 
@@ -523,7 +743,7 @@ else
     python scripts/merge_lora.py \
         --adapter_path outputs/dpo \
         --output_path  outputs/merged \
-        2>&1 | tee logs/merge_lora.log
+        2>&1 | tee "$RUN_LOG_DIR/merge_lora.log"
     log "最终权重合并完成 → outputs/merged/"
 fi
 
@@ -534,39 +754,44 @@ if $SKIP_EVAL; then
     warn "已跳过最终评测（--skip-eval）"
 else
     EVAL_N=50
+    FINAL_GSM8K_JSON="$RESULTS_DIR/gsm8k_result.json"
+    FINAL_BBH_JSON="$RESULTS_DIR/bbh_result.json"
 
-    info "Step 5 — GSM8K 评测（SFT+DPO，前 $EVAL_N 条）"
-    if ! $FORCE && [[ -f "logs/gsm8k_result.json" ]]; then
-        warn "logs/gsm8k_result.json 已存在，跳过（使用 --force 可强制重跑）"
+    info "Step 5 — GSM8K/BBH 评测（SFT+DPO，前 $EVAL_N 条）"
+    if ! $FORCE && ensure_eval_result_pair "result"; then
+        warn "已检测到 SFT+DPO 最终评测结果，自动跳过（使用 --force 可强制重跑）"
     else
         python eval/gsm8k_eval.py \
             --model_path  outputs/merged \
             --max_samples "$EVAL_N" \
-            --output      logs/gsm8k_result.json \
-            2>&1 | tee logs/gsm8k_eval.log
-    fi
+            --output      "$FINAL_GSM8K_JSON" \
+            2>&1 | tee "$RUN_LOG_DIR/gsm8k_eval.log"
 
-    info "Step 5 — BBH 评测（SFT+DPO，前 $EVAL_N 条）"
-    if ! $FORCE && [[ -f "logs/bbh_result.json" ]]; then
-        warn "logs/bbh_result.json 已存在，跳过（使用 --force 可强制重跑）"
-    else
+        mkdir -p logs
+        cp -f "$FINAL_GSM8K_JSON" "logs/gsm8k_result.json"
+
         python eval/bbh_eval.py \
             --model_path  outputs/merged \
             --max_samples "$EVAL_N" \
-            --output      logs/bbh_result.json \
-            2>&1 | tee logs/bbh_eval.log
+            --output      "$FINAL_BBH_JSON" \
+            2>&1 | tee "$RUN_LOG_DIR/bbh_eval.log"
+
+        mkdir -p logs
+        cp -f "$FINAL_BBH_JSON" "logs/bbh_result.json"
     fi
 
     # ── 对比表 ──────────────────────────────────────────────────────────────
     python eval/compare_table.py
+    write_stage_report "final_eval" "config/dpo_config.yaml" "$RUN_LOG_DIR/gsm8k_eval.log" "$FINAL_GSM8K_JSON" "$FINAL_BBH_JSON"
 fi
 
 if [[ -f "$GPU_MON_LOG" ]]; then
-python - <<'EOF'
+python - "$GPU_MON_LOG" <<'PY'
 import csv
+import sys
 from statistics import mean
 
-path = "logs/gpu_usage.csv"
+path = sys.argv[1]
 rows = []
 with open(path, "r", encoding="utf-8") as f:
     reader = csv.reader(f)
@@ -605,9 +830,9 @@ else:
     print(f"峰值显存占用         : {max_mem_used:.1f} MiB / {mem_total:.0f} MiB")
     print(f"平均功耗             : {avg_power:.1f} W")
     print(f"平均温度             : {avg_temp:.1f} °C")
-    print("GPU 监控日志          : logs/gpu_usage.csv")
+    print(f"GPU 监控日志          : {path}")
     print("=================================================\n")
-EOF
+PY
 fi
 
 # =============================================================================
@@ -620,4 +845,7 @@ echo "  SFT merged       : outputs/sft_merged/"
 echo "  DPO adapter      : outputs/dpo/"
 echo "  SFT+DPO merged   : outputs/merged/"
 echo "  评测日志         : logs/"
+echo "  本次评测结果     : $RESULTS_DIR/"
+echo "  本次运行日志     : $RUN_LOG_DIR/"
+echo "  最新运行快捷入口 : logs/latest/"
 echo ""
