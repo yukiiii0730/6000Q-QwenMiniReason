@@ -4,18 +4,27 @@
 
 ---
 
-## 实验结果（实测）
+## 实验结果
 
-> 评测数据：GSM8K / BBH 各 50 条（固定 seed 的分层抽样）
+### 训练方法对比（Step 1）
 
-| 模型阶段 | GSM8K Acc | BBH Acc |
-|---|---|---|
-| Qwen2.5-1.5B-Instruct（Baseline） | **32.0%** | **82.0%** |
-| + SFT only | — | — |
-| + **SFT + DPO**（完整两阶段） | **46.0%** | **84.0%** |
-| Δ vs Baseline | **+14.0pp** | **+2.0pp** |
+| 方法 | GSM8K Acc | BBH Acc | 备注 |
+|---|---|---|---|
+| Baseline（原始模型） | — | — | Qwen2.5-1.5B-Instruct |
+| LoRA (SFT+DPO) | — | — | r=16, alpha=32 |
+| DoRA (SFT+DPO) | — | — | 同上，use_dora=True |
+| 全量微调 (SFT only) | — | — | 不用 LoRA，直接微调 |
 
-> 完整对比表由评测 notebook 自动生成，结果存入 `eval/` 目录。
+### 数据优化后（Step 2-5）
+
+| 优化项 | GSM8K Acc | BBH Acc | 备注 |
+|---|---|---|---|
+| + 数据清洗 (Step 2) | — | — | 过滤低质量 DPO 数据 |
+| + 分阶段 SFT (Step 3) | — | — | NuminaMath → Magpie |
+| + Long-CoT (Step 4) | — | — | 大模型合成推理链 |
+| + Iterative DPO (Step 5) | — | — | 多轮迭代 |
+
+> 评测完成后填入，结果 JSON 保存在 `eval/` 目录。
 
 ---
 
