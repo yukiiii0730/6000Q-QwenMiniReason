@@ -1,6 +1,6 @@
 # Qwen-Reasoning-Enhance
 
-基于 **Unsloth + TRL** 对 Qwen2.5-1.5B-Instruct 进行两阶段微调（SFT → DPO），提升模型在数学推理（GSM8K）及综合推理（BBH）任务上的能力。
+基于 **Unsloth + TRL** 对 Qwen2.5-1.5B-Instruct 进行多阶段微调（SFT → DPO），提升模型在数学推理（GSM8K）及综合推理（BBH）任务上的能力。
 
 ---
 
@@ -15,7 +15,21 @@
 | + **SFT + DPO**（完整两阶段） | **46.0%** | **84.0%** |
 | Δ vs Baseline | **+14.0pp** | **+2.0pp** |
 
-> 完整四行对比表由 `run_train.sh` 自动打印，结果存入 `logs/compare_metrics.json`。
+> 完整对比表由评测 notebook 自动生成，结果存入 `eval/` 目录。
+
+---
+
+## 优化路线图
+
+按 TA 建议的优先级执行：
+
+| Step | 内容 | 平台 | 脚本/Notebook |
+|---|---|---|---|
+| **1** | LoRA vs DoRA vs 全量微调对比 | Colab A100 | `colab_dora_experiment.ipynb` / `colab_full_finetune.ipynb` |
+| **2** | DPO 数据质量清洗 + Teacher-Guided 构造 | Colab / 本地 | `dpo_quality_filter.py` / `teacher_guided_dpo.py` |
+| **3** | SFT 分阶段训练（NuminaMath → Magpie） | HPC H20 | `staged_sft.py` |
+| **4** | Long-CoT 数据合成 | 不需要 GPU | `synthesize_long_cot.py` |
+| **5** | Iterative DPO（多轮迭代） | HPC H20 | `iterative_dpo.py` |
 
 ---
 
@@ -23,31 +37,41 @@
 
 ```
 Qwen-Reasoning-Enhance/
-├── run_train.sh              # 🚀 一键全流程脚本（推荐入口）
+├── run_train.sh                  # 🚀 一键全流程脚本
 ├── config/
-│   ├── sft_config.yaml       # SFT 超参数（LoRA r=16, alpha=32 等）
-│   ├── dpo_config.yaml       # DPO 超参数
-│   └── benchmark_models.yaml # 7B/14B 对照评测配置（本地+API）
+│   ├── sft_config.yaml           # SFT 超参数（LoRA/DoRA r=16, alpha=32 等）
+│   ├── dpo_config.yaml           # DPO 超参数
+│   └── benchmark_models.yaml     # 7B/14B 对照评测配置
 ├── scripts/
-│   ├── prepare_data.py       # 数据集下载与预处理
-│   ├── sft_train.py          # 第一阶段：SFT（监督微调）
-│   ├── dpo_train.py          # 第二阶段：DPO（直接偏好优化）
-│   └── merge_lora.py         # LoRA 权重合并（transformers + peft）
+│   ├── sft_train.py              # SFT 训练（LoRA/DoRA，支持 use_dora 切换）
+│   ├── dpo_train.py              # DPO 偏好优化
+│   ├── full_finetune.py          # 全量微调（不用 LoRA，直接训练全部参数）
+│   ├── staged_sft.py             # Step 3: SFT 分阶段训练
+│   ├── iterative_dpo.py          # Step 5: Iterative DPO（推理→收集错误→DPO）
+│   ├── dpo_quality_filter.py     # Step 2a: DPO 数据质量清洗（规则+API）
+│   ├── teacher_guided_dpo.py     # Step 2b: Teacher-Guided DPO 数据构造
+│   ├── synthesize_long_cot.py    # Step 4: Long-CoT 数据合成
+│   ├── merge_lora.py             # LoRA/DoRA 权重合并
+│   ├── prepare_data.py           # 数据集下载与预处理
+│   ├── build_hq_subsets.py       # 高质量数据子集筛选
+│   ├── backfill_badcases.py      # 回填 badcase
+│   └── write_stage_report.py     # 阶段报告生成
 ├── eval/
-│   ├── gsm8k_eval.py         # GSM8K 自动评测
-│   ├── bbh_eval.py           # BBH 自动评测（含 CoT 答案提取）
-│   ├── gsm8k_api_eval.py     # GSM8K API 评测（OpenAI-compatible）
-│   ├── bbh_api_eval.py       # BBH API 评测（OpenAI-compatible）
-│   ├── benchmark_open_models.py # 本地开源模型批量评测
-│   ├── compare_table.py      # 统一对比表输出
-│   └── visualize.py          # 雷达图 & Loss 曲线可视化
+│   ├── gsm8k_eval.py             # GSM8K 自动评测
+│   ├── bbh_eval.py               # BBH 自动评测
+│   ├── gsm8k_api_eval.py         # GSM8K API 评测
+│   ├── bbh_api_eval.py           # BBH API 评测
+│   ├── benchmark_open_models.py  # 批量评测开源模型
+│   ├── compare_table.py          # 统一对比表
+│   └── visualize.py              # 雷达图 & Loss 曲线
 ├── data/
-│   ├── raw/                  # 原始数据占位目录
-│   ├── processed/            # 预处理后的训练数据（quick 模式本地 JSON）
-│   └── process.py            # 格式转换脚本（→ Alpaca / DPO 格式）
+│   ├── processed/                # 预处理后的训练数据
+│   └── process.py                # 格式转换脚本
 ├── notebooks/
-│   ├── colab_train.ipynb     # Colab 一键训练示例
-│   └── inference_test.ipynb  # 零样本 vs 微调模型推理对比
+│   ├── colab_train.ipynb         # Colab 基线训练（LoRA SFT→DPO）
+│   ├── colab_dora_experiment.ipynb  # Step 1: DoRA 对比实验
+│   ├── colab_full_finetune.ipynb    # Step 1: 全量微调对比实验
+│   └── inference_test.ipynb      # 推理对比
 └── requirements.txt
 ```
 
@@ -156,55 +180,90 @@ bash run_train.sh --sft_n 20000 --dpo_n 20000  # 自定义采样量
 
 ## 手动运行各步骤
 
-若需精细控制，可手动运行各脚本：
-
-### 数据准备
+### Step 1：训练方法对比（Colab A100）
 
 ```bash
-python scripts/prepare_data.py --sft_n 50000 --dpo_n 50000
-```
-
-### SFT 训练
-
-```bash
+# LoRA 基线（colab_train.ipynb）
 python scripts/sft_train.py --config config/sft_config.yaml
+python scripts/dpo_train.py --config config/dpo_config.yaml
+
+# DoRA 对比（colab_dora_experiment.ipynb）
+# 在 config 中设置 lora.use_dora: true，其他不变
+
+# 全量微调对比（colab_full_finetune.ipynb）
+python scripts/full_finetune.py --config config/sft_config.yaml
 ```
 
-关键超参数（`config/sft_config.yaml`）：
-
-| 参数 | 值 |
-|---|---|
-| LoRA r / alpha | 16 / 32 |
-| Learning rate | 2e-4 |
-| Batch size | 2 × 8 grad_accum |
-| Max steps（完整）| ~1000（quick: 50）|
-| Optimizer | paged_adamw_8bit |
-| Quantization | 4-bit NF4 |
-
-### DPO 训练
+### Step 2：数据质量清洗（Colab / 本地，不需要 GPU）
 
 ```bash
-python scripts/dpo_train.py --config config/dpo_config.yaml
+# 2a: 规则过滤（快速）
+python scripts/dpo_quality_filter.py \
+    --input data/processed/dpo_train.json \
+    --output data/processed/dpo_filtered.json \
+    --rule_only
+
+# 2a: API 过滤（更精准）
+python scripts/dpo_quality_filter.py \
+    --input data/processed/dpo_train.json \
+    --output data/processed/dpo_filtered.json \
+    --api_base_url https://api.openai.com/v1 \
+    --api_key sk-xxx --model gpt-4o-mini
+
+# 2b: Teacher-Guided DPO 构造
+python scripts/teacher_guided_dpo.py \
+    --questions data/processed/sft_train.json \
+    --student_model outputs/sft \
+    --teacher_api_url https://api.openai.com/v1 \
+    --teacher_api_key sk-xxx --teacher_model gpt-4o-mini \
+    --output data/processed/dpo_teacher_guided.json
 ```
 
-| 参数 | 值 |
-|---|---|
-| β (beta) | 0.1 |
-| Learning rate | 1e-5 |
-| Max steps（完整）| ~800（quick: 30）|
-| 基座 | outputs/sft（SFT 产物）|
+### Step 3：SFT 分阶段训练（HPC H20）
+
+```bash
+# 两阶段全跑
+python scripts/staged_sft.py --config config/sft_config.yaml
+
+# 只跑阶段 1（NuminaMath 基础逻辑对齐）
+python scripts/staged_sft.py --config config/sft_config.yaml --stage 1
+
+# 从阶段 2 开始（Magpie 通用推理增强）
+python scripts/staged_sft.py --config config/sft_config.yaml --stage 2
+```
+
+### Step 4：Long-CoT 数据合成（不需要 GPU，纯 API）
+
+```bash
+python scripts/synthesize_long_cot.py \
+    --input data/processed/sft_train.json \
+    --output data/processed/sft_long_cot.json \
+    --api_base_url https://api.openai.com/v1 \
+    --api_key sk-xxx --model qwen2.5-72b-instruct \
+    --max_samples 3000
+```
+
+### Step 5：Iterative DPO（HPC H20）
+
+```bash
+# 第 1 轮：用 SFT 模型推理 → 收集错误 → DPO
+python scripts/iterative_dpo.py \
+    --sft_model outputs/sft \
+    --eval_data data/processed/sft_train.json \
+    --output_dir outputs/iterative_dpo_r1 \
+    --round 1
+
+# 第 2 轮：用第 1 轮模型继续迭代
+python scripts/iterative_dpo.py \
+    --sft_model outputs/iterative_dpo_r1 \
+    --eval_data data/processed/sft_train.json \
+    --output_dir outputs/iterative_dpo_r2 \
+    --round 2
+```
 
 ### 合并 LoRA 权重
 
-`merge_lora.py` 使用 `transformers + peft` 直接合并（不依赖 Unsloth fp16 权重下载），自动读取 `adapter_config.json` 中的 base model 路径：
-
 ```bash
-# 合并 SFT adapter
-python scripts/merge_lora.py \
-    --adapter_path outputs/sft \
-    --output_path  outputs/sft_merged
-
-# 合并 SFT+DPO（完整两阶段）
 python scripts/merge_lora.py \
     --adapter_path outputs/dpo \
     --output_path  outputs/merged
@@ -270,38 +329,17 @@ python eval/visualize.py \
 
 ## Google Colab 使用指南
 
-**不需要提前下载数据集**，Colab 可直接通过 `datasets` 库从 HuggingFace Hub 在线拉取。
+项目提供了多个 Colab Notebook，按需选用：
 
-### 推荐流程
+| Notebook | 用途 | GPU |
+|---|---|---|
+| `colab_train.ipynb` | LoRA 基线训练（SFT→DPO） | A100 / T4 |
+| `colab_dora_experiment.ipynb` | DoRA vs LoRA 对比 | A100 |
+| `colab_full_finetune.ipynb` | 全量微调对比 | A100 |
 
-```python
-# 1. 安装依赖（每次新 Session 需要）
-!pip install unsloth trl peft bitsandbytes transformers datasets accelerate pyyaml safetensors -q
+**使用流程**：打开 Notebook → 选择 A100 GPU → 按顺序运行 Cell。
 
-# 2. 克隆本项目
-!git clone https://github.com/your-repo/Qwen-Reasoning-Enhance.git
-%cd Qwen-Reasoning-Enhance
-
-# 3. 设置 HuggingFace Token（使用 Colab Secrets，避免硬编码）
-import os
-from google.colab import userdata
-os.environ["HF_TOKEN"] = userdata.get("HF_TOKEN")
-
-# 4. 运行快速测试
-!bash run_train.sh --quick
-```
-
-> **Colab 免费版**（T4，15GB）可正常运行 Qwen2.5-1.5B-Instruct 的 4-bit 量化训练（约 6-8 GB 显存）。
-> **Colab Pro/Pro+**（A100）速度提升约 5-8×。
-
-挂载 Google Drive 持久化保存检查点：
-
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-# 在 config yaml 中将 output_dir 改为 Drive 路径：
-# output_dir: "/content/drive/MyDrive/Qwen-Reasoning/outputs/sft"
-```
+> 断线重连后从 Cell 1（挂载 Drive）重新开始，数据缓存和 checkpoint 都在 Drive 上，不会丢失。
 
 ---
 

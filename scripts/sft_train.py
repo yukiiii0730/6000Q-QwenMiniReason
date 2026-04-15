@@ -181,6 +181,7 @@ def main():
         lora_alpha=cfg["lora"]["alpha"],
         lora_dropout=cfg["lora"]["dropout"],
         target_modules=cfg["lora"]["target_modules"],
+        use_dora=cfg["lora"].get("use_dora", False),
         use_gradient_checkpointing="unsloth",
         random_state=cfg["seed"],
     )
