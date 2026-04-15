@@ -4,7 +4,16 @@ import json
 import yaml
 import torch
 import os
+import sys
+import types
 from pathlib import Path
+
+# ── 修复 TRL 导入依赖缺失问题（预防性）──────────────────────────
+for _mod_name in ("llm_blender", "llm_blender.blender", "llm_blender.blender.blender",
+                   "llm_blender.blender.blender_utils", "mergekit", "mergekit.config"):
+    if _mod_name not in sys.modules:
+        sys.modules[_mod_name] = types.ModuleType(_mod_name)
+
 from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
@@ -145,7 +154,6 @@ def main():
     optimize_torch_runtime()
 
     # 优先使用环境变量 HF_TOKEN（来自 .env）；其次读取 config
-    import os
     hf_token = os.environ.get("HF_TOKEN") or cfg.get("hf_token", "").strip()
     if hf_token:
         os.environ["HF_TOKEN"] = hf_token

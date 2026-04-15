@@ -4,7 +4,19 @@ import json
 import yaml
 import torch
 import os
+import sys
+import types
 from pathlib import Path
+
+# ── 修复 TRL 导入依赖缺失问题 ─────────────────────────────────
+# 新版 TRL 无条件导入 llm_blender 和 mergekit，但 DPO 训练不需要它们。
+# 且 llm_blender 与新版 transformers 不兼容（TRANSFORMERS_CACHE 已移除）。
+# 注入空模块来绕过导入错误。
+for _mod_name in ("llm_blender", "llm_blender.blender", "llm_blender.blender.blender",
+                   "llm_blender.blender.blender_utils", "mergekit", "mergekit.config"):
+    if _mod_name not in sys.modules:
+        sys.modules[_mod_name] = types.ModuleType(_mod_name)
+
 from unsloth import FastLanguageModel          # ← 必须在 trl/transformers 之前导入
 from datasets import load_dataset
 from trl import DPOTrainer, DPOConfig
