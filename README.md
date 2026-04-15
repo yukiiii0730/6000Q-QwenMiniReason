@@ -352,6 +352,126 @@ python eval/visualize.py \
 
 ---
 
+## HPC 平台使用指南（A800 / H20）
+
+相比 Colab，HPC 平台环境可控、无预装包污染，推荐用于正式训练。
+
+### 1. 环境搭建（仅首次）
+
+```bash
+# 加载 CUDA（根据集群实际版本选择）
+module load cuda/12.4
+
+# 创建 conda 隔离环境
+conda create -n qwen-reason python=3.12 -y
+conda activate qwen-reason
+
+# 克隆项目
+git clone -b Nancy https://github.com/yukiiii0730/6000Q-QwenMiniReason.git
+cd 6000Q-QwenMiniReason
+
+# 安装依赖（干净环境，不会有 Colab 的版本冲突问题）
+pip install -r requirements.txt
+```
+
+### 2. 配置
+
+```bash
+# 设置 HuggingFace Token（二选一）
+# 方式 A：环境变量
+export HF_TOKEN=hf_YOUR_TOKEN_HERE
+
+# 方式 B：写入 .env 文件
+echo "HF_TOKEN=hf_YOUR_TOKEN_HERE" > .env
+```
+
+### 3. 一键训练
+
+```bash
+# 激活环境
+conda activate qwen-reason
+
+# 快速测试（500 条数据，约 10 分钟）
+bash run_train.sh --quick
+
+# 正式训练（各 50k 条，完整 SFT + DPO + 评测）
+bash run_train.sh
+```
+
+### 4. SLURM 作业提交（如集群使用 SLURM 调度）
+
+创建 `submit_train.slurm`：
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=qwen-reason
+#SBATCH --partition=gpu          # 根据集群实际分区名修改
+#SBATCH --gres=gpu:1             # 申请 1 张 GPU
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=24:00:00
+#SBATCH --output=logs/slurm_%j.log
+
+module load cuda/12.4
+conda activate qwen-reason
+cd $SLURM_SUBMIT_DIR
+
+bash run_train.sh
+```
+
+提交作业：
+
+```bash
+sbatch submit_train.slurm
+```
+
+### 5. DoRA 对比实验（HPC 版）
+
+在 HPC 上无需使用 Notebook，直接用命令行：
+
+```bash
+conda activate qwen-reason
+cd 6000Q-QwenMiniReason
+
+# ── Step 1: 准备数据 ──
+python scripts/prepare_data.py --sft_n 50000 --dpo_n 50000
+
+# ── Step 2: LoRA SFT + DPO（基线） ──
+python scripts/sft_train.py --config config/sft_config.yaml
+python scripts/dpo_train.py --config config/dpo_config.yaml
+python scripts/merge_lora.py --adapter_path outputs/dpo --output_path outputs/merged
+python eval/gsm8k_eval.py --model_path outputs/merged --max_samples 1319 --output eval/gsm8k_result.json
+
+# ── Step 3: DoRA SFT + DPO（对比组） ──
+# 修改配置启用 DoRA 并隔离输出目录
+python -c "
+import yaml
+for cfg_path, out_dir in [('config/sft_config.yaml', 'outputs/sft_dora'), ('config/dpo_config.yaml', 'outputs/dpo_dora')]:
+    with open(cfg_path) as f: cfg = yaml.safe_load(f)
+    cfg['lora']['use_dora'] = True
+    cfg['output_dir'] = out_dir
+    if 'base_adapter_path' in cfg: cfg['base_adapter_path'] = 'outputs/sft_dora'
+    with open(cfg_path, 'w') as f: yaml.dump(cfg, f, allow_unicode=True)
+print('✅ DoRA 配置已更新')
+"
+python scripts/sft_train.py --config config/sft_config.yaml
+python scripts/dpo_train.py --config config/dpo_config.yaml
+python scripts/merge_lora.py --adapter_path outputs/dpo_dora --output_path outputs/merged_dora
+python eval/gsm8k_eval.py --model_path outputs/merged_dora --max_samples 1319 --output eval/gsm8k_dora_result.json
+```
+
+### HPC vs Colab 对比
+
+| | Colab A100 | HPC A800 |
+|---|---|---|
+| 环境隔离 | 无（全局 pip，预装包冲突） | conda/venv 完全隔离 |
+| CUDA 版本 | Google 随时升级，不可控 | `module load` 自由选择 |
+| 依赖可复现 | 每次 session 可能不同 | `pip freeze` 锁定，永远一致 |
+| GPU 时长 | 有限额，会被断连 | 按队列分配，稳定运行 |
+| 持久化 | session 断了需重装 | 环境和数据持久保存 |
+
+---
+
 ## 注意事项
 
 - `unsloth` 仅支持 Linux / WSL2 + CUDA，macOS 仅用于代码开发，训练需在 GPU 机器上运行。
