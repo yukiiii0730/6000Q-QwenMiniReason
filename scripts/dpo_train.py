@@ -8,6 +8,7 @@ from pathlib import Path
 from unsloth import FastLanguageModel          # ← 必须在 trl/transformers 之前导入
 from datasets import load_dataset
 from trl import DPOTrainer, DPOConfig
+from transformers import EarlyStoppingCallback
 
 
 def load_config(path: str):
@@ -224,6 +225,11 @@ def main():
 
     ds = load_dpo_dataset(cfg)
 
+    # 切 5% 作为验证集，用于监控 DPO 训练是否过拟合
+    split = ds.train_test_split(test_size=0.05, seed=cfg["seed"])
+    train_ds, eval_ds = split["train"], split["test"]
+    print(f"📊 训练集: {len(train_ds)} 条 | 验证集: {len(eval_ds)} 条")
+
     # T4 / Turing GPU 不支持 bf16，强制降级为 fp16
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
@@ -241,7 +247,12 @@ def main():
         learning_rate=float(cfg["train"]["learning_rate"]),
         logging_steps=cfg["train"]["logging_steps"],
         save_steps=cfg["train"]["save_steps"],
+        save_total_limit=3,                    # 只保留最近 3 个 checkpoint，防止磁盘撑爆
+        eval_strategy="steps",
         eval_steps=cfg["train"]["eval_steps"],
+        load_best_model_at_end=True,           # 训练结束后自动加载验证 loss 最低的 checkpoint
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
         weight_decay=float(cfg["train"]["weight_decay"]),
         lr_scheduler_type=cfg["train"]["lr_scheduler_type"],
         optim=cfg["train"]["optim"],
@@ -260,8 +271,10 @@ def main():
         model=model,
         ref_model=None,
         args=train_args,
-        train_dataset=ds,
+        train_dataset=train_ds,
+        eval_dataset=eval_ds,
         processing_class=tokenizer,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
     )
 
     resume_ckpt = find_latest_checkpoint(cfg["output_dir"])

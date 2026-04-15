@@ -44,27 +44,27 @@
 
 ## 执行步骤（按 TA 建议的优先级）
 
-### Step 1：DoRA 对比实验（最快出结果）
+### Step 1：DoRA 对比实验（最快出结果）colab跑就行
 - [ ] 将 LoRA 替换为 DoRA，其他参数不变，直接跑一轮
 - [ ] 对比 LoRA vs DoRA 的 GSM8K / BBH 结果
 - [ ] 考虑是否尝试全量微调作为第三组对比
 - [ ] 确定最终训练基准（LoRA / DoRA / 全量微调）
 
-### Step 2：数据质量清洗与提升
+### Step 2：数据质量清洗与提升 colab
 - [ ] 写脚本让大模型检查现有 DPO 数据质量，过滤低质量样本
 - [ ] 用 Teacher-Guided 方法重新构造 DPO 数据（SFT 模型错误输出 → 负样本，大模型正确输出 → 正样本）
 - [ ] 用大模型合成更丰富的补充数据
 
-### Step 3：SFT 分阶段训练
+### Step 3：SFT 分阶段训练 hpc h20
 - [ ] 第一阶段：仅用 NuminaMath 训练（基础逻辑对齐）
 - [ ] 第二阶段：引入 Magpie-Reasoning（通用推理增强）
 - [ ] 对比分阶段 vs 直接混合的效果
 
-### Step 4：Long-CoT 数据合成
+### Step 4：Long-CoT 数据合成 不需要GPU
 - [ ] 用 Qwen2.5-72B 对 NuminaMath 难题生成详细推理链
 - [ ] 将合成的 Long-CoT 数据加入 SFT 训练集
 
-### Step 5：Iterative DPO
+### Step 5：Iterative DPO hpc h20
 - [ ] 用 SFT 模型在训练集上推理，收集错误输出作为负样本
 - [ ] 构造高质量 DPO pairs，重跑 DPO
 - [ ] 可迭代多轮，逐步提升

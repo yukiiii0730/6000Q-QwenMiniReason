@@ -8,9 +8,8 @@ from pathlib import Path
 from unsloth import FastLanguageModel          # ← 必须在 trl 之前导入
 from datasets import load_dataset, concatenate_datasets
 from trl import SFTTrainer, SFTConfig
+from transformers import EarlyStoppingCallback
 
-
-PROMPT_TEMPLATE = """### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}"""
 
 DEFAULT_INSTRUCTION = "请先进行清晰的逐步推理，再给出最终答案。"
 
@@ -47,10 +46,17 @@ def normalize_example(example: dict) -> dict:
     }
 
 
-def formatting_func(example):
+def formatting_func(example, tokenizer):
+    """使用 Qwen 原生 chat template 格式化，推理时效果更一致。"""
     normed = normalize_example(example)
-    text = PROMPT_TEMPLATE.format(**normed)
-    return {"text": text}
+    query = normed["instruction"]
+    if normed["input"]:
+        query = f"{normed['instruction']}\n\n{normed['input']}"
+    messages = [
+        {"role": "user", "content": query},
+        {"role": "assistant", "content": normed["output"]}
+    ]
+    return {"text": tokenizer.apply_chat_template(messages, tokenize=False)}
 
 
 def load_sft_datasets(cfg: dict):
@@ -174,9 +180,14 @@ def main():
     raw_ds = load_sft_datasets(cfg)
     eos = tokenizer.eos_token
     ds = raw_ds.map(
-        lambda ex: {"text": formatting_func(ex)["text"] + eos},
+        lambda ex: {"text": formatting_func(ex, tokenizer)["text"] + eos},
         remove_columns=raw_ds.column_names
     )
+
+    # 切 5% 作为验证集，用于监控过拟合
+    split = ds.train_test_split(test_size=0.05, seed=cfg["seed"])
+    train_ds, eval_ds = split["train"], split["test"]
+    print(f"📊 训练集: {len(train_ds)} 条 | 验证集: {len(eval_ds)} 条")
 
     # T4 / Turing GPU 不支持 bf16，强制降级为 fp16
     if torch.cuda.is_available():
@@ -195,6 +206,12 @@ def main():
         learning_rate=float(cfg["train"]["learning_rate"]),
         logging_steps=cfg["train"]["logging_steps"],
         save_steps=cfg["train"]["save_steps"],
+        save_total_limit=3,                    # 只保留最近 3 个 checkpoint，防止磁盘撑爆
+        eval_strategy="steps",
+        eval_steps=int(cfg["train"].get("eval_steps", 100)),
+        load_best_model_at_end=True,           # 训练结束后自动加载验证 loss 最低的 checkpoint
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
         weight_decay=float(cfg["train"]["weight_decay"]),
         lr_scheduler_type=cfg["train"]["lr_scheduler_type"],
         optim=cfg["train"]["optim"],
@@ -215,8 +232,10 @@ def main():
     trainer = SFTTrainer(
         model=model,
         processing_class=tokenizer,
-        train_dataset=ds,
+        train_dataset=train_ds,
+        eval_dataset=eval_ds,
         args=train_args,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=5)],
     )
 
     resume_ckpt = find_latest_checkpoint(cfg["output_dir"])
