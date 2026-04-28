@@ -1,0 +1,153 @@
+{
+  "mode": "api",
+  "model": "qwen2.5-7b-instruct",
+  "n_subsets": 27,
+  "n_total": 125,
+  "macro_avg_accuracy": 0.384,
+  "micro_avg_accuracy": 0.384,
+  "micro_95ci": [
+    0.3034,
+    0.4715
+  ],
+  "per_task": {
+    "boolean_expressions": {
+      "accuracy": 0.8,
+      "total": 5,
+      "correct": 4
+    },
+    "causal_judgement": {
+      "accuracy": 1.0,
+      "total": 5,
+      "correct": 5
+    },
+    "date_understanding": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "disambiguation_qa": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "dyck_languages": {
+      "accuracy": 0.8,
+      "total": 5,
+      "correct": 4
+    },
+    "formal_fallacies": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "geometric_shapes": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "hyperbaton": {
+      "accuracy": 0.4,
+      "total": 5,
+      "correct": 2
+    },
+    "logical_deduction_five_objects": {
+      "accuracy": 0.4,
+      "total": 5,
+      "correct": 2
+    },
+    "logical_deduction_seven_objects": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "logical_deduction_three_objects": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "movie_recommendation": {
+      "accuracy": 0.8,
+      "total": 5,
+      "correct": 4
+    },
+    "multistep_arithmetic_two": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "navigate": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "object_counting": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "penguins_in_a_table": {
+      "accuracy": null,
+      "total": 0,
+      "correct": 0
+    },
+    "reasoning_about_colored_objects": {
+      "accuracy": null,
+      "total": 0,
+      "correct": 0
+    },
+    "ruin_names": {
+      "accuracy": 0.4,
+      "total": 5,
+      "correct": 2
+    },
+    "salient_translation_error_detection": {
+      "accuracy": 0.2,
+      "total": 5,
+      "correct": 1
+    },
+    "snarks": {
+      "accuracy": 1.0,
+      "total": 5,
+      "correct": 5
+    },
+    "sports_understanding": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "temporal_sequences": {
+      "accuracy": 0.6,
+      "total": 5,
+      "correct": 3
+    },
+    "tracking_shuffled_objects_five_objects": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "tracking_shuffled_objects_seven_objects": {
+      "accuracy": 0.2,
+      "total": 5,
+      "correct": 1
+    },
+    "tracking_shuffled_objects_three_objects": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "web_of_lies": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    },
+    "word_sorting": {
+      "accuracy": 0.0,
+      "total": 5,
+      "correct": 0
+    }
+  },
+  "failed_subsets": [
+    "penguins_in_a_table",
+    "reasoning_about_colored_objects"
+  ]
+}

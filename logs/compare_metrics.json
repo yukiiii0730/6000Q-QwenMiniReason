@@ -1,0 +1,12 @@
+{
+  "baseline_gsm8k": 0.46,
+  "sft_gsm8k": 0.5,
+  "qwen25_7b_gsm8k": 0.82,
+  "qwen25_14b_gsm8k": 0.64,
+  "finetuned_gsm8k": 0.4,
+  "baseline_bbh": 0.8,
+  "sft_bbh": 0.86,
+  "qwen25_7b_bbh": 0.78,
+  "qwen25_14b_bbh": 0.68,
+  "finetuned_bbh": 0.84
+}

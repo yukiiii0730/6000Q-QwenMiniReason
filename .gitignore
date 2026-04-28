@@ -36,8 +36,15 @@ venv/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
-# 训练日志与评测结果（本地运行产物，不上传）
-logs/
+# 运行流水日志（不上传）
+logs/runs/
+logs/*.log
+logs/*.csv
+logs/latest
+# 评测结果 JSON 保留（git 追踪方便跨版本对比）
+# logs/gsm8k_*.json  ← 保留
+# logs/bbh_*.json    ← 保留
+# logs/math_*.json   ← 保留
 
 # Unsloth 编译缓存
 unsloth_compiled_cache/
