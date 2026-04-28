@@ -26,14 +26,25 @@ def chat_completion(
     max_tokens: int,
     timeout: int,
     max_retries: int,
+    enable_thinking: bool = False,
+    thinking_budget: int | None = None,
 ) -> str:
+    """调用 OpenAI 兼容的 chat completion 接口。
+
+    针对 DashScope 上的 Qwen3 thinking 模型（如 qwen3-235b-a22b-thinking-2507），
+    需要启用 enable_thinking=True；返回内容默认拼接 reasoning_content + content。
+    """
     url = base_url.rstrip("/") + "/chat/completions"
-    payload = {
+    payload: dict = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0,
         "max_tokens": max_tokens,
     }
+    if enable_thinking:
+        payload["enable_thinking"] = True
+        if thinking_budget:
+            payload["thinking_budget"] = int(thinking_budget)
     data = json.dumps(payload).encode("utf-8")
     headers = {
         "Content-Type": "application/json",
@@ -46,7 +57,12 @@ def chat_completion(
             req = urllib.request.Request(url, data=data, headers=headers, method="POST")
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 result = json.loads(resp.read().decode("utf-8"))
-            return result["choices"][0]["message"]["content"]
+            msg = result["choices"][0]["message"]
+            content = msg.get("content", "") or ""
+            reasoning = msg.get("reasoning_content", "") or ""
+            if reasoning and content:
+                return f"<think>{reasoning}</think>\n{content}"
+            return reasoning or content
         except urllib.error.HTTPError as e:
             body = ""
             try:
@@ -54,6 +70,14 @@ def chat_completion(
             except Exception:
                 pass
             last_error = f"HTTP {e.code}: {body}"
+            if e.code == 403 and "FreeTierOnly" in body:
+                raise RuntimeError(
+                    f"免费额度已耗尽（AllocationQuota.FreeTierOnly）。\n"
+                    f"解决方法：登录 DashScope 控制台 → 模型广场 → 找到模型 {model!r} "
+                    f"→ 关闭「仅用免费额度」开关，改用按量付费；\n"
+                    f"或在运行脚本时加 --skip-api 跳过 API 评测。\n"
+                    f"原始错误：{body}"
+                )
             if e.code in (429, 500, 502, 503, 504) and i < max_retries - 1:
                 time.sleep(1.5 * (2 ** i))
                 continue
@@ -133,9 +157,11 @@ def main():
     parser.add_argument("--max_samples", type=int, default=50)
     parser.add_argument("--sampling_mode", choices=["first", "random", "stratified"], default="stratified")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--max_new_tokens", type=int, default=256)
-    parser.add_argument("--timeout", type=int, default=90)
+    parser.add_argument("--max_new_tokens", type=int, default=512)
+    parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument("--max_retries", type=int, default=4)
+    parser.add_argument("--enable_thinking", action="store_true", help="为 Qwen3 thinking 模型启用思考模式")
+    parser.add_argument("--thinking_budget", type=int, default=0, help="thinking 预算 token 数（0=默认）")
     parser.add_argument("--output", required=True)
     parser.add_argument("--badcase_output", default="", help="badcase 输出路径（默认跟随 output 自动生成 *_badcases.jsonl）")
     args = parser.parse_args()
@@ -163,6 +189,8 @@ def main():
             max_tokens=args.max_new_tokens,
             timeout=args.timeout,
             max_retries=args.max_retries,
+            enable_thinking=args.enable_thinking,
+            thinking_budget=args.thinking_budget or None,
         )
         pred_num = extract_number(pred_raw)
         gt_num = extract_number(ex["answer"])

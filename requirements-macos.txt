@@ -1,0 +1,21 @@
+# macOS 本机（含 Apple Silicon / Python 3.9）可解析的安装组合。
+# 说明：
+# - 官方 requirements.txt 里 bitsandbytes>=0.45 在 Py3.9 + macOS 上常无预编译包，会装失败。
+# - Unsloth 强依赖 Linux/CUDA 训练路径；在 Mac 上多仅做脚本联调，如需训练请用 Colab / Linux GPU 并 pip install -r requirements.txt
+# - 若本机已装 Python 3.10+，可优先升级解释器再装 requirements.txt
+
+# 显式拉取 certifi，避免 cacert.pem 缺失导致 HuggingFace TLS 失败
+certifi>=2024.8.30
+
+torch>=2.2.0
+transformers>=4.49.0
+datasets>=3.2.0
+accelerate>=1.2.0
+peft>=0.14.0
+trl>=0.14.0,<0.25
+bitsandbytes>=0.42.0,<0.45
+pyyaml>=6.0.2
+numpy>=1.24.0
+pandas>=2.2.0
+matplotlib>=3.8.0
+tqdm>=4.67.0

@@ -36,8 +36,8 @@ venv/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
-# 训练日志与评测结果（保留到仓库，便于实验对比）
-# logs/
+# 训练日志与评测结果（本地运行产物，不上传）
+logs/
 
 # Unsloth 编译缓存
 unsloth_compiled_cache/

@@ -1,327 +1,272 @@
-# Qwen-Reasoning-Enhance
+# Qwen-Reasoning-Enhance（v4）
 
-基于 **Unsloth + TRL** 对 Qwen2.5-1.5B-Instruct 进行两阶段微调（SFT → DPO），提升模型在数学推理（GSM8K）及综合推理（BBH）任务上的能力。
+在 **Qwen2.5-1.5B-Instruct** 上通过**目标对齐的五段数据课程**与**诊断驱动的偏好优化**，实现接近 7B 模型的数学推理能力。
+
+> 迭代历史见 [`AI2AI.md`](AI2AI.md)，完整架构与方案见 [`me2AI.md`](me2AI.md)。
 
 ---
 
-## 实验结果（实测）
+## 核心方案（v4）
 
-> 评测数据：GSM8K / BBH 各 50 条（固定 seed 的分层抽样）
+| 维度 | 方案 |
+|---|---|
+| **基座模型** | Qwen2.5-1.5B-Instruct |
+| **SFT 数据** | v4 五段课程（三剑客 + in-distribution 锚点，共 ~38k） |
+| **DPO 数据** | Error-Type-Targeted（创新核心）+ Teacher-Guided + distilabel 兜底 |
+| **PEFT** | DoRA（r=16，alpha=32） |
+| **评测** | GSM8K + MATH-500 + BBH-27 三维 |
+| **Baseline** | Qwen 官方公开值 + 自跑 50 题 sanity check |
 
-| 模型阶段 | GSM8K Acc | BBH Acc |
-|---|---|---|
-| Qwen2.5-1.5B-Instruct（Baseline） | **32.0%** | **82.0%** |
-| + SFT only | — | — |
-| + **SFT + DPO**（完整两阶段） | **46.0%** | **84.0%** |
-| Δ vs Baseline | **+14.0pp** | **+2.0pp** |
+---
 
-> 完整四行对比表由 `run_train.sh` 自动打印，结果存入 `logs/compare_metrics.json`。
+## 数据策略（v4 五段课程）
+
+| 阶段 | 数据集 | 采样 | 作用 |
+|---|---|---|---|
+| **A** in-distribution | `openai/gsm8k` train | 7.5k | 直接对齐 GSM8K 评测分布 |
+| **B1** R1 推理深度 | `open-r1/OpenR1-Math-220k`（verified） | 10k | 高质量长 CoT，DeepSeek-R1 蒸馏 |
+| **B2** 应用题广度 | `microsoft/orca-math-word-problems-200k` | 15k | 步骤短、覆盖广，1.5B 友好，GPT-4 蒸馏 |
+| **B3** 题型多样 | `AI-MO/NuminaMath-CoT`（去 gsm8k 子集） | 8k | 奥赛/AMC/AOPS 多源专家 |
+| **C** 通用推理 | `Magpie-Align/Magpie-Reasoning-150K` | 3k | 防 BBH 退化（占比 ~7%） |
+| **DPO 兜底** | `argilla/distilabel-math-preference-dpo` | 5k | 无 Teacher 数据时的 fallback |
+
+跨集去重（SHA-1）+ 长度过滤（<1024/<2048 双档）后实际约 38k。
+
+---
+
+## 快速开始
+
+### 架构分工
+
+```
+本地（CPU，run_local.sh）                GPU（Colab/服务器，run_gpu.sh）
+──────────────────────────              ──────────────────────────────
+① 数据下载 & 预处理                       ⑤ SFT 五段式课程训练
+② 7B/14B API 评测（sanity check）        ⑥ 合并 + SFT 评测
+③ 数据质量过滤（可选）                     ⑦ 错误诊断（5类分类）
+④ Teacher DPO 数据生成                   ⑧ Targeted DPO 训练
+                                         ⑨ 合并 + 最终评测
+```
+
+### Step 1 — 环境准备
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入：
+#   DASHSCOPE_API_KEY=sk-xxx    （DashScope API，必须）
+#   HF_TOKEN=hf_xxx             （HuggingFace Token，可选）
+
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-macos.txt   # 本地阶段（无需 torch/unsloth）
+```
+
+> **DashScope 注意**：请在 [DashScope 控制台](https://dashscope.console.aliyun.com/) 对用到的模型（`qwen2.5-7b-instruct`、`qwen2.5-14b-instruct`、`qwen-flash`）关闭「仅用免费额度」，否则会遇到 HTTP 403 错误。
+
+### Step 2 — 本地阶段（无需 GPU）
+
+```bash
+bash run_local.sh                  # 完整本地流程（约 1-2 小时）
+bash run_local.sh --quick          # 快速测试（数据各 500 条，约 15 分钟）
+bash run_local.sh --force          # 忽略缓存，强制重新生成所有结果
+bash run_local.sh --skip-filter    # 跳过 LLM 质量过滤（v4 数据源质量已高，推荐）
+bash run_local.sh --skip-data      # 跳过数据下载（已有缓存时用）
+bash run_local.sh --skip-api       # 跳过 API 评测（已有结果时用）
+bash run_local.sh --eval-235b      # 额外跑 Qwen3-235B-Thinking 评测（费用较高）
+bash run_local.sh --full-baseline  # 自跑完整 baseline（不用官方公开值）
+```
+
+完成后产出：
+
+```
+data/processed/
+├── sft_train.json              # 五段课程 SFT 数据（~38k 条）
+├── dpo_train.json              # DPO 兜底数据（5k 条）
+└── dpo_teacher_round_1.json   # Teacher 生成的 DPO 数据（可选）
+
+logs/
+├── gsm8k_qwen25_7b_sanity.json    # 7B  sanity check 结果（50 题）
+├── math_qwen25_7b_sanity.json
+├── bbh_qwen25_7b_sanity.json
+├── gsm8k_qwen25_14b_sanity.json   # 14B sanity check 结果（50 题）
+├── math_qwen25_14b_sanity.json
+└── bbh_qwen25_14b_sanity.json
+```
+
+### Step 3 — 同步到 GPU 环境
+
+**方式 A：rsync 到服务器**
+
+```bash
+rsync -avz --progress data/   user@server:/path/to/project/data/
+rsync -avz --progress logs/   user@server:/path/to/project/logs/
+rsync -avz --progress config/ user@server:/path/to/project/config/
+```
+
+**方式 B：打包上传到 Google Drive（Colab 推荐）**
+
+```bash
+zip -r local_artifacts.zip data/ logs/ config/
+# 上传到 Drive，Colab 挂载后 cp 到 /content/project/
+```
+
+### Step 4 — GPU 阶段（Colab A100 / 服务器）
+
+**Colab：** 打开 `notebooks/colab_train.ipynb`，按顺序执行各 Cell。
+
+**服务器：**
+
+```bash
+pip install -r requirements.txt
+
+bash run_gpu.sh                         # 完整：SFT → DPO → 评测
+bash run_gpu.sh --use-teacher-dpo       # 追加 Teacher 生成的 DPO 数据
+bash run_gpu.sh --use-filtered-data     # 使用质量过滤后的数据（需先跑 filter）
+bash run_gpu.sh --iterative-dpo 2       # 额外跑 2 轮 Iterative DPO
+bash run_gpu.sh --quick                 # 快速测试（50/30 步）
+bash run_gpu.sh --skip-sft              # 跳过 SFT（已有 outputs/sft_merged）
+```
+
+完成后产出：
+
+```
+outputs/
+├── sft_merged/     # 合并后 SFT 模型
+└── merged/         # 最终 SFT+DPO 模型
+
+logs/
+├── gsm8k_sft.json | math_sft.json | bbh_sft.json     # SFT 评测
+└── gsm8k_result.json | math_result.json | bbh_result.json  # 最终评测
+```
+
+### Step 5 — 本地生成对比表
+
+```bash
+python3 eval/compare_table.py
+python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eval/figures
+```
 
 ---
 
 ## 项目结构
 
 ```
-Qwen-Reasoning-Enhance/
-├── run_train.sh              # 🚀 一键全流程脚本（推荐入口）
+.
+├── run_local.sh              # 本地阶段一键脚本（无需 GPU）
+├── run_gpu.sh                # GPU 阶段一键脚本
+├── run_train.sh              # 兼容入口（本地有 GPU 时使用）
+│
 ├── config/
-│   ├── sft_config.yaml       # SFT 超参数（LoRA r=16, alpha=32 等）
-│   ├── dpo_config.yaml       # DPO 超参数
-│   └── benchmark_models.yaml # 7B/14B 对照评测配置（本地+API）
+│   ├── sft_config.yaml       # v4 五段课程超参 + DoRA 配置
+│   ├── dpo_config.yaml       # DPO 超参（loss_type / beta / seq_len）
+│   └── benchmark_models.yaml # 参考模型 + Teacher 模型分工
+│
 ├── scripts/
-│   ├── prepare_data.py       # 数据集下载与预处理
-│   ├── sft_train.py          # 第一阶段：SFT（监督微调）
-│   ├── dpo_train.py          # 第二阶段：DPO（直接偏好优化）
-│   └── merge_lora.py         # LoRA 权重合并（transformers + peft）
+│   ├── prepare_data.py       # v4 数据下载：三剑客 + 长度过滤 + 去重
+│   ├── sft_train.py          # SFT（DoRA + 五段课程）
+│   ├── dpo_train.py          # DPO（loss_type 可切换 + 加权支持）
+│   ├── merge_lora.py         # LoRA/DoRA 合并
+│   ├── classify_errors.py    # badcase 分类（5 类错误）
+│   ├── build_targeted_dpo.py # Error-Type-Targeted DPO 数据生成
+│   ├── build_teacher_dpo.py  # Teacher-Guided DPO 数据生成
+│   ├── llm_quality_filter.py # 数据质量评分（可选）
+│   ├── iterative_dpo_loop.py # Iterative DPO 编排
+│   ├── run_ablation.py       # 6 组 ablation 对照实验
+│   ├── stats_significance.py # McNemar 检验 + bootstrap CI
+│   └── watchdog_run.py       # 进程监控（卡死自动重启）
+│
 ├── eval/
-│   ├── gsm8k_eval.py         # GSM8K 自动评测
-│   ├── bbh_eval.py           # BBH 自动评测（含 CoT 答案提取）
-│   ├── gsm8k_api_eval.py     # GSM8K API 评测（OpenAI-compatible）
-│   ├── bbh_api_eval.py       # BBH API 评测（OpenAI-compatible）
-│   ├── benchmark_open_models.py # 本地开源模型批量评测
-│   ├── compare_table.py      # 统一对比表输出
-│   └── visualize.py          # 雷达图 & Loss 曲线可视化
-├── data/
-│   ├── raw/                  # 原始数据占位目录
-│   ├── processed/            # 预处理后的训练数据（quick 模式本地 JSON）
-│   └── process.py            # 格式转换脚本（→ Alpaca / DPO 格式）
-├── notebooks/
-│   ├── colab_train.ipynb     # Colab 一键训练示例
-│   └── inference_test.ipynb  # 零样本 vs 微调模型推理对比
-└── requirements.txt
+│   ├── gsm8k_eval.py / gsm8k_api_eval.py   # GSM8K 本地 / API 评测
+│   ├── math_eval.py  / math_api_eval.py    # MATH-500 本地 / API 评测
+│   ├── bbh_eval.py   / bbh_api_eval.py     # BBH 本地 / API 评测
+│   ├── bbh_full_eval.py                    # BBH 27 子任务 wrapper
+│   ├── compare_table.py                    # 生成对比表（优先官方 baseline）
+│   ├── visualize.py                        # 雷达图 + 错误分布 + ablation 图
+│   └── published_baselines.json            # Qwen 官方公开值
+│
+├── data/processed/           # 本地生成的训练数据（gitignore 大文件）
+├── logs/                     # 评测结果 JSON + 每次运行日志
+└── notebooks/
+    └── colab_train.ipynb     # Colab GPU 训练入口
 ```
 
 ---
 
-## 环境安装
+## 评测与 Baseline 策略
 
-> 推荐 Python 3.10+，GPU 显存 ≥ 16 GB（A100 / L20 / 4090 最佳；T4 可运行但较慢）。
+| 模型 | GSM8K | MATH-500 | BBH-27 | 来源 |
+|---|---|---|---|---|
+| Qwen2.5-1.5B-Instruct（目标模型） | 73.2% | 55.2% | 自跑全量 | 官方 + GPU 阶段产出 |
+| Qwen2.5-7B-Instruct | **91.6%** | **75.5%** | **70.3%** | Qwen 官方 + 50题 sanity check |
+| Qwen2.5-14B-Instruct | **94.0%** | **80.0%** | **78.9%** | Qwen 官方 + 50题 sanity check |
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+> 引用：Qwen Team, "Qwen2.5 Technical Report", arXiv:2412.15115。1.5B 的 GSM8K/MATH 为官方值，BBH 无官方值需 GPU 阶段自跑。训练后结果将回填本表。
 
-在 `config/sft_config.yaml` 与 `config/dpo_config.yaml` 中填写 HuggingFace Token：
-
-```yaml
-hf_token: hf_YOUR_TOKEN_HERE   # 从 https://huggingface.co/settings/tokens 获取
-```
-
-并在 `config/benchmark_models.yaml` 中填写 7B/14B API 评测配置：
-
-```yaml
-api_evaluation:
-    api_base_url: https://your-openai-compatible-endpoint/v1
-    api_key: YOUR_API_KEY
-    reference_models:
-        model_7b:
-            model: your-7b-model-name
-        model_14b:
-            model: your-14b-model-name
-```
+v4 训练完成后结果将回填上表。
 
 ---
 
-## 快速开始
+## Ablation 实验（6 组对照）
 
-### 一键全流程（推荐）
-
-```bash
-# 快速测试（本地 JSON，500 条，SFT=50 steps，DPO=30 steps，约 10 分钟）
-bash run_train.sh --quick
-
-# 完整训练（HuggingFace 在线数据集，各 50k 条，生产级超参）
-bash run_train.sh
-```
-
-完整流程自动执行以下步骤：
-
-| 步骤 | 描述 | 产物 |
-|---|---|---|
-| **Step 0a** | Baseline 评测（训练前原始模型） | `logs/gsm8k_baseline.json`, `logs/bbh_baseline.json` |
-| **Step 0b** | 7B/14B 参考模型 API 评测 | `logs/gsm8k_qwen25_7b.json`, `logs/bbh_qwen25_7b.json`, `logs/gsm8k_qwen25_14b.json`, `logs/bbh_qwen25_14b.json` |
-| **Step 1** | 数据集下载与预处理 | `data/processed/` |
-| **Step 2** | SFT 监督微调 | `outputs/sft/` |
-| **Step 3** | DPO 偏好优化 | `outputs/dpo/` |
-| **Step 4a** | 合并 SFT adapter → 评测 SFT 单独效果 | `outputs/sft_merged/`, `logs/gsm8k_sft.json`, `logs/bbh_sft.json` |
-| **Step 4b** | 合并最终 SFT+DPO 权重 | `outputs/merged/` |
-| **Step 5** | 最终评测 + 四行对比表 | `logs/gsm8k_result.json`, `logs/bbh_result.json`, `logs/compare_metrics.json` |
-
-所有步骤均支持**断点续跑**（自动检测已有产物，跳过已完成阶段）。
-
-### 常用参数
-
-```bash
-bash run_train.sh --skip-data        # 跳过数据下载（已有缓存时）
-bash run_train.sh --skip-sft         # 跳过 SFT（使用已有 outputs/sft/）
-bash run_train.sh --skip-baseline    # 跳过 Baseline 评测
-bash run_train.sh --only-sft         # 仅训练 SFT，不做 DPO
-bash run_train.sh --force            # 强制重跑所有阶段
-bash run_train.sh --sft_n 20000 --dpo_n 20000  # 自定义采样量
-```
-
----
-
-## 数据集
-
-### SFT 数据集（完整训练模式）
-
-训练脚本在完整模式下**直接从 HuggingFace Hub 在线拉取**，无需手动下载：
-
-| 数据集 | HuggingFace ID | 字段 | 说明 |
+| Group | SFT | DPO | 验证目的 |
 |---|---|---|---|
-| **NuminaMath-CoT** | [`AI-MO/NuminaMath-CoT`](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) | `problem` / `solution` | 数学竞赛题 + 详细 CoT 推理，约 86 万条 |
-| **Magpie-Reasoning-150K** | [`Magpie-Align/Magpie-Reasoning-150K`](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K) | `instruction` / `response` | 蒸馏自 Llama-3.1-70B，逻辑密度高，15 万条 |
-
-默认各取 5 万条（通过 `--sft_n` 自定义）。
-
-### DPO 数据集（完整训练模式）
-
-| 数据集 | HuggingFace ID | 字段 | 说明 |
-|---|---|---|---|
-| **Orca-Math-Pairs** | [`microsoft/orca-math-word-problems-200k`](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k) | `question` / `correct_solution` / `incorrect_solution` | 专为 DPO 设计，含正确和错误推理路径，20 万条 |
-
-自动映射为 `prompt / chosen / rejected` 格式，默认取 5 万条（`--dpo_n` 自定义）。
-
-### 快速测试模式数据集
-
-`--quick` 模式使用本地预生成的 JSON 文件（500 条），由 `scripts/prepare_data.py` 自动创建：
-
-- SFT: `data/processed/sft_train.json`（NuminaMath-CoT + Magpie 各 250 条）
-- DPO: `data/processed/dpo_train.json`（orca_dpo_pairs 500 条）
-
----
-
-## 手动运行各步骤
-
-若需精细控制，可手动运行各脚本：
-
-### 数据准备
+| A | LoRA + 单段混合 | Standard DPO | 经典 baseline |
+| B | DoRA + 五段课程 | Standard DPO | DoRA + 课程效果 |
+| C | DoRA + 五段课程 | Teacher-Guided | Teacher 数据效果 |
+| **D** | DoRA + 五段课程 | **Error-Type-Targeted** | **创新核心** |
+| E | DoRA + 五段课程 | IPO + Targeted 数据 | 损失函数改进 |
+| F | DoRA + 五段课程 | Weighted Targeted DPO | 加权版创新 |
 
 ```bash
-python scripts/prepare_data.py --sft_n 50000 --dpo_n 50000
-```
-
-### SFT 训练
-
-```bash
-python scripts/sft_train.py --config config/sft_config.yaml
-```
-
-关键超参数（`config/sft_config.yaml`）：
-
-| 参数 | 值 |
-|---|---|
-| LoRA r / alpha | 16 / 32 |
-| Learning rate | 2e-4 |
-| Batch size | 2 × 8 grad_accum |
-| Max steps（完整）| ~1000（quick: 50）|
-| Optimizer | paged_adamw_8bit |
-| Quantization | 4-bit NF4 |
-
-### DPO 训练
-
-```bash
-python scripts/dpo_train.py --config config/dpo_config.yaml
-```
-
-| 参数 | 值 |
-|---|---|
-| β (beta) | 0.1 |
-| Learning rate | 1e-5 |
-| Max steps（完整）| ~800（quick: 30）|
-| 基座 | outputs/sft（SFT 产物）|
-
-### 合并 LoRA 权重
-
-`merge_lora.py` 使用 `transformers + peft` 直接合并（不依赖 Unsloth fp16 权重下载），自动读取 `adapter_config.json` 中的 base model 路径：
-
-```bash
-# 合并 SFT adapter
-python scripts/merge_lora.py \
-    --adapter_path outputs/sft \
-    --output_path  outputs/sft_merged
-
-# 合并 SFT+DPO（完整两阶段）
-python scripts/merge_lora.py \
-    --adapter_path outputs/dpo \
-    --output_path  outputs/merged
+python3 scripts/run_ablation.py --eval_n 200 --bbh_n 100   # 完整 6 组
+python3 scripts/run_ablation.py --groups D                  # 只跑创新组
+python3 scripts/run_ablation.py --quick                     # 快速 smoke test
 ```
 
 ---
 
-## 评估
+## Error-Type-Targeted DPO 闭环（创新点 B）
 
-### GSM8K
+```
+SFT 模型评测 GSM8K → 自动收集 badcase
+   ↓
+scripts/classify_errors.py   （qwen-flash 归到 5 类）
+   ↓
+scripts/build_targeted_dpo.py（每类用专属 system prompt 让 Teacher 生成 chosen）
+   ↓
+Targeted DPO 训练（可选 weighted loss）
+   ↓
+再次评测 → 对比每类错误的修复率
+```
 
 ```bash
-python eval/gsm8k_eval.py \
-    --model_path  outputs/merged \
-    --max_samples 50 \
-    --output      logs/gsm8k_result.json
-```
+# 1. 错误分类（约 ¥0.5 / 300 条）
+python3 scripts/classify_errors.py \
+    --badcase_jsonl logs/runs/<run_id>/results/gsm8k_sft_badcases.jsonl \
+    --output_dir results/errors/sft
 
-### BBH
-
-```bash
-python eval/bbh_eval.py \
-    --model_path  outputs/merged \
-    --subset      boolean_expressions \
-    --max_samples 50 \
-    --output      logs/bbh_result.json
-```
-
-BBH 评测内置三级答案匹配（前缀匹配 → 末尾 200 字符 → 全文搜索），兼容 CoT 长输出。
-
-为降低评测耗时，默认使用 `max_samples=50` + 固定 `seed=42` 的分层抽样（按题目长度分桶），比“前 50 条”更稳健、可复现。
-
-### 与 7B / 14B 开源模型做横向对照
-
-统一配置在 [config/benchmark_models.yaml](config/benchmark_models.yaml)：
-
-- `api_evaluation`：供 `run_train.sh` 的 Step 0b 使用（API 评测）
-- `evaluation + models`：供本地批量评测脚本使用
-
-本地批量评测运行方式：
-
-```bash
-python eval/benchmark_open_models.py --config config/benchmark_models.yaml
-```
-
-结果会写入 `logs/open_model_benchmarks/`。
-
-### 可视化
-
-```bash
-python eval/visualize.py \
-    --metrics_json logs/compare_metrics.json \
-    --out_dir      eval/figures
-```
-
----
-
-## 快速推理测试
-
-打开 `notebooks/inference_test.ipynb`，可直接对比同一道题在基础模型与微调模型上的输出差异。
-
----
-
-## Google Colab 使用指南
-
-**不需要提前下载数据集**，Colab 可直接通过 `datasets` 库从 HuggingFace Hub 在线拉取。
-
-### 推荐流程
-
-```python
-# 1. 安装依赖（每次新 Session 需要）
-!pip install unsloth trl peft bitsandbytes transformers datasets accelerate pyyaml safetensors -q
-
-# 2. 克隆本项目
-!git clone https://github.com/your-repo/Qwen-Reasoning-Enhance.git
-%cd Qwen-Reasoning-Enhance
-
-# 3. 设置 HuggingFace Token（使用 Colab Secrets，避免硬编码）
-import os
-from google.colab import userdata
-os.environ["HF_TOKEN"] = userdata.get("HF_TOKEN")
-
-# 4. 运行快速测试
-!bash run_train.sh --quick
-```
-
-> **Colab 免费版**（T4，15GB）可正常运行 Qwen2.5-1.5B-Instruct 的 4-bit 量化训练（约 6-8 GB 显存）。
-> **Colab Pro/Pro+**（A100）速度提升约 5-8×。
-
-挂载 Google Drive 持久化保存检查点：
-
-```python
-from google.colab import drive
-drive.mount('/content/drive')
-# 在 config yaml 中将 output_dir 改为 Drive 路径：
-# output_dir: "/content/drive/MyDrive/Qwen-Reasoning/outputs/sft"
+# 2. 生成 Targeted DPO 数据
+python3 scripts/build_targeted_dpo.py \
+    --by_type_dir results/errors/sft/by_type \
+    --tag round1 --per_type_n 200
 ```
 
 ---
 
 ## 注意事项
 
-- `unsloth` 仅支持 Linux / WSL2 + CUDA，macOS 仅用于代码开发，训练需在 GPU 机器上运行。
-- 4-bit 量化训练时 `bf16=true` 与 `fp16=true` 不可同时开启；T4 不支持 bf16，`run_train.sh` 会自动检测并降级为 fp16。
-- DPO 训练时 `ref_model=None` 表示使用 SFT 模型自身作为参考（Unsloth 内置 PEFT 参考实现）。
-- **请勿将 HuggingFace Token 明文提交**，在 `config/*.yaml` 中填写 `YOUR_HF_TOKEN_HERE` 占位符，使用环境变量或 Colab Secrets 管理真实 Token。
-- `merge_lora.py` 使用 `safetensors.torch.save_model` 保存（而非 `save_file`），可正确处理 `lm_head` / `embed_tokens` 权重共享问题。
+- `unsloth` 仅支持 Linux + CUDA，**macOS 无法跑 SFT/DPO**；`run_local.sh` 不依赖 unsloth，可在 macOS 直接运行。
+- **DashScope 免费额度**：`qwen2.5-7b-instruct`、`qwen2.5-14b-instruct`、`qwen-flash` 均有免费额度上限，建议提前在控制台关闭「仅用免费额度」。
+- **数据质量过滤可跳过**：v4 数据源（OpenR1/NuminaMath/Orca-Math）本身质量已有保证，`--skip-filter` 对训练效果影响可忽略。
+- **缓存机制**：`run_local.sh` 检测到结果文件已存在则跳过，重新生成用 `--force`，重跑特定步骤用对应 `--skip-*` 组合。
+- 请勿提交 `.env` 或含 Token 的文件；`config/*.yaml` 中无明文密钥，统一通过 `.env` 或 Colab Secrets 管理。
 
 ---
 
 ## 参考资料
 
-- [Unsloth 官方文档](https://github.com/unslothai/unsloth)
-- [TRL DPOTrainer](https://huggingface.co/docs/trl/dpo_trainer)
-- [GSM8K Dataset](https://huggingface.co/datasets/gsm8k)
-- [BIG-Bench Hard (BBH)](https://huggingface.co/datasets/lukaemon/bbh)
-- [Qwen2.5-1.5B-Instruct on HuggingFace](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct)
-- [NuminaMath-CoT](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT)
-- [Magpie-Reasoning-150K](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K)
-- [Orca-Math-Word-Problems-200k](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k)
+- [Unsloth](https://github.com/unslothai/unsloth) · [TRL DPOTrainer](https://huggingface.co/docs/trl/dpo_trainer)
+- [DoRA: Weight-Decomposed Low-Rank Adaptation](https://arxiv.org/abs/2402.09353)
+- [OpenR1-Math-220k](https://huggingface.co/datasets/open-r1/OpenR1-Math-220k) · [NuminaMath-CoT](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT)
+- [Orca-Math-200k](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k) · [Magpie-Reasoning-150K](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K)
+- [GSM8K](https://huggingface.co/datasets/gsm8k) · [MATH](https://huggingface.co/datasets/hendrycks/competition_math) · [BBH](https://huggingface.co/datasets/lukaemon/bbh)
+- [Qwen2.5-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) · [Qwen2.5 Technical Report](https://arxiv.org/abs/2412.15115)

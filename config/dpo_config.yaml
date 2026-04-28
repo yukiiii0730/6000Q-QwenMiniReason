@@ -1,15 +1,17 @@
 model_name: Qwen/Qwen2.5-1.5B-Instruct
-base_adapter_path: outputs/sft
+base_adapter_path: outputs/sft_merged
 output_dir: outputs/dpo
-max_seq_length: 1536
+max_seq_length: 2048
 load_in_4bit: true
 seed: 42
-beta: 0.3
+beta: 0.1
+loss_type: sigmoid
 dataset:
-  name: microsoft/orca-math-word-problems-200k
+  name: argilla/distilabel-math-preference-dpo
   split: train
-  max_samples: 50000
+  max_samples: 5000
 lora:
+  use_dora: true
   r: 16
   alpha: 32
   dropout: 0.0
@@ -24,9 +26,9 @@ lora:
 train:
   per_device_train_batch_size: 1
   gradient_accumulation_steps: 16
-  warmup_steps: 80
-  max_steps: 800
-  learning_rate: 3.0e-06
+  warmup_steps: 50
+  max_steps: 600
+  learning_rate: 1.0e-05
   logging_steps: 10
   save_steps: 100
   eval_steps: 100

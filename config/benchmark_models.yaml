@@ -1,17 +1,20 @@
 evaluation:
   output_dir: logs/open_model_benchmarks
-  gsm8k_max_samples: 50
+  gsm8k_max_samples: 200
   bbh_subset: boolean_expressions
-  bbh_max_samples: 50
+  bbh_max_samples: 200
   load_in_4bit: true
 
-# run_train.sh 中 Step 0b（7B / 14B 参考模型）会使用此 API 配置。
-# API Key 请在 .env 中配置 DASHSCOPE_API_KEY（参考 .env.example）。
+# DashScope (OpenAI-compatible) 配置
+# - 评测对照：7B / 14B / Qwen3-235B-Thinking 三档梯度
+# - Teacher（CoT 与 DPO chosen 生成）：默认 qwen3-235b-a22b-thinking-2507（开源 MoE，推理强，性价比高）
+# - Filter Teacher（数据质量评分）：默认 qwen-flash（轻量便宜）
 api_evaluation:
   api_base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
-  timeout: 90
+  timeout: 120
   max_retries: 4
 
+  # 三档参考模型（用于 baseline 横向对比）
   reference_models:
     model_7b:
       label: Qwen2.5-7B-Instruct
@@ -19,7 +22,25 @@ api_evaluation:
     model_14b:
       label: Qwen2.5-14B-Instruct
       model: qwen2.5-14b-instruct
+    model_235b:
+      label: Qwen3-235B-A22B-Thinking
+      model: qwen3-235b-a22b-thinking-2507
+      enable_thinking: true
 
+  # Teacher 模型分工（数据生成 / 蒸馏）
+  teacher_models:
+    cot_generator:
+      label: Qwen3-235B-Thinking (CoT / DPO chosen)
+      model: qwen3-235b-a22b-thinking-2507
+      enable_thinking: true
+      max_tokens: 4096
+      thinking_budget: 8192
+    quality_filter:
+      label: Qwen-Flash (data quality scorer)
+      model: qwen-flash
+      max_tokens: 256
+
+# 本地批量评测保留的开源对照模型（仅当本地有 GPU 时使用）
 models:
   - label: Qwen2.5-7B-Instruct
     model_path: Qwen/Qwen2.5-7B-Instruct
@@ -27,4 +48,4 @@ models:
 
   - label: Qwen2.5-14B-Instruct
     model_path: Qwen/Qwen2.5-14B-Instruct
-    note: 接近 15B 量级的同家族对照，适合展示更大模型上限
+    note: 接近 15B 量级的同家族对照，展示更大模型上限

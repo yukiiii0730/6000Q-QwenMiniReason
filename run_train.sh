@@ -1,28 +1,26 @@
 #!/usr/bin/env bash
 # =============================================================================
-# run_train.sh — Qwen2.5-1.5B Reasoning 两阶段微调一键训练脚本
+# run_train.sh — Qwen2.5-1.5B Reasoning 两阶段微调一键训练脚本（v2，整合入口）
 #
-# 用法：
-#   bash run_train.sh                   # 完整流程（Baseline + 参考模型 + 数据 + SFT + DPO + 合并 + 评测）
-#   bash run_train.sh --quick           # 快速测试（本地 JSON，各 500 条，SFT=50 steps，DPO=30 steps）
-#   bash run_train.sh --skip-data       # 跳过数据下载（已有缓存时使用）
-#   bash run_train.sh --skip-sft        # 跳过 SFT（已训练时使用）
-#   bash run_train.sh --skip-dpo        # 跳过 DPO
-#   bash run_train.sh --skip-eval       # 跳过最终评测
-#   bash run_train.sh --skip-baseline   # 跳过 Baseline 评测（训练前）
-#   bash run_train.sh --only-sft        # 仅运行 SFT（跳过 DPO、合并、评测）
-#   bash run_train.sh --force           # 强制重跑所有阶段（忽略已有产物）
-#   bash run_train.sh --sft_n 20000 --dpo_n 20000   # 自定义采样量
+# 推荐：本地无 GPU 时用 run_local.sh + run_gpu.sh 拆分执行；
+#       本机就有 GPU 时用本脚本一键跑完所有阶段。
 #
-# 数据集：
-#   完整流程  SFT : AI-MO/NuminaMath-CoT（单数据集，默认 50k）
-#   完整流程  DPO : microsoft/orca-math-word-problems-200k（50k）
-#   --quick   SFT : data/processed/sft_train.json（本地 500 条）
-#   --quick   DPO : data/processed/dpo_train.json（本地 500 条）
+# 阶段路由（--phase）：
+#   bash run_train.sh                       # = --phase all（完整流程，要求本机有 GPU）
+#   bash run_train.sh --phase local         # 等价于 run_local.sh（数据 + API 评测 + 过滤 + Teacher 数据）
+#   bash run_train.sh --phase gpu           # 等价于 run_gpu.sh   （SFT + DPO + 合并 + 评测）
+#   bash run_train.sh --phase all           # 先 local 后 gpu，连续执行（必须有 GPU）
 #
-# 断点续跑（自动检测）：
-#   若 outputs/sft/ 已含模型文件，SFT 阶段自动跳过；DPO 同理。
-#   使用 --force 可强制重跑所有阶段。
+# 其他参数：
+#   --quick / --skip-data / --skip-sft / --skip-dpo / --skip-eval / --skip-baseline
+#   --only-sft / --force
+#   --sft_n N --dpo_n N --magpie_n N --eval_n N
+#
+# 数据集（v2）：
+#   SFT Stage1a: open-r1/OpenR1-Math-220k        (default, 默认 20k)
+#   SFT Stage1b: Magpie-Align/Magpie-Reasoning-150K   (默认 8k)
+#   DPO       : argilla/distilabel-math-preference-dpo (默认 5k)
+#               + Teacher-Guided 自建数据（可选 --use-teacher-dpo）
 # =============================================================================
 set -euo pipefail
 
@@ -42,6 +40,7 @@ warn() { echo -e "${YELLOW}[$(date '+%H:%M:%S')] ⚠️  $1${NC}"; }
 die()  { echo -e "${RED}[$(date '+%H:%M:%S')] ❌ $1${NC}" >&2; exit 1; }
 
 # ── 默认参数 ──────────────────────────────────────────────────────────────────
+PHASE="all"
 QUICK=false
 SKIP_DATA=false
 SKIP_SFT=false
@@ -50,32 +49,70 @@ SKIP_EVAL=false
 SKIP_BASELINE=false
 ONLY_SFT=false
 FORCE=false
-SFT_N=50000
-DPO_N=50000
-USE_HQ_MIXED_SFT=false
+SFT_N=20000
+MAGPIE_N=8000
+DPO_N=5000
+EVAL_N=200
+BASELINE_N=200
+USE_FILTERED_DATA=false
+USE_TEACHER_DPO=false
 
 # ── 解析参数 ──────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --quick)      QUICK=true ;;
-        --skip-data)  SKIP_DATA=true ;;
-        --skip-sft)   SKIP_SFT=true ;;
-        --skip-dpo)   SKIP_DPO=true ;;
-        --skip-eval)      SKIP_EVAL=true ;;
-        --skip-baseline)  SKIP_BASELINE=true ;;
-        --only-sft)       ONLY_SFT=true ;;
-        --force)      FORCE=true ;;
-        --sft_n)      SFT_N="$2"; shift ;;
-        --dpo_n)      DPO_N="$2"; shift ;;
+        --phase)             PHASE="$2"; shift ;;
+        --quick)             QUICK=true ;;
+        --skip-data)         SKIP_DATA=true ;;
+        --skip-sft)          SKIP_SFT=true ;;
+        --skip-dpo)          SKIP_DPO=true ;;
+        --skip-eval)         SKIP_EVAL=true ;;
+        --skip-baseline)     SKIP_BASELINE=true ;;
+        --only-sft)          ONLY_SFT=true ;;
+        --force)             FORCE=true ;;
+        --use-filtered-data) USE_FILTERED_DATA=true ;;
+        --use-teacher-dpo)   USE_TEACHER_DPO=true ;;
+        --sft_n)             SFT_N="$2"; shift ;;
+        --magpie_n)          MAGPIE_N="$2"; shift ;;
+        --dpo_n)             DPO_N="$2"; shift ;;
+        --eval_n)            EVAL_N="$2"; shift ;;
         *) die "未知参数: $1" ;;
     esac
     shift
 done
 
 if $QUICK; then
-    SFT_N=500; DPO_N=500
+    SFT_N=500; MAGPIE_N=500; DPO_N=500; EVAL_N=50; BASELINE_N=50
     warn "快速测试模式：每个数据集仅取 500 条，SFT max_steps=50，DPO max_steps=30"
 fi
+
+# ── 阶段路由：local-only / gpu-only / all ────────────────────────────────────
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_DIR"
+
+if [[ "$PHASE" == "local" ]]; then
+    info "[路由] 转发到 run_local.sh"
+    LOCAL_ARGS=()
+    $QUICK && LOCAL_ARGS+=(--quick)
+    $SKIP_DATA && LOCAL_ARGS+=(--skip-data)
+    $SKIP_BASELINE && LOCAL_ARGS+=(--skip-api)
+    LOCAL_ARGS+=(--sft_n "$SFT_N" --magpie_n "$MAGPIE_N" --dpo_n "$DPO_N" --eval_n "$BASELINE_N")
+    exec bash run_local.sh "${LOCAL_ARGS[@]}"
+fi
+
+if [[ "$PHASE" == "gpu" ]]; then
+    info "[路由] 转发到 run_gpu.sh"
+    GPU_ARGS=()
+    $QUICK && GPU_ARGS+=(--quick)
+    $SKIP_SFT && GPU_ARGS+=(--skip-sft)
+    $SKIP_DPO && GPU_ARGS+=(--skip-dpo)
+    $SKIP_EVAL && GPU_ARGS+=(--skip-eval)
+    $FORCE && GPU_ARGS+=(--force)
+    $USE_FILTERED_DATA && GPU_ARGS+=(--use-filtered-data)
+    $USE_TEACHER_DPO && GPU_ARGS+=(--use-teacher-dpo)
+    GPU_ARGS+=(--eval_n "$EVAL_N")
+    exec bash run_gpu.sh "${GPU_ARGS[@]}"
+fi
+# else PHASE=all → 继续往下走旧的本地一体化流程
 
 # ── 切换到项目根目录 ──────────────────────────────────────────────────────────
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -330,59 +367,60 @@ if ! $FORCE; then
     fi
 fi
 
-BASELINE_N=50
-SFT_HQ_PER_SOURCE=15000
-SFT_HQ_PATH="data/processed/sft_train_hq_30k.json"
-
-# ── 快速测试：切换到本地 JSON，覆写 max_steps ────────────────────────────────
-# 全量模式：用 HuggingFace 数据集（yaml 中的 datasets / dataset 字段）
-# quick 模式：用本地预处理 JSON（yaml 中的 dataset_path 字段），并临时隐藏 HF 字段
+# ── 快速测试：禁用 stages，回退到本地 JSON ───────────────────────────────────
+# 全量模式：保持 stages 两段式课程（OpenR1 → Magpie）
 if $QUICK; then
     python - <<'EOF'
 import yaml
 
-# SFT config: 隐藏 datasets 字段，只用 dataset_path，并覆写 steps
 with open("config/sft_config.yaml") as f:
     cfg = yaml.safe_load(f)
-cfg.pop("datasets", None)          # quick 模式不用 HF 数据集
+# quick 模式：禁用 stages 和 datasets，使用本地 JSON 单段训练
+cfg.pop("stages", None)
+cfg.pop("datasets", None)
+cfg.pop("dataset", None)
+cfg["dataset_path"] = "data/processed/sft_train.json"
 cfg["train"]["max_steps"] = 50
 with open("config/sft_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
-# DPO config: 隐藏 dataset 字段，只用 dataset_path，并覆写 steps
 with open("config/dpo_config.yaml") as f:
     cfg = yaml.safe_load(f)
-cfg.pop("dataset", None)           # quick 模式不用 HF 数据集
+cfg.pop("dataset", None)
+cfg["dataset_path"] = "data/processed/dpo_train.json"
 cfg["train"]["max_steps"] = 30
 with open("config/dpo_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
-print("⚡ quick 模式：使用本地 JSON，max_steps 已覆写为 SFT=50 / DPO=30")
+print("⚡ quick 模式：禁用 stages，使用本地 JSON，max_steps=SFT 50 / DPO 30")
 EOF
 else
-    # 全量模式：确保 HF 数据集字段存在（防止上次 quick 运行后未还原）
+    # 全量模式：把 stages 中的 max_samples 同步为 CLI 入参（不破坏字段结构）
     python - <<EOF
 import yaml
 
 with open("config/sft_config.yaml") as f:
     cfg = yaml.safe_load(f)
-cfg["datasets"] = [
-    {"name": "AI-MO/NuminaMath-CoT", "split": "train", "max_samples": $SFT_N},
-]
+
+stages = cfg.get("stages") or []
+for st in stages:
+    ds = st.get("dataset", {})
+    if ds.get("name", "").endswith("OpenR1-Math-220k"):
+        ds["max_samples"] = $SFT_N
+    elif "Magpie" in ds.get("name", ""):
+        ds["max_samples"] = $MAGPIE_N
+
 with open("config/sft_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
 with open("config/dpo_config.yaml") as f:
     cfg = yaml.safe_load(f)
-if "dataset" not in cfg:
-    cfg["dataset"] = {"name": "microsoft/orca-math-word-problems-200k", "split": "train", "max_samples": $DPO_N}
-else:
+if "dataset" in cfg and isinstance(cfg["dataset"], dict):
     cfg["dataset"]["max_samples"] = $DPO_N
 with open("config/dpo_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
-print(f"📦 全量模式：SFT 数据集 NuminaMath-CoT（$SFT_N 条）")
-print(f"📦 全量模式：DPO 数据集 orca-math-word-problems-200k（$DPO_N 条）")
+print(f"📦 全量模式：SFT Stage1a={$SFT_N}, Stage1b={$MAGPIE_N}, DPO={$DPO_N}")
 EOF
 fi
 
@@ -446,60 +484,13 @@ fi
 if $SKIP_DATA; then
     warn "已跳过数据下载（--skip-data）"
 else
-    info "Step 1/6 — 数据集下载与预处理"
+    info "Step 1/6 — 数据集下载与预处理 (OpenR1-Math + Magpie + distilabel-math-pref)"
     python scripts/prepare_data.py \
         --sft_n "$SFT_N" \
+        --magpie_n "$MAGPIE_N" \
         --dpo_n "$DPO_N" \
         2>&1 | tee "$RUN_LOG_DIR/prepare_data.log"
     log "数据准备完成"
-fi
-
-# =============================================================================
-# Step 1.5：可选高质量子集筛选（默认关闭，避免混合源分布干扰）
-# =============================================================================
-if $QUICK; then
-    warn "quick 模式跳过高质量子集筛选（直接使用本地小样本）"
-elif ! $USE_HQ_MIXED_SFT; then
-    warn "已关闭 mixed-HQ 子集筛选（USE_HQ_MIXED_SFT=false），保持 SFT 单数据集方案"
-else
-    info "Step 1.5/6 — 构建 mixed-HQ 训练子集（Numina + Magpie）"
-
-    if $FORCE || [[ ! -s "$SFT_HQ_PATH" ]]; then
-        python scripts/build_hq_subsets.py \
-            --sft_in data/processed/sft_train.json \
-            --dpo_in data/processed/dpo_train.json \
-            --sft_out "$SFT_HQ_PATH" \
-            --dpo_out data/processed/dpo_train_hq_15k.json \
-            --sft_per_source "$SFT_HQ_PER_SOURCE" \
-            --dpo_n 15000 \
-            --seed 42 \
-            2>&1 | tee "$RUN_LOG_DIR/hq_filter.log"
-    else
-        warn "检测到高质量子集缓存，跳过构建（使用 --force 可重建）"
-    fi
-
-    # 将训练配置切换到高质量子集
-    python - <<EOF
-import yaml
-
-with open("config/sft_config.yaml", "r", encoding="utf-8") as f:
-    sft_cfg = yaml.safe_load(f)
-sft_cfg.pop("datasets", None)
-sft_cfg["dataset_path"] = "$SFT_HQ_PATH"
-with open("config/sft_config.yaml", "w", encoding="utf-8") as f:
-    yaml.dump(sft_cfg, f, allow_unicode=True, sort_keys=False)
-
-with open("config/dpo_config.yaml", "r", encoding="utf-8") as f:
-    dpo_cfg = yaml.safe_load(f)
-dpo_cfg.pop("dataset", None)
-dpo_cfg["dataset_path"] = "data/processed/dpo_train.json"
-with open("config/dpo_config.yaml", "w", encoding="utf-8") as f:
-    yaml.dump(dpo_cfg, f, allow_unicode=True, sort_keys=False)
-
-print("✅ 已更新训练数据路径")
-print("   SFT:", "$SFT_HQ_PATH")
-print("   DPO:", "data/processed/dpo_train.json")
-EOF
 fi
 
 # =============================================================================
@@ -553,7 +544,6 @@ fi
 if $SKIP_EVAL; then
     warn "已跳过 SFT 单独评测（--skip-eval）"
 else
-    EVAL_N=50
     SFT_GSM8K_JSON="$RESULTS_DIR/gsm8k_sft.json"
     SFT_BBH_JSON="$RESULTS_DIR/bbh_sft.json"
 
@@ -617,7 +607,6 @@ fi
 if $SKIP_EVAL; then
     warn "已跳过最终评测（--skip-eval）"
 else
-    EVAL_N=50
     FINAL_GSM8K_JSON="$RESULTS_DIR/gsm8k_result.json"
     FINAL_BBH_JSON="$RESULTS_DIR/bbh_result.json"
 

@@ -15,29 +15,37 @@ def normalize(x: str) -> str:
 
 
 def extract_answer(pred: str, gt: str) -> bool:
-    """从模型输出中提取答案，支持思维链输出。
-    优先匹配末尾最后一次出现的 gt（大小写不敏感），回退到全文任意位置匹配。
+    """从模型输出（含 CoT）健壮地匹配 BBH 答案。
+    优先级：末段"答案：X" / "answer is X" > \\boxed{X} > 末段词边界匹配 > 全文词边界匹配。
     """
     import re
     gt_norm = normalize(gt)
     pred_norm = normalize(pred)
+    if not pred_norm:
+        return False
 
-    # 1. 直接前缀匹配（原始逻辑，兼容直接输出答案的模型）
+    pred_low = pred.replace("\n", " ").strip().lower()
+
+    m = re.findall(r"\\boxed\{\s*([^}]+?)\s*\}", pred_low)
+    if m and normalize(m[-1]) == gt_norm:
+        return True
+
+    tail_low = pred_low[-300:]
+    for pat in [
+        r"答案\s*[:：是为等于]+\s*([^\n,。.，]+)",
+        r"final answer\s*[:：is]+\s*([^\n,。.，]+)",
+        r"the answer is\s*([^\n,。.，]+)",
+    ]:
+        m = re.findall(pat, tail_low)
+        if m and normalize(m[-1].strip(" .。,，:：")) == gt_norm:
+            return True
+
     if pred_norm.startswith(gt_norm):
         return True
-
-    # 2. 在输出末尾 200 字符内查找答案（CoT 模型把答案放在最后）
-    tail = pred_norm[-200:]
-    # 用词边界匹配，避免 "False" 误匹配 "Falsely"
-    pattern = r'(?<![\w])' + re.escape(gt_norm) + r'(?![\w])'
-    if re.search(pattern, tail):
+    pattern = r"(?<![\w])" + re.escape(gt_norm) + r"(?![\w])"
+    if re.search(pattern, pred_norm[-300:]):
         return True
-
-    # 3. 全文搜索（最宽松，作为最后手段）
-    if re.search(pattern, pred_norm):
-        return True
-
-    return False
+    return bool(re.search(pattern, pred_norm))
 
 
 def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
@@ -107,17 +115,38 @@ def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
     return ds.select(indices), indices
 
 
-def generate(model, tokenizer, prompt: str, max_new_tokens: int = 256) -> str:
+def build_prompt(tokenizer, question: str, system: str | None = None) -> str:
+    """套 chat_template（Qwen2.5-Instruct 必须）。"""
+    user_msg = (
+        "请简洁地一步步推理，并在最后一行写："
+        "答案：<最终结果>。\n\n题目：" + question
+    )
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user_msg})
+    try:
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    except Exception:
+        prefix = (system + "\n") if system else ""
+        return prefix + user_msg + "\n答案："
+
+
+def generate(model, tokenizer, prompt: str, max_new_tokens: int = 1024) -> str:
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    prompt_len = inputs.input_ids.shape[1]
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=False,
             pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
         )
-    text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return text[len(prompt):].strip() if text.startswith(prompt) else text.strip()
+    new_tokens = outputs[0][prompt_len:]
+    return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
 
 def resolve_badcase_output(output_path: str, badcase_output: str) -> str:
@@ -146,6 +175,7 @@ def main():
     parser.add_argument("--output", default="eval/bbh_result.json")
     parser.add_argument("--badcase_output", default="", help="badcase 输出路径（默认跟随 output 自动生成 *_badcases.jsonl）")
     parser.add_argument("--load_in_4bit", action="store_true", help="使用 bitsandbytes 4bit 量化加载模型")
+    parser.add_argument("--max_new_tokens", type=int, default=1024)
     args = parser.parse_args()
 
     model, tokenizer = load_model_and_tokenizer(args.model_path, load_in_4bit=args.load_in_4bit)
@@ -161,8 +191,8 @@ def main():
     details: List[dict] = []
     correct = 0
     for ex in tqdm(ds, desc=f"BBH-{args.subset}"):
-        prompt = f"{ex['input']}\n请只输出最终答案。"
-        pred = generate(model, tokenizer, prompt)
+        prompt = build_prompt(tokenizer, ex["input"])
+        pred = generate(model, tokenizer, prompt, max_new_tokens=args.max_new_tokens)
         gt = ex["target"]
         ok = extract_answer(pred, gt)
         correct += int(ok)

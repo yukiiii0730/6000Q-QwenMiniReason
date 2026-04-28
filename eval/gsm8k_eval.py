@@ -12,8 +12,33 @@ import torch
 
 
 def extract_number(text: str) -> str:
-    matches = re.findall(r"-?\d+(?:\.\d+)?", text.replace(",", ""))
-    return matches[-1] if matches else ""
+    """从模型输出鲁棒地抽取最终数字答案。
+    优先级：\\boxed{...} > #### N > "答案"/"answer is" 标志 > 末段最后一个数字。"""
+    if not text:
+        return ""
+    s = text.replace(",", "")
+
+    m = re.findall(r"\\boxed\{\s*(-?\d+(?:\.\d+)?)\s*\}", s)
+    if m:
+        return m[-1]
+    m = re.findall(r"####\s*(-?\d+(?:\.\d+)?)", s)
+    if m:
+        return m[-1]
+    for pat in [
+        r"答案\s*[:：是为等于]+\s*\$?\s*(-?\d+(?:\.\d+)?)",
+        r"final answer\s*(?:is|:)?\s*\$?\s*(-?\d+(?:\.\d+)?)",
+        r"the answer is\s*\$?\s*(-?\d+(?:\.\d+)?)",
+        r"答案[:：]?\s*\\\(\s*(-?\d+(?:\.\d+)?)",
+    ]:
+        m = re.findall(pat, s, flags=re.IGNORECASE)
+        if m:
+            return m[-1]
+    tail = s[-300:]
+    nums = re.findall(r"-?\d+(?:\.\d+)?", tail)
+    if nums:
+        return nums[-1]
+    nums = re.findall(r"-?\d+(?:\.\d+)?", s)
+    return nums[-1] if nums else ""
 
 
 def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
@@ -82,16 +107,38 @@ def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
     return ds.select(indices), indices
 
 
-def generate_answer(model, tokenizer, prompt: str, max_new_tokens: int = 256) -> str:
+def build_prompt(tokenizer, question: str, system: str | None = None) -> str:
+    """优先用 chat_template（Qwen2.5-Instruct 强依赖），失败回退裸文本。"""
+    user_msg = (
+        "请一步步推理后给出最终答案，并在最后一行写："
+        "答案：<数字>。\n\n题目：" + question
+    )
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user_msg})
+    try:
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    except Exception:
+        prefix = (system + "\n") if system else ""
+        return prefix + user_msg + "\n答案："
+
+
+def generate_answer(model, tokenizer, prompt: str, max_new_tokens: int = 1024) -> str:
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    prompt_len = inputs.input_ids.shape[1]
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             do_sample=False,
             pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
         )
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    new_tokens = outputs[0][prompt_len:]
+    return tokenizer.decode(new_tokens, skip_special_tokens=True)
 
 
 def resolve_badcase_output(output_path: str, badcase_output: str) -> str:
@@ -120,6 +167,7 @@ def main():
     parser.add_argument("--output", default="eval/gsm8k_result.json")
     parser.add_argument("--badcase_output", default="", help="badcase 输出路径（默认跟随 output 自动生成 *_badcases.jsonl）")
     parser.add_argument("--load_in_4bit", action="store_true", help="使用 bitsandbytes 4bit 量化加载模型")
+    parser.add_argument("--max_new_tokens", type=int, default=1024, help="生成最大 token 数（CoT 需要 >= 768）")
     args = parser.parse_args()
 
     model, tokenizer = load_model_and_tokenizer(args.model_path, load_in_4bit=args.load_in_4bit)
@@ -135,8 +183,8 @@ def main():
     correct = 0
     details: List[dict] = []
     for ex in tqdm(ds, desc="Evaluating"):
-        prompt = f"请解答以下数学题，并在最后给出数字答案。\n题目：{ex['question']}\n答案："
-        pred_raw = generate_answer(model, tokenizer, prompt)
+        prompt = build_prompt(tokenizer, ex["question"])
+        pred_raw = generate_answer(model, tokenizer, prompt, max_new_tokens=args.max_new_tokens)
         pred_num = extract_number(pred_raw)
         gt_num = extract_number(ex["answer"])
         ok = pred_num == gt_num and pred_num != ""

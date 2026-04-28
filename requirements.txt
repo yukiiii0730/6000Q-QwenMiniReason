@@ -1,3 +1,4 @@
+# Colab / Linux + NVIDIA GPU 推荐用本文件。macOS 本机见 requirements-macos.txt
 unsloth>=2025.1.0
 trl>=0.14.0
 peft>=0.14.0

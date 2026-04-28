@@ -3,11 +3,77 @@ output_dir: outputs/sft
 max_seq_length: 2048
 load_in_4bit: true
 seed: 42
+stages:
+- name: stage_a_gsm8k
+  dataset:
+    path: data/processed/sft_train.json
+    filter_source:
+    - gsm8k_train
+    max_samples: 7500
+    field_map:
+      prompt: input
+      response: output
+  train:
+    max_steps: 800
+    learning_rate: 5.0e-05
+    warmup_steps: 80
+- name: stage_b1_openr1
+  dataset:
+    path: data/processed/sft_train.json
+    filter_source:
+    - openr1_math
+    max_samples: 10000
+    field_map:
+      prompt: input
+      response: output
+  train:
+    max_steps: 1000
+    learning_rate: 4.0e-05
+    warmup_steps: 80
+- name: stage_b2_orca_math
+  dataset:
+    path: data/processed/sft_train.json
+    filter_source:
+    - orca_math
+    max_samples: 15000
+    field_map:
+      prompt: input
+      response: output
+  train:
+    max_steps: 1200
+    learning_rate: 4.0e-05
+    warmup_steps: 100
+- name: stage_b3_numinamath
+  dataset:
+    path: data/processed/sft_train.json
+    filter_source_prefix:
+    - numinamath_
+    max_samples: 8000
+    field_map:
+      prompt: input
+      response: output
+  train:
+    max_steps: 600
+    learning_rate: 3.0e-05
+    warmup_steps: 50
+- name: stage_c_magpie
+  dataset:
+    path: data/processed/sft_train.json
+    filter_source:
+    - magpie_reasoning
+    max_samples: 3000
+    field_map:
+      prompt: instruction
+      response: output
+  train:
+    max_steps: 300
+    learning_rate: 2.0e-05
+    warmup_steps: 30
 datasets:
-- name: AI-MO/NuminaMath-CoT
-  split: train
+- path: data/processed/sft_train.json
   max_samples: 50000
 lora:
+  use_dora: true
   r: 16
   alpha: 32
   dropout: 0.0
@@ -22,12 +88,12 @@ lora:
 train:
   per_device_train_batch_size: 2
   gradient_accumulation_steps: 8
-  warmup_steps: 150
-  max_steps: 1800
-  learning_rate: 8.0e-05
+  warmup_steps: 100
+  max_steps: 1500
+  learning_rate: 5.0e-05
   logging_steps: 10
-  save_steps: 100
-  eval_steps: 100
+  save_steps: 200
+  eval_steps: 200
   weight_decay: 0.01
   lr_scheduler_type: cosine
   optim: paged_adamw_8bit
