@@ -181,7 +181,7 @@ EOF
 fi
 
 # ── 自适应 fp16/bf16 ───────────────────────────────────────────────────────────
-"" - <<'EOF'
+"$PYTHON" - <<'EOF'
 import torch, yaml
 supported = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
 for path in ["config/sft_config.yaml", "config/dpo_config.yaml"]:
