@@ -6,7 +6,7 @@
 #
 # 用法：
 #   bash run_gpu.sh                      # SFT(课程) → merge → eval → DPO → merge → eval
-#   bash run_gpu.sh --quick              # 快速测试（各 50/30 步）
+#   bash run_gpu.sh --quick              # SFT/DPO 全量训练；评测用少量样本快速看效果
 #   bash run_gpu.sh --skip-sft           # 跳过 SFT（已完成时）
 #   bash run_gpu.sh --skip-dpo           # 跳过 DPO（仅评测 SFT）
 #   bash run_gpu.sh --skip-eval          # 跳过本地模型评测
@@ -56,7 +56,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-$QUICK && warn "⚡ 快速测试：SFT=50 steps，DPO=30 steps，eval=50 samples"
+$QUICK && warn "⚡ --quick：SFT/DPO 按 yaml 全量训练；评测 GSM8K/MATH/BBH 使用少量样本以节省时间"
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
@@ -144,28 +144,8 @@ EOF
     DPO_DATA="${DPO_DATA%.json}_with_teacher.json"
 fi
 
-# ── 配置写回：把数据路径注入 yaml（保留 stages 字段用于 SFT，但覆写 dataset_path 作为 fallback）───
-if $QUICK; then
-    "$PYTHON" - <<EOF
-import yaml
-for cfg_path, key, val, steps, max_field in [
-    ("config/sft_config.yaml", "dataset_path", "$SFT_DATA", 50, "max_steps"),
-    ("config/dpo_config.yaml", "dataset_path", "$DPO_DATA", 30, "max_steps"),
-]:
-    with open(cfg_path, "r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
-    cfg[key] = val
-    cfg.get("train", {})["max_steps"] = steps
-    # quick 模式：禁用 stages（避免每段都要下载数据集），改用 dataset_path
-    cfg.pop("stages", None)
-    cfg.pop("datasets", None)
-    cfg.pop("dataset", None)
-    with open(cfg_path, "w", encoding="utf-8") as f:
-        yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
-print("⚡ quick 模式：dataset_path 写入完毕，stages 已禁用")
-EOF
-else
-    "$PYTHON" - <<EOF
+# ── 配置写回：注入数据路径；SFT 保留 stages / max_steps（全量训练）。--quick 仅影响下方评测样本数。───
+"$PYTHON" - <<EOF
 import yaml
 for cfg_path, key, val in [
     ("config/sft_config.yaml", "dataset_path", "$SFT_DATA"),
@@ -176,9 +156,8 @@ for cfg_path, key, val in [
     cfg[key] = val
     with open(cfg_path, "w", encoding="utf-8") as f:
         yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
-print("📦 数据路径已写入 config（stages 保持两阶段课程）")
+print("📦 数据路径已写入 config（SFT stages / max_steps 不变，与全量一致）")
 EOF
-fi
 
 # ── 自适应 fp16/bf16 ───────────────────────────────────────────────────────────
 "$PYTHON" - <<'EOF'

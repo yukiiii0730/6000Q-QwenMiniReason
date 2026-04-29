@@ -1,12 +1,64 @@
 {
-  "baseline_gsm8k": 0.46,
-  "sft_gsm8k": 0.5,
-  "qwen25_7b_gsm8k": 0.82,
-  "qwen25_14b_gsm8k": 0.64,
-  "finetuned_gsm8k": 0.4,
-  "baseline_bbh": 0.8,
-  "sft_bbh": 0.86,
-  "qwen25_7b_bbh": 0.78,
-  "qwen25_14b_bbh": 0.68,
-  "finetuned_bbh": 0.84
+  "rows": [
+    {
+      "label": "Qwen2.5-1.5B-Instruct (Baseline)",
+      "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "gsm8k": 0.46,
+      "math500": null,
+      "bbh_macro": 0.8,
+      "source": {
+        "gsm8k": "self",
+        "math500": "na",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "Qwen2.5-7B-Instruct (官方/sanity)",
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "gsm8k": 0.82,
+      "math500": 0.7,
+      "bbh_macro": 0.78,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "Qwen2.5-14B-Instruct (官方/sanity)",
+      "model_id": "Qwen/Qwen2.5-14B-Instruct",
+      "gsm8k": 0.64,
+      "math500": 0.78,
+      "bbh_macro": 0.68,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "我们 SFT only",
+      "model_id": "ours_sft",
+      "gsm8k": 0.62,
+      "math500": 0.5,
+      "bbh_macro": 0.3852,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "我们 SFT + DPO",
+      "model_id": "ours_sft_dpo",
+      "gsm8k": 0.66,
+      "math500": 0.56,
+      "bbh_macro": 0.4111,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    }
+  ]
 }

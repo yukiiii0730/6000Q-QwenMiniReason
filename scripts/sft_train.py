@@ -11,6 +11,7 @@
 import argparse
 import csv
 import copy
+import gc
 import json
 import os
 import yaml
@@ -44,6 +45,13 @@ def optimize_torch_runtime():
         except Exception:
             pass
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
+
+
+def cleanup_training_memory():
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
 
 
 def find_latest_checkpoint(output_dir: str):
@@ -430,6 +438,9 @@ def main():
         export_trainer_metrics(trainer, stage_dir, tag=stage["name"])
         trainer.save_model(stage_dir)
         tokenizer.save_pretrained(stage_dir)
+        del ds
+        del trainer
+        cleanup_training_memory()
 
     # 最终 adapter 同步到 output_dir 根（让下游 merge_lora / dpo 能直接拿到）
     if len(stages) > 1:
@@ -442,6 +453,8 @@ def main():
             if os.path.isfile(src):
                 shutil.copy2(src, dst)
         print(f"\n📌 最终 adapter 已同步至: {output_dir_root}")
+
+    cleanup_training_memory()
 
 
 if __name__ == "__main__":

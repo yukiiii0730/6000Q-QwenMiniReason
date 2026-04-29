@@ -12,6 +12,7 @@
 """
 import argparse
 import csv
+import gc
 import json
 import os
 from pathlib import Path
@@ -200,6 +201,13 @@ def optimize_torch_runtime():
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "true")
 
 
+def cleanup_training_memory():
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
+
+
 def find_latest_checkpoint(output_dir: str):
     out = Path(output_dir)
     if not out.exists():
@@ -339,6 +347,9 @@ def main():
     export_trainer_metrics(trainer, cfg["output_dir"])
     trainer.save_model(cfg["output_dir"])
     tokenizer.save_pretrained(cfg["output_dir"])
+    del ds
+    del trainer
+    cleanup_training_memory()
 
 
 if __name__ == "__main__":

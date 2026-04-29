@@ -17,6 +17,8 @@ stages:
     max_steps: 800
     learning_rate: 5.0e-05
     warmup_steps: 80
+    bf16: true
+    fp16: false
 - name: stage_b1_openr1
   dataset:
     path: data/processed/sft_train.json
@@ -30,6 +32,8 @@ stages:
     max_steps: 1000
     learning_rate: 4.0e-05
     warmup_steps: 80
+    bf16: true
+    fp16: false
 - name: stage_b2_orca_math
   dataset:
     path: data/processed/sft_train.json
@@ -43,6 +47,8 @@ stages:
     max_steps: 1200
     learning_rate: 4.0e-05
     warmup_steps: 100
+    bf16: true
+    fp16: false
 - name: stage_b3_numinamath
   dataset:
     path: data/processed/sft_train.json
@@ -56,6 +62,8 @@ stages:
     max_steps: 600
     learning_rate: 3.0e-05
     warmup_steps: 50
+    bf16: true
+    fp16: false
 - name: stage_c_magpie
   dataset:
     path: data/processed/sft_train.json
@@ -69,6 +77,8 @@ stages:
     max_steps: 300
     learning_rate: 2.0e-05
     warmup_steps: 30
+    bf16: true
+    fp16: false
 datasets:
 - path: data/processed/sft_train.json
   max_samples: 50000

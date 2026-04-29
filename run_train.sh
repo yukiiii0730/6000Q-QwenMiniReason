@@ -81,8 +81,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 if $QUICK; then
-    SFT_N=500; MAGPIE_N=500; DPO_N=500; EVAL_N=50; BASELINE_N=50
-    warn "快速测试模式：每个数据集仅取 500 条，SFT max_steps=50，DPO max_steps=30"
+    EVAL_N=50
+    BASELINE_N=50
+    warn "⚡ --quick：SFT/DPO 仍为全量（默认 SFT_N/MAGPIE_N/DPO_N + yaml steps）；仅评测与 baseline 样本数为 $EVAL_N"
 fi
 
 # ── 阶段路由：local-only / gpu-only / all ────────────────────────────────────
@@ -367,36 +368,8 @@ if ! $FORCE; then
     fi
 fi
 
-# ── 快速测试：禁用 stages，回退到本地 JSON ───────────────────────────────────
-# 全量模式：保持 stages 两段式课程（OpenR1 → Magpie）
-if $QUICK; then
-    python - <<'EOF'
-import yaml
-
-with open("config/sft_config.yaml") as f:
-    cfg = yaml.safe_load(f)
-# quick 模式：禁用 stages 和 datasets，使用本地 JSON 单段训练
-cfg.pop("stages", None)
-cfg.pop("datasets", None)
-cfg.pop("dataset", None)
-cfg["dataset_path"] = "data/processed/sft_train.json"
-cfg["train"]["max_steps"] = 50
-with open("config/sft_config.yaml", "w") as f:
-    yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
-
-with open("config/dpo_config.yaml") as f:
-    cfg = yaml.safe_load(f)
-cfg.pop("dataset", None)
-cfg["dataset_path"] = "data/processed/dpo_train.json"
-cfg["train"]["max_steps"] = 30
-with open("config/dpo_config.yaml", "w") as f:
-    yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
-
-print("⚡ quick 模式：禁用 stages，使用本地 JSON，max_steps=SFT 50 / DPO 30")
-EOF
-else
-    # 全量模式：把 stages 中的 max_samples 同步为 CLI 入参（不破坏字段结构）
-    python - <<EOF
+# ── 训练数据规模：stages 课程 + CLI 入参（与 --quick 无关；quick 仅缩小评测样本）───
+python - <<EOF
 import yaml
 
 with open("config/sft_config.yaml") as f:
@@ -420,9 +393,8 @@ if "dataset" in cfg and isinstance(cfg["dataset"], dict):
 with open("config/dpo_config.yaml", "w") as f:
     yaml.dump(cfg, f, allow_unicode=True, sort_keys=False)
 
-print(f"📦 全量模式：SFT Stage1a={$SFT_N}, Stage1b={$MAGPIE_N}, DPO={$DPO_N}")
+print(f"📦 SFT Stage1a={$SFT_N}, Stage1b={$MAGPIE_N}, DPO={$DPO_N}（max_steps 见 yaml）")
 EOF
-fi
 
 # =============================================================================
 # Step 0：Baseline 评测（训练前，原始模型）
