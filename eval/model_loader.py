@@ -159,8 +159,7 @@ def _load_with_adapters(adapter_dirs: list[str], tokenizer, load_in_4bit: bool =
     for adapter_dir in adapter_dirs:
         model = PeftModel.from_pretrained(model, adapter_dir)
         print(f"  已加载 adapter: {adapter_dir}")
-
-    # 合并 adapter 到 base（推理时不需要 adapter 开销）
-    model = model.merge_and_unload()
-    print(f"  adapter 已合并到 base model")
+        # 每个 adapter 加载后立即合并，避免嵌套 PeftModel 导致 key 不匹配
+        model = model.merge_and_unload()
+        print(f"  adapter {adapter_dir} 已合并到 base model")
     return model, tokenizer
