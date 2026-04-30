@@ -46,11 +46,14 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List
 
+import time
 import torch
 from datasets import load_dataset
 from tqdm import tqdm
 
 from model_loader import load_model_and_tokenizer
+
+CHECKPOINT_EVERY = 20
 
 
 # =============================================================================
@@ -349,6 +352,22 @@ def load_math500(split: str = "test"):
         return ds
 
 
+def _save_checkpoint(output_path: str, details: list, sample_indices: list, args):
+    acc = sum(1 for d in details if d.get("correct")) / max(len(details), 1)
+    result = {
+        "accuracy": round(acc, 4),
+        "total": len(details),
+        "correct": sum(1 for d in details if d.get("correct")),
+        "sampling_mode": args.sampling_mode,
+        "seed": args.seed,
+        "sample_indices": sample_indices,
+        "details": details,
+    }
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+
 def main():
     ap = argparse.ArgumentParser(description="MATH-500 自动评测")
     ap.add_argument("--model_path", required=True)
@@ -369,10 +388,29 @@ def main():
         ds, max_samples=args.max_samples, sampling_mode=args.sampling_mode, seed=args.seed
     )
 
-    correct = 0
+    # --- 断点续跑 ---
+    ckpt_path = Path(args.output)
     details: List[dict] = []
-    for ex in tqdm(ds, desc="MATH-500"):
+    correct = 0
+    done_problems: set = set()
+    if ckpt_path.exists() and not getattr(args, "force", False):
+        try:
+            with open(ckpt_path, encoding="utf-8") as f:
+                old = json.load(f)
+            details = old.get("details", [])
+            correct = sum(1 for d in details if d.get("correct"))
+            done_problems = {d["problem"] for d in details}
+            if details:
+                print(f"[续跑] 已有 {len(details)} 条结果，跳过已完成")
+        except Exception:
+            pass
+
+    total = len(ds)
+    t0 = time.time()
+    for ex in tqdm(ds, desc="MATH-500", initial=len(details), total=total):
         problem = ex.get("problem") or ex.get("question") or ""
+        if problem in done_problems:
+            continue
         gt_full = ex.get("solution") or ex.get("answer") or ""
         gt_answer = ex.get("answer") or extract_boxed(gt_full) or ""
 
@@ -392,6 +430,14 @@ def main():
             "subject": ex.get("subject"),
             "correct": ok,
         })
+        if len(details) % CHECKPOINT_EVERY == 0:
+            elapsed = time.time() - t0
+            acc_so_far = correct / max(len(details), 1)
+            speed = len(details) / max(elapsed, 1e-6)
+            eta = (total - len(details)) / max(speed, 1e-6)
+            print(f"  [{len(details)}/{total}] acc={acc_so_far:.1%}  "
+                  f"elapsed={elapsed:.0f}s  ETA={eta:.0f}s")
+            _save_checkpoint(args.output, details, sample_indices, args)
 
     n = len(details)
     acc = correct / max(n, 1)

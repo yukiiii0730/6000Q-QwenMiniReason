@@ -2,6 +2,7 @@ import argparse
 import json
 import random
 import re
+import time
 from pathlib import Path
 from typing import List
 
@@ -10,6 +11,8 @@ from tqdm import tqdm
 import torch
 
 from model_loader import load_model_and_tokenizer
+
+CHECKPOINT_EVERY = 20  # 每 N 条保存一次断点 + 打印进度
 
 
 def extract_number(text: str) -> str:
@@ -132,6 +135,23 @@ def write_badcases(details: List[dict], output_path: str) -> int:
     return len(badcases)
 
 
+def _save_checkpoint(output_path: str, details: list, sample_indices: list, args):
+    """保存断点（中间结果），格式与最终输出一致。"""
+    acc = sum(1 for d in details if d.get("correct")) / max(len(details), 1)
+    result = {
+        "accuracy": acc,
+        "total": len(details),
+        "correct": sum(1 for d in details if d.get("correct")),
+        "sampling_mode": args.sampling_mode,
+        "seed": args.seed,
+        "sample_indices": sample_indices,
+        "details": details,
+    }
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+
 def main():
     parser = argparse.ArgumentParser(description="GSM8K 自动评测")
     parser.add_argument("--model_path", required=True)
@@ -155,9 +175,28 @@ def main():
         seed=args.seed,
     )
 
-    correct = 0
+    # --- 断点续跑：检查已有 checkpoint ---
+    ckpt_path = Path(args.output)
     details: List[dict] = []
-    for ex in tqdm(ds, desc="Evaluating"):
+    correct = 0
+    done_questions: set = set()
+    if ckpt_path.exists() and not getattr(args, "force", False):
+        try:
+            with open(ckpt_path, encoding="utf-8") as f:
+                old = json.load(f)
+            details = old.get("details", [])
+            correct = sum(1 for d in details if d.get("correct"))
+            done_questions = {d["question"] for d in details}
+            if details:
+                print(f"[续跑] 已有 {len(details)} 条结果，跳过已完成")
+        except Exception:
+            pass
+
+    total = len(ds)
+    t0 = time.time()
+    for ex in tqdm(ds, desc="Evaluating", initial=len(details), total=total):
+        if ex["question"] in done_questions:
+            continue
         prompt = build_prompt(tokenizer, ex["question"])
         pred_raw = generate_answer(model, tokenizer, prompt, max_new_tokens=args.max_new_tokens)
         pred_num = extract_number(pred_raw)
@@ -174,6 +213,15 @@ def main():
                 "correct": ok,
             }
         )
+        # 进度打印 + 断点保存
+        if len(details) % CHECKPOINT_EVERY == 0:
+            elapsed = time.time() - t0
+            acc_so_far = correct / max(len(details), 1)
+            speed = len(details) / max(elapsed, 1e-6)
+            eta = (total - len(details)) / max(speed, 1e-6)
+            print(f"  [{len(details)}/{total}] acc={acc_so_far:.1%}  "
+                  f"elapsed={elapsed:.0f}s  ETA={eta:.0f}s")
+            _save_checkpoint(args.output, details, sample_indices, args)
 
     acc = correct / max(len(details), 1)
     result = {

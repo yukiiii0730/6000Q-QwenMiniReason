@@ -1,6 +1,7 @@
 import argparse
 import json
 import random
+import time
 from pathlib import Path
 from typing import List
 
@@ -9,6 +10,8 @@ from tqdm import tqdm
 import torch
 
 from model_loader import load_model_and_tokenizer
+
+CHECKPOINT_EVERY = 20
 
 
 def normalize(x: str) -> str:
@@ -140,6 +143,23 @@ def write_badcases(details: List[dict], output_path: str) -> int:
     return len(badcases)
 
 
+def _save_checkpoint(output_path: str, details: list, sample_indices: list, args):
+    acc = sum(1 for d in details if d.get("correct")) / max(len(details), 1)
+    result = {
+        "subset": args.subset,
+        "accuracy": acc,
+        "total": len(details),
+        "correct": sum(1 for d in details if d.get("correct")),
+        "sampling_mode": args.sampling_mode,
+        "seed": args.seed,
+        "sample_indices": sample_indices,
+        "details": details,
+    }
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+
 def main():
     parser = argparse.ArgumentParser(description="BBH 评测")
     parser.add_argument("--model_path", required=True)
@@ -163,15 +183,42 @@ def main():
         seed=args.seed,
     )
 
+    # --- 断点续跑 ---
+    ckpt_path = Path(args.output)
     details: List[dict] = []
     correct = 0
-    for ex in tqdm(ds, desc=f"BBH-{args.subset}"):
+    done_inputs: set = set()
+    if ckpt_path.exists() and not getattr(args, "force", False):
+        try:
+            with open(ckpt_path, encoding="utf-8") as f:
+                old = json.load(f)
+            details = old.get("details", [])
+            correct = sum(1 for d in details if d.get("correct"))
+            done_inputs = {d["input"] for d in details}
+            if details:
+                print(f"[续跑] 已有 {len(details)} 条结果，跳过已完成")
+        except Exception:
+            pass
+
+    total = len(ds)
+    t0 = time.time()
+    for ex in tqdm(ds, desc=f"BBH-{args.subset}", initial=len(details), total=total):
+        if ex["input"] in done_inputs:
+            continue
         prompt = build_prompt(tokenizer, ex["input"])
         pred = generate(model, tokenizer, prompt, max_new_tokens=args.max_new_tokens)
         gt = ex["target"]
         ok = extract_answer(pred, gt)
         correct += int(ok)
         details.append({"input": ex["input"], "pred": pred, "gt": gt, "correct": ok})
+        if len(details) % CHECKPOINT_EVERY == 0:
+            elapsed = time.time() - t0
+            acc_so_far = correct / max(len(details), 1)
+            speed = len(details) / max(elapsed, 1e-6)
+            eta = (total - len(details)) / max(speed, 1e-6)
+            print(f"  [{len(details)}/{total}] acc={acc_so_far:.1%}  "
+                  f"elapsed={elapsed:.0f}s  ETA={eta:.0f}s")
+            _save_checkpoint(args.output, details, sample_indices, args)
 
     acc = correct / max(len(details), 1)
     result = {
