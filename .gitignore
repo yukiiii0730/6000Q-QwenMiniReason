@@ -8,10 +8,13 @@ build/
 
 # 训练输出（体积大，不上传）
 outputs/
+colab/
+gpu/
 *.bin
 *.safetensors
 *.pt
 *.pth
+*.tar.gz
 
 # 数据（原始数据不上传）
 data/raw/*
@@ -41,10 +44,12 @@ logs/runs/
 logs/*.log
 logs/*.csv
 logs/latest
-# 评测结果 JSON 保留（git 追踪方便跨版本对比）
-# logs/gsm8k_*.json  ← 保留
-# logs/bbh_*.json    ← 保留
-# logs/math_*.json   ← 保留
+# 评测结果 JSON（本地或流水线生成，不上传）
+logs/*.json
+
+# 本地打包产物
+local_artifacts.zip
+*.zip
 
 # Unsloth 编译缓存
 unsloth_compiled_cache/

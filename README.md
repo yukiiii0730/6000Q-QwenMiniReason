@@ -111,7 +111,19 @@ zip -r local_artifacts.zip data/ logs/ config/
 
 ### Step 4 — GPU 阶段（Colab A100 / 服务器）
 
-**Colab：** 打开 `notebooks/colab_train.ipynb`，按顺序执行各 Cell。
+**Colab 训练：** 打开 `notebooks/colab_train.ipynb`，按顺序执行各 Cell（Group B/C 训练）。
+
+**Colab 消融实验：** 打开 `notebooks/colab_ablation.ipynb`，完整流水线（P0-P5）：
+- P0: 环境 + Drive 同步（~5 min）
+- P1: Group B 扩充评测 n=200（~1.5h）
+- P2: 错误分类 + Targeted DPO 数据生成（~30 min，需 DASHSCOPE_API_KEY）
+- P3: Group A 训练 + 评测（~4h）
+- P4: Group D 训练 + 评测（~1.5h）
+- P5: 汇总 + 同步
+
+每个 Phase 支持断点续跑，完成后自动同步到 Google Drive。
+
+**服务器 / Colab（仅训练、评测在本地做）：** 可用 `bash run_gpu.sh --skip-eval` 只跑 SFT / DPO / 合并，不上 GSM8K·MATH·BBH 本地评；将 `outputs/` 同步到本机后执行 `bash run_eval_local.sh`（与 `run_gpu` 默认评测子集一致）。先自检本机： `python3 scripts/check_eval_env.py`（需已同步 `outputs/sft_merged` 与 `outputs/merged`）。
 
 **服务器：**
 
@@ -119,6 +131,8 @@ zip -r local_artifacts.zip data/ logs/ config/
 pip install -r requirements.txt
 
 bash run_gpu.sh                         # 完整：SFT → DPO → 评测
+bash run_gpu.sh --skip-eval             # 只训练+合并，评测在本地用 run_eval_local.sh
+bash run_eval_local.sh                  # 本机：评 SFT 与最终合并模型（需已同步 outputs/）
 bash run_gpu.sh --use-teacher-dpo       # 追加 Teacher 生成的 DPO 数据
 bash run_gpu.sh --use-filtered-data     # 使用质量过滤后的数据（需先跑 filter）
 bash run_gpu.sh --iterative-dpo 2       # 额外跑 2 轮 Iterative DPO
@@ -140,6 +154,8 @@ logs/
 
 ### Step 5 — 本地生成对比表
 
+`run_eval_local.sh` 结束时若 `logs/*.json` 已齐，会调用 `compare_table.py`；仅补表时：
+
 ```bash
 python3 eval/compare_table.py
 python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eval/figures
@@ -153,6 +169,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 .
 ├── run_local.sh              # 本地阶段一键脚本（无需 GPU）
 ├── run_gpu.sh                # GPU 阶段一键脚本
+├── run_eval_local.sh         # 仅本机评测（可 --quick；--load-in-4bit 仅 NVIDIA+CUDA，Mac 用默认半精度）
 ├── run_train.sh              # 兼容入口（本地有 GPU 时使用）
 │
 ├── config/
@@ -172,6 +189,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 │   ├── iterative_dpo_loop.py # Iterative DPO 编排
 │   ├── run_ablation.py       # 6 组 ablation 对照实验
 │   ├── stats_significance.py # McNemar 检验 + bootstrap CI
+│   ├── check_eval_env.py     # 本机跑 eval 前自检（CPU/MPS/CUDA、内存）
 │   └── watchdog_run.py       # 进程监控（卡死自动重启）
 │
 ├── eval/
@@ -186,7 +204,8 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 ├── data/processed/           # 本地生成的训练数据（gitignore 大文件）
 ├── logs/                     # 评测结果 JSON + 每次运行日志
 └── notebooks/
-    └── colab_train.ipynb     # Colab GPU 训练入口
+    ├── colab_train.ipynb     # Colab GPU 训练入口（Group B/C）
+    └── colab_ablation.ipynb  # Colab 完整消融实验（P0-P5：评测+错误分类+Group A/D 训练）
 ```
 
 ---
@@ -201,7 +220,16 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 
 > 引用：Qwen Team, "Qwen2.5 Technical Report", arXiv:2412.15115。1.5B 的 GSM8K/MATH 为官方值，BBH 无官方值需 GPU 阶段自跑。训练后结果将回填本表。
 
-v4 训练完成后结果将回填上表。
+**v4 Group B（DoRA + 五段课程 + Standard DPO）已完成（2026-04-29）：**
+
+| 模型 | GSM8K | MATH-500 | BBH-27 macro |
+|---|---|---|---|
+| Qwen2.5-1.5B-Instruct（Baseline）| 46% | ~55%（官方）| ~38%（估算）|
+| **Ours SFT only** | **62%** | **50%** | **38.52%** |
+| **Ours SFT + DPO（Group B）** | **66%** | **56%** | **41.11%** |
+| Qwen2.5-7B-Instruct（参考）| 82% | 70% | — |
+
+> 当前 n=50（CI ±14pp），扩充评测 n=200 和消融实验（Groups A/D）在 `colab_ablation.ipynb` 中执行。
 
 ---
 

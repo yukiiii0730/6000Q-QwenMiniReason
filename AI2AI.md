@@ -195,3 +195,82 @@
 - 创建 me2AI.md（11 章节，含架构图 + 评分对照）
 - 创建 AI2AI.md（本文件，含 v1-v4 完整迭代史）
 - 接下来开始 v4 代码落地
+
+### 2026-04-29 · GPU 服务器 + Colab 训练完成（v4 首次完整跑通）
+
+**GPU 服务器（NVIDIA L20 47.4GB）— Group B（DoRA + 五段课程 + Standard DPO）**
+
+| 阶段 | 步数 | 初始loss | 末段loss | 耗时 |
+|------|------|---------|---------|------|
+| Stage A gsm8k | 800 | 1.286 | 0.225 | ~2.5h |
+| Stage B1 openr1 | 1000 | 0.952 | 0.641 | ~2.1h |
+| Stage B2 orca | 1200 | 0.549 | 0.347 | ~1.1h |
+| Stage B3 numina | 600 | 0.616 | 0.531 | ~0.8h |
+| Stage C magpie | 300 | 0.623 | 0.517 | ~0.5h |
+| DPO（distilabel，sigmoid，β=0.1）| 600 | 0.687 | 0.458 | ~1.9h |
+
+**GPU Group B 评测结果（n=50，注：CI ±14pp，待扩充）**
+
+| 指标 | SFT only | SFT+DPO | Δ |
+|------|---------|---------|---|
+| GSM8K | 62% | **66%** | +4pp |
+| MATH-500 | 50% | **56%** | +6pp |
+| BBH-27 macro | 38.52% | **41.11%** | +2.6pp |
+
+**Colab T4（Teacher-DPO）— Group C 训练完成，评测待补**
+
+- SFT 与 GPU 完全一致（seed=42，最大偏差 <0.02，hardware noise）
+- DPO train_loss 0.2394（vs GPU 0.5611），teacher 数据质量更高导致更低 loss
+- 评测文件为旧 run 残留（03-14），**v4 Colab 模型从未正式评测**
+
+**关键发现**
+
+1. DPO 无 KL 漂移：rewards/chosen 维持 0 附近，margin 主要来自压低 rejected
+2. Stage A 过拟合风险：800 steps + 16.7 packing-epoch，loss 降到 0.22，后续消融可将 max_steps 减到 500 验证
+3. n=50 评测太小：95% CI ±14pp，无法区分 4-6pp 的组间差异
+
+**待完成事项（消融实验）**
+
+- [ ] L1: 评测 Colab Group C 模型（需下载权重）
+- [ ] L2: Group B 评测扩充到 n=200（`bash run_eval_expanded.sh`）
+- [ ] L3: GSM8K badcase 错误分类（`bash run_local_pipeline.sh`）
+- [ ] L4: 生成 Targeted DPO 数据（L3 完成后）
+- [ ] L5: 统计显著性检验（所有 eval 完成后）
+- [ ] L6: 可视化（`eval/visualize.py`）
+- [ ] G1-G3: Group A LoRA baseline（Colab `colab_ablation.ipynb`）
+- [ ] G4-G5: Group D Targeted DPO（创新核心，Colab `colab_ablation.ipynb`）
+- [ ] G6-G7: Group E/F 可选
+
+**评测样本量规范（v4 统一）**
+
+- GSM8K: n=200（CI ±6.9pp）
+- MATH-500: n=200（CI ±6.9pp）
+- BBH-27: 30/task × 27 = 810（macro CI ±3.4pp）
+
+### 2026-04-30 · Colab 消融流水线整合 + 质量检查
+
+**整合 colab_eval_l1l2 → colab_ablation**
+
+- 将 `colab_eval_l1l2.ipynb`（L1+L2 扩充评测）合并到 `colab_ablation.ipynb` 的 P1 Phase
+- 删除 `colab_eval_l1l2.ipynb`，统一为单个 notebook 完成全部消融实验
+- `colab_ablation.ipynb` 结构：P0（环境）→ P1（Group B 评测 n=200）→ P2（错误分类+Targeted DPO 数据）→ P3（Group A 训练+评测）→ P4（Group D 训练+评测）→ P5（汇总+同步）
+
+**质量检查修复（3 个问题）**
+
+1. Cell 6 f-string 嵌套花括号 `{'='*60}` → 改为 `SEP` 变量（Python 3.12+ 语法，Colab 3.10/3.11 不支持）
+2. Cells 10/12/15 移除 `--resume_from_checkpoint` CLI 参数（`sft_train.py`/`dpo_train.py` 内部自动检测 checkpoint，无此 CLI 参数）
+3. `eval/compare_table.py` 确认为模块级脚本，subprocess 调用无需修改
+
+**eval/model_loader.py Mac MPS 兼容**
+
+- 检测 bitsandbytes NF4 量化权重（uint8 dtype）时自动回退到 base model + adapter 加载
+- 清除 config.json 中嵌入的 quantization_config
+- 注意：模型权重本身仍为 NF4 量化格式，Mac MPS 无法直接加载——评测统一在 Colab A100 执行
+
+**待完成（Colab 执行）**
+
+- [ ] P1: Group B n=200 评测（GSM8K/MATH/BBH）
+- [ ] P2: 错误分类 + Targeted DPO 数据生成
+- [ ] P3: Group A 训练 + 评测
+- [ ] P4: Group D 训练 + 评测
+- [ ] P5: 汇总

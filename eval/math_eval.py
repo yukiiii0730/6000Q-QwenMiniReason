@@ -49,33 +49,8 @@ from typing import List
 import torch
 from datasets import load_dataset
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-
-# =============================================================================
-# 模型加载（与 gsm8k_eval 保持一致）
-# =============================================================================
-def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    if tokenizer.pad_token_id is None:
-        tokenizer.pad_token_id = tokenizer.eos_token_id
-
-    model_kwargs = {"device_map": "auto", "trust_remote_code": True}
-    if load_in_4bit:
-        model_kwargs["quantization_config"] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-        )
-    else:
-        model_kwargs["dtype"] = torch.float16 if torch.cuda.is_available() else torch.float32
-
-    model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs)
-    model.config.pad_token_id = tokenizer.pad_token_id
-    return model, tokenizer
+from model_loader import load_model_and_tokenizer
 
 
 # =============================================================================

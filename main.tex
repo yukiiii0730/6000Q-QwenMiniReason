@@ -1,0 +1,224 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\title{DSAA-6000Q Project Final Report Template}
+\author{Team Members: [1-5 people] \\ Date: [Submission Date]}
+\date{}
+
+\usepackage{natbib}
+\usepackage{graphicx}
+
+\begin{document}
+
+\maketitle
+
+
+
+\begin{abstract}
+A brief summary of the project, including the research question or objective, methods, and key findings.
+\end{abstract}
+\line(1,0){550} 
+\section*{Timeline [Important!]}
+\begin{itemize}
+    \item \textbf{Team-up due}: {\textbf{\color{red} April 19th, 2026.}} 
+    
+    Please complete the team-up and register at this link \href{https://docs.google.com/spreadsheets/d/1FJsGVfhf7oHint2zKoZ13pNIbClVsMkPLsbs6yYbZAE/edit?usp=sharing}{[Google Sheet (Teams)]}.
+    \item \textbf{Project topic \& TA-matching due}: {\textbf{\color{red} April 19th, 2026.}}
+
+    Please decide on the topic of your project, fill in the column of ``Project name" in this link \href{https://docs.google.com/spreadsheets/d/1FJsGVfhf7oHint2zKoZ13pNIbClVsMkPLsbs6yYbZAE/edit?usp=sharing}{[Google Sheet (Teams)]}.
+
+    Please also reach out to 1-2 TAs about your project plan via e-mail, budget requirements of the potential resources required in your project (if any). 
+    
+    The TA would be happy to help with supervising / question-answering your project.  
+
+    {\textbf{\color{red} Self-proposed project requires approval of the instructor.}}
+    \item \textbf{Project presentation due}: {\textbf{\color{red} May 12th, 2026.}}
+
+    In the week-13 (final 2 lectures (May 11, May 12)), each team will have around 8 minutes to present and share their project results.
+
+    The presentation grade will consist of 20\% of your project grades.
+    \item \textbf{Final report \& supplementation materials due}: {\textbf{\color{red} May 17th, 2026.}}
+
+    Last day to submit the final project report of your team, {\textbf{\color{red} no late days are allowed.}}
+\end{itemize}
+
+\line(1,0){550} 
+\section{Introduction}
+\begin{itemize}
+    \item Background and context of the project.
+    \item Motivation and significance of the study.
+    \item Objectives and research questions.
+\end{itemize}
+
+\section{Related Works}
+\begin{itemize}
+    \item Summary of existing research related to the project.
+    \item How your project builds upon or diverges from existing work.
+\end{itemize}
+
+
+\section{Methodology}
+\subsection{[Option 1] Model Training/Fine-tuning}
+\begin{itemize}
+    \item \textbf{Data Collection and Pre-processing:} Describe the dataset used, including sources, size, and any pre-processing steps undertaken (e.g., tokenization, normalization).
+    \item \textbf{Model Architecture:} Specify the model used (e.g., BERT, RoBERTa, T5, GPT-2) and justify the choice based on your research objectives.
+    \item \textbf{Training Parameters:} Detail the training setup, including hyperparameters like learning rate, batch size, epochs, and optimizer used.
+    \item \textbf{Computational Resources:} Mention the computational resources utilized, such as GPUs, and any specific platforms (e.g., HuggingFace).
+\end{itemize}
+
+\subsection{[Option 2] Prompt Evaluation}
+\begin{itemize}
+    \item \textbf{Model Selection:} Identify the large language model used (e.g., GPT-4.5, Deepseek-R1) and explain the rationale for its selection.
+    \item \textbf{Prompt Design:} Describe how prompts were crafted, including any iterative testing or refinement processes.
+    \item \textbf{Evaluation Criteria:} Outline the criteria for evaluating the model's responses, such as accuracy, coherence, creativity, or ethical considerations.
+    \item \textbf{Budget and Access:} Discuss any budgetary constraints and how access to the models was managed.
+\end{itemize}
+
+\subsection{[Option 3] Self-Proposed Projects}
+\begin{itemize}
+    \item \textbf{Project Description:} Provide a detailed description of your unique project idea, including objectives and expected outcomes.
+    \item \textbf{Methodological Framework:} Define the framework or approach you used, including any theoretical or practical models.
+    \item \textbf{Tools and Technologies:} List any specific tools, technologies, or platforms employed in your project.
+    \item \textbf{Validation and Testing:} Explain how you validated your results or tested your hypotheses.
+\end{itemize}
+
+\section{Results}
+\begin{itemize}
+    \item Presentation of the main findings.
+    \item Tables, graphs, and other visualizations to support the results.
+    \item Interpretation of the results.
+    \item (Optional) Comparison with previous studies. 
+    \item Limitations of the study.
+\end{itemize}
+
+
+\section{Conclusion}
+\begin{itemize}
+    \item Summary of findings.
+    \item Implications and potential applications.
+    \item Challenges that you met.
+    \item Suggestions for future research.
+\end{itemize}
+
+
+\section{Contributions}
+
+For each group member, list your estimated percentage of contributions to this project (sum up to 100\%). 
+\newline
+
+\textbf{Note 1: if some group member contributes too little to the project, for example, 3\% in a group of 4, you will get a relative lower grade compared with your teammates. The student who contributes much more than all other members might have a relative higher grade compared with your teammates.}
+
+\textbf{Note 2: the grading rubrics are given in Table 1.}
+
+\section{Report Format}
+The report should follow this template (docs/pdf) via microsoft/overleaf/latex, etc. Reference and appendix are needed. 
+
+\bibliographystyle{plain}
+\bibliography{references}
+Properly formatted citations of all sources used.
+
+\begin{table}[ht]\label{tab:rubrics}
+\centering
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{4pt}
+
+\begin{tabular}{|m{3.5cm}|m{3.5cm}|m{3.5cm}|m{3.5cm}|m{3.5cm}|}
+\hline
+\textbf{Project Rubrics} & \textbf{Excellent} & \textbf{Good} & \textbf{Fair} & \textbf{Poor} \\ 
+\hline
+\begin{tabular}[c]{@{}l@{}}Problem Definition and \\ Relevance (15\%)\end{tabular} & \textbf{(13-15 points):} Clearly defines a problem with real-world relevance that requires the LLM-related approach.  & \textbf{(10-12 points):} Defines a relevant problem with moderate complexity, integrating / leveraging LLM. & \textbf{(7-9 points):} Defines a problem, but it lacks relevance, depth, or LLM integration. & \textbf{(0-6 points):} Problem is poorly defined or irrelevant, with minimal integration of course themes. \\ 
+\hline
+\begin{tabular}[c]{@{}l@{}}Innovation and \\ Creativity (20\%)\end{tabular} & \textbf{(18-20 points):} Project demonstrates highly original and creative ideas, applying innovative solutions or methodologies in novel ways. & \textbf{(15-17 points):} Shows some originality and creativity, with moderate innovation in approach or solution. & \textbf{(10-14 points):} Limited creativity; applies standard methods with minimal innovation. & \textbf{(0-9 points):} Lacks creativity; relies heavily on existing solutions without any novel contributions. \\ 
+\hline
+\begin{tabular}[c]{@{}l@{}}Report Coherence \\ and Presentation (15\%)\end{tabular} & \textbf{(13-15 points):} Report is well-structured, with clear organization, precise language, strong coherence, and minimal errors. & \textbf{(10-12 points):} Report is well-written, with good organization and clarity, though minor issues in coherence or language may be present. & \textbf{(7-9 points):} Report conveys key points but has noticeable issues in organization, clarity, or grammar. & \textbf{(0-6 points):} Report is poorly written, with weak structure, unclear arguments, and frequent grammatical errors. \\
+\hline
+\begin{tabular}[c]{@{}l@{}}Technical \\ Implementation (30\%)\end{tabular} & \textbf{(26-30 points):} Implementation is robust, functional, and demonstrates advanced technical skills in the field of LLM. & \textbf{(19-25 points):} Functional implementation with moderate complexity and some advanced techniques. & \textbf{(13-18 points):} Basic implementation with limited functionality or technical depth. & \textbf{(0-12 points):} Weak or incomplete implementation with significant technical flaws. \\ 
+\hline
+\begin{tabular}[c]{@{}l@{}}Presentation and \\ Communication (20\%)\end{tabular} & \textbf{(17-20 points):} Clear, engaging, and well-structured presentation, effectively communicating the project's goals, methodology, and outcomes. & \textbf{(13-16 points):} Effective presentation with minor issues in clarity or structure. & \textbf{(9-12 points):} Presentation is understandable but lacks polish, clarity, or structure. & \textbf{(0-8 points):} Unclear or poorly structured presentation, failing to communicate the project effectively. \\ 
+\hline
+\end{tabular}
+\caption{Project Rubrics}
+\end{table}
+
+\newpage
+
+
+\begin{table}[ht]\label{tab:rubrics}
+\centering
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{4pt}
+
+\begin{tabular}{|m{3.5cm}|m{3.5cm}|m{3.5cm}|m{3.5cm}|m{3.5cm}|}
+\hline
+\textbf{Presentation Rubrics} & \textbf{Excellent} & \textbf{Good} & \textbf{Fair} & \textbf{Poor} \\ 
+\hline
+\begin{tabular}[c]{@{}l@{}}Presentation and \\ Communication (20\%)\end{tabular} & \textbf{(17-20 points):} Clear, engaging, and well-structured presentation, effectively communicating the project's goals, methodology, and outcomes. & \textbf{(13-16 points):} Effective presentation with minor issues in clarity or structure. & \textbf{(9-12 points):} Presentation is understandable but lacks polish, clarity, or structure. & \textbf{(0-8 points):} Unclear or poorly structured presentation, failing to communicate the project effectively. \\ 
+\hline
+\end{tabular}
+% \caption{Project Rubrics}
+\end{table}
+% \begin{table}[h!]
+% \centering
+% \begin{tabular}{|>{\centering\arraybackslash}p{0.1\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.3\linewidth}|>{\centering\arraybackslash}p{0.2\linewidth}|}
+% \hline
+% \textbf{Order} & \textbf{Team-Name} & \textbf{Presenter} & \textbf{Grades/Scores} \\
+% \hline\hline
+% 1 & DeepSleep & Zihao Tang &  \\
+% \hline
+% 2 & BioGroup & Weicai Long &  \\
+% \hline
+% 3 & DriverVL & Zhijie Qiu &  \\
+% \hline
+% 4 & GPleaseT & Xiaorui Zhang &  \\
+% \hline
+% 5 & M3LM & Haowen YANG &  \\
+% \hline
+% 6 & DeepSick & Qi ZENG &  \\
+% \hline
+% 7 & Prompter & Xingjian TAO &  \\
+% \hline
+% 8 & LyingFlat & Jiahao ZENG &  \\
+% \hline
+% 9 & CodeInsightBench & Yanhong Wang &  \\
+% \hline
+% 10 & DeepHub & Yijie XU, Songyue Guo &  \\
+% \hline
+% 11 & AAAResearch & Miao Peng &  \\
+% \hline
+% 12 & PaperReader & Xingyu LI &  \\
+% \hline
+% 13 & TBD & Longhan Zhang &  \\
+% \hline
+% 14 & ComLLM & Ziyi Lu &  \\
+% \hline
+% 15 & ShallowSeek & Jingyi Pan &  \\
+% \hline
+% 16 & FT9 & Honghao Liu &  \\
+% \hline
+% 17 & SQLLLM & Huanze DONG &  \\
+% \hline
+% 18 & TBD & Ziyue Gao &  \\
+% \hline
+% 19 & JX & Liuchang JING &  \\
+% \hline
+% 20 & TBD & Liguo Lin &  \\
+% \hline
+% 21 & table LLM & Yuchen LIU &  \\
+% \hline
+% 22 & gymLLM & Zhongxi Tan &  \\
+% \hline
+% 23 & TAILab & Yuemeng Zhao &  \\
+% \hline
+% 24 & 404TeamFound & Jixin Yang &  \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+\end{document}
