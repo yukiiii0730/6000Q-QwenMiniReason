@@ -88,23 +88,28 @@ def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
         del cfg_dict["quantization_config"]
         cfg_path.write_text(json.dumps(cfg_dict, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    # 检测量化权重：如果 merged 模型包含 uint8 权重且不在 CUDA 上，
-    # 回退到 base model + adapter 加载
+    # 检测量化权重：如果 merged 模型包含 uint8 权重，
+    # 回退到 base model + adapter 加载（NF4 格式的 merged 模型无法直接加载）
     use_adapter_fallback = False
     adapter_dirs = []
-    if not load_in_4bit and not torch.cuda.is_available():
-        if _has_quantized_weights(model_path):
-            adapter_dirs = _find_adapter_dir(model_path)
-            if adapter_dirs:
-                use_adapter_fallback = True
-                warnings.warn(
-                    f"检测到量化权重，回退到 base model + adapter: {adapter_dirs}",
-                    UserWarning,
-                    stacklevel=2,
-                )
+    if _has_quantized_weights(model_path):
+        adapter_dirs = _find_adapter_dir(model_path)
+        if adapter_dirs:
+            use_adapter_fallback = True
+            warnings.warn(
+                f"检测到 NF4 量化权重，回退到 base model + adapter: {adapter_dirs}",
+                UserWarning,
+                stacklevel=2,
+            )
+        else:
+            warnings.warn(
+                f"检测到 NF4 量化权重但未找到 adapter 目录，尝试直接加载（可能失败）",
+                UserWarning,
+                stacklevel=2,
+            )
 
     if use_adapter_fallback:
-        return _load_with_adapters(adapter_dirs, tokenizer)
+        return _load_with_adapters(adapter_dirs, tokenizer, load_in_4bit)
 
     model_kwargs: dict = {
         "device_map": "auto",
@@ -129,17 +134,26 @@ def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
     return model, tokenizer
 
 
-def _load_with_adapters(adapter_dirs: list[str], tokenizer):
+def _load_with_adapters(adapter_dirs: list[str], tokenizer, load_in_4bit: bool = False):
     """加载 base model + 一个或多个 LoRA/DoRA adapter。"""
     from peft import PeftModel
 
-    dtype = torch.float16 if (_mps_ok() or torch.cuda.is_available()) else torch.float32
-    model = AutoModelForCausalLM.from_pretrained(
-        BASE_MODEL,
-        device_map="auto",
-        trust_remote_code=True,
-        dtype=dtype,
-    )
+    model_kwargs: dict = {
+        "device_map": "auto",
+        "trust_remote_code": True,
+    }
+    if load_in_4bit and torch.cuda.is_available():
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+        )
+    else:
+        dtype = torch.float16 if (_mps_ok() or torch.cuda.is_available()) else torch.float32
+        model_kwargs["dtype"] = dtype
+
+    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, **model_kwargs)
     model.config.pad_token_id = tokenizer.pad_token_id
 
     for adapter_dir in adapter_dirs:
