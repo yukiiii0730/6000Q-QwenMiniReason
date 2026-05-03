@@ -177,7 +177,8 @@ def attach_peft_adapter(model, lora_cfg: dict, seed: int):
     except Exception as e:  # noqa: BLE001
         if not use_dora:
             raise
-        print(f"⚠️  Unsloth 路径异常 ({e})，回退到 peft 原生 DoRA")
+        print(f"⚠️  Unsloth 路径异常 ({e})")
+        print(f"   DoRA 与 NF4 量化模型不兼容，自动降级为标准 LoRA")
 
     from peft import LoraConfig, get_peft_model
     peft_cfg = LoraConfig(
@@ -187,7 +188,7 @@ def attach_peft_adapter(model, lora_cfg: dict, seed: int):
         target_modules=lora_cfg["target_modules"],
         bias="none",
         task_type="CAUSAL_LM",
-        use_dora=use_dora,
+        use_dora=False,  # NF4 模型不支持 DoRA，强制降级为 LoRA
     )
     model = get_peft_model(model, peft_cfg)
     return model, "peft"
