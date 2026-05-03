@@ -301,7 +301,7 @@ def main():
         learning_rate=float(cfg["train"]["learning_rate"]),
         logging_steps=int(cfg["train"]["logging_steps"]),
         save_steps=int(cfg["train"]["save_steps"]),
-        eval_steps=int(cfg["train"]["eval_steps"]),
+        eval_steps=int(cfg["train"].get("eval_steps", 0)),
         weight_decay=float(cfg["train"]["weight_decay"]),
         lr_scheduler_type=str(cfg["train"]["lr_scheduler_type"]),
         optim=str(cfg["train"]["optim"]),
