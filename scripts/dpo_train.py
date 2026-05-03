@@ -104,13 +104,18 @@ def apply_error_type_weights(ds, weights: dict) -> "Dataset":  # noqa: F821
 def load_dpo_dataset(cfg: dict):
     if "dataset" in cfg and isinstance(cfg["dataset"], dict):
         ds_cfg = cfg["dataset"]
-        kwargs = {"split": ds_cfg.get("split", "train")}
-        if ds_cfg.get("config"):
-            ds = load_dataset(ds_cfg["name"], ds_cfg["config"], **kwargs)
+        name = ds_cfg.get("name", "")
+        if name == "local":
+            # 本地 JSON 文件
+            ds = load_dataset("json", data_files=cfg["dataset_path"], split="train")
         else:
-            ds = load_dataset(ds_cfg["name"], **kwargs)
+            kwargs = {"split": ds_cfg.get("split", "train")}
+            if ds_cfg.get("config"):
+                ds = load_dataset(name, ds_cfg["config"], **kwargs)
+            else:
+                ds = load_dataset(name, **kwargs)
         max_n = ds_cfg.get("max_samples")
-        if max_n and max_n < len(ds):
+        if max_n and max_n > 0 and max_n < len(ds):
             ds = ds.select(range(max_n))
         ds = ds.map(normalize_dpo_example, remove_columns=ds.column_names)
     else:
