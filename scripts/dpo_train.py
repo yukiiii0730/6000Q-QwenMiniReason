@@ -270,6 +270,46 @@ def main():
         load_in_4bit=cfg["load_in_4bit"],
     )
 
+    # NF4 检测：如果 merged 模型包含 NF4 量化权重，无法直接加载 adapter，
+    # 需要回退到原始 base model + SFT adapter
+    _nf4_keys = [k for k in (getattr(model, "state_dict", lambda: {})() or {}) if "quant_state" in k or "quant_map" in k]
+    if not _nf4_keys and hasattr(model, "base_model"):
+        _sd = model.base_model.model.state_dict() if hasattr(model.base_model, "model") else {}
+        _nf4_keys = [k for k in _sd if "quant_state" in k or "quant_map" in k]
+    if _nf4_keys:
+        print(f"⚠️  检测到 NF4 量化模型（{_nf4_keys[0][:50]}...），无法直接做 DPO")
+        # 尝试找到 SFT adapter 目录
+        sft_adapter = None
+        for candidate in [
+            str(Path(base_name).parent / "sft"),
+            str(Path(base_name).parent / "sft_adapter"),
+            "outputs/sft",
+        ]:
+            if os.path.isfile(os.path.join(candidate, "adapter_config.json")):
+                sft_adapter = candidate
+                break
+        if sft_adapter:
+            base_model_name = cfg["model_name"]
+            print(f"🔄 回退：加载 base model {base_model_name} + SFT adapter {sft_adapter}")
+            del model
+            import gc; gc.collect()
+            model, tokenizer = FastLanguageModel.from_pretrained(
+                model_name=base_model_name,
+                max_seq_length=cfg["max_seq_length"],
+                load_in_4bit=cfg["load_in_4bit"],
+            )
+            model, _ = FastLanguageModel.get_peft_model(
+                model, r=16, lora_alpha=32, lora_dropout=0.0,
+                target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
+                use_gradient_checkpointing="unsloth", random_state=cfg["seed"],
+            )
+            from peft import PeftModel
+            model = PeftModel.from_pretrained(model, sft_adapter)
+            print(f"✅ 已加载 base + SFT adapter")
+        else:
+            print(f"❌ 找不到 SFT adapter 目录，请确保 outputs/sft/adapter_config.json 存在")
+            return
+
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     if tokenizer.pad_token_id is None:
