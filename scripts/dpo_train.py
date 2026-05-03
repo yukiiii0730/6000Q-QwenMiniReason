@@ -270,14 +270,16 @@ def main():
         load_in_4bit=cfg["load_in_4bit"],
     )
 
-    # NF4 检测：如果 merged 模型包含 NF4 量化权重，无法直接加载 adapter，
+    # NF4 检测：如果 merged 模型包含 NF4 量化权重，peft LoRA 的 matmul 维度不匹配，
     # 需要回退到原始 base model + SFT adapter
-    _nf4_keys = [k for k in (getattr(model, "state_dict", lambda: {})() or {}) if "quant_state" in k or "quant_map" in k]
-    if not _nf4_keys and hasattr(model, "base_model"):
-        _sd = model.base_model.model.state_dict() if hasattr(model.base_model, "model") else {}
-        _nf4_keys = [k for k in _sd if "quant_state" in k or "quant_map" in k]
-    if _nf4_keys:
-        print(f"⚠️  检测到 NF4 量化模型（{_nf4_keys[0][:50]}...），无法直接做 DPO")
+    _has_nf4 = False
+    try:
+        _sd = model.state_dict() if hasattr(model, "state_dict") else {}
+        _has_nf4 = any("quant_state" in k or "quant_map" in k for k in _sd)
+    except Exception:
+        pass
+    if _has_nf4:
+        print(f"⚠️  检测到 NF4 量化模型，无法直接挂载 DPO adapter")
         # 尝试找到 SFT adapter 目录
         sft_adapter = None
         for candidate in [
@@ -298,14 +300,9 @@ def main():
                 max_seq_length=cfg["max_seq_length"],
                 load_in_4bit=cfg["load_in_4bit"],
             )
-            model, _ = FastLanguageModel.get_peft_model(
-                model, r=16, lora_alpha=32, lora_dropout=0.0,
-                target_modules=["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"],
-                use_gradient_checkpointing="unsloth", random_state=cfg["seed"],
-            )
             from peft import PeftModel
             model = PeftModel.from_pretrained(model, sft_adapter)
-            print(f"✅ 已加载 base + SFT adapter")
+            print(f"✅ 已加载 base + SFT adapter（跳过 attach_peft_adapter）")
         else:
             print(f"❌ 找不到 SFT adapter 目录，请确保 outputs/sft/adapter_config.json 存在")
             return
