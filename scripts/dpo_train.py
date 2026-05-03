@@ -259,6 +259,9 @@ def main():
         print("✅ HuggingFace Token 已加载")
 
     base_name = cfg.get("base_adapter_path") or cfg["model_name"]
+    # 防御：如果传入的是 config.json 路径，自动剥离为目录
+    if base_name.endswith(("/config.json", "/adapter_config.json")):
+        base_name = str(Path(base_name).parent)
     print(f"📥 加载基座: {base_name}")
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=base_name,
