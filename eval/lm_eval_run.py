@@ -50,7 +50,7 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
 
     cmd = [
         sys.executable, "-m", "lm_eval",
-        "hf",
+        "--model", "hf",
         "--model_args", f"pretrained={model_path},dtype=float16,trust_remote_code=True",
         "--tasks", lm_task,
         "--batch_size", batch_size,
