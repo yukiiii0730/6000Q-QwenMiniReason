@@ -21,6 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description="合并 LoRA 到基础模型")
     parser.add_argument("--adapter_path", required=True,  help="LoRA adapter 目录（outputs/sft 等）")
     parser.add_argument("--output_path",  required=True,  help="合并后 fp16 模型输出目录")
+    parser.add_argument("--base_model",   default="",     help="显式指定基座模型路径（覆盖 adapter_config 中的 base_model_name_or_path）")
     parser.add_argument("--config",       default="config/dpo_config.yaml", help="读取 max_seq_length / hf_token 等参数")
     parser.add_argument("--save_method",  default="merged_16bit",
                         choices=["merged_16bit", "merged_4bit", "lora"],
@@ -40,8 +41,8 @@ def main():
         os.environ["HF_TOKEN"] = hf_token
         os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
 
-    # 从 adapter_config.json 读取 base model（如 Qwen/Qwen2.5-1.5B-Instruct）
-    base_model = read_base_model(args.adapter_path)
+    # 优先使用 --base_model 显式指定，否则从 adapter_config.json 读取
+    base_model = args.base_model or read_base_model(args.adapter_path)
     print(f"📥 加载 base model: {base_model}  (fp16)")
 
     if args.save_method == "lora":
