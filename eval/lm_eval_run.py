@@ -36,8 +36,8 @@ def ensure_lm_eval():
 
 
 TASK_MAP = {
-    "gsm8k": "gsm8k_cot_zeroshot",
-    "math": "hendrycks_math",
+    "gsm8k": "gsm8k_cot",          # 8-shot，与 Qwen 官方技术报告一致
+    "math": "hendrycks_math",       # MATH-500 via --limit 71 per subtask
 }
 
 
@@ -51,10 +51,10 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
     cmd = [
         sys.executable, "-u", "-m", "lm_eval",
         "--model", "hf",
-        "--model_args", f"pretrained={model_path},dtype=float16,trust_remote_code=True",
+        "--model_args", f"pretrained={model_path},dtype=float16,trust_remote_code=True,ignore_mismatched_sizes=True",
         "--tasks", lm_task,
         "--batch_size", batch_size,
-        "--output_path", str(out_dir),
+        "--output_path", str(out_dir.resolve()),
         "--log_samples",
         "--trust_remote_code",
     ]
@@ -66,8 +66,10 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
     print(f"  执行: {' '.join(cmd[-8:])}")
     env = {**os.environ, "PYTHONUNBUFFERED": "1", "TQDM_DISABLE": "1"}
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
+    stdout_lines = []
     for line in proc.stdout:
         print(line, end="", flush=True)
+        stdout_lines.append(line)
     proc.wait()
 
     if proc.returncode != 0:
@@ -75,22 +77,95 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
         return {}
 
     # 解析结果：找 results 目录下的 JSON
-    result = parse_lm_eval_output(str(out_dir), task)
+    result = parse_lm_eval_output(str(out_dir.resolve()), task)
+
+    # 如果文件解析失败，从 stdout 中提取 accuracy 作为 fallback
+    if not result or (not result.get("details") and result.get("accuracy", 0) == 0):
+        stdout_acc = _parse_accuracy_from_stdout("".join(stdout_lines), task)
+        if stdout_acc is not None:
+            print(f"  ℹ️ 从 stdout 提取 accuracy={stdout_acc:.4f}（结果文件未找到）")
+            result = {
+                "accuracy": round(stdout_acc, 4),
+                "total": limit,
+                "correct": int(stdout_acc * limit),
+                "lm_eval_accuracy": stdout_acc,
+                "details": result.get("details", []) if result else [],
+            }
     return result
+
+
+def _parse_accuracy_from_stdout(stdout: str, task: str) -> float | None:
+    """从 lm-eval stdout 的结果表格中解析 accuracy（fallback）。
+    策略：先找表头确定 Value 列的索引，再从数据行提取对应值。
+    lm-eval 表格格式（用 | 分隔）:
+      | Tasks |Version|Filter|n-shot| Metric |   |Value |   |Stderr|
+      |-------|------:|------|-----:|--------|---|-----:|---|-----:|
+      |task   |    ver|filter|     n|metric  |   |value |   |stderr|
+    """
+    lm_task = TASK_MAP.get(task, task)
+    lines = stdout.splitlines()
+    value_col = -1  # Value 列在 parts[] 中的索引
+
+    for line in lines:
+        # 第一步：找表头，确定 Value 列索引
+        if "Metric" in line and "Value" in line:
+            parts = line.split("|")
+            for i, p in enumerate(parts):
+                if "Value" in p.strip():
+                    value_col = i
+                    break
+            continue
+
+        if value_col < 0:
+            continue  # 还没找到表头
+
+        # 跳过分隔行
+        if "---" in line and "|" in line:
+            continue
+
+        # 必须包含 metric 关键字
+        if "exact_match" not in line and "acc,none" not in line and "acc_norm" not in line:
+            continue
+
+        # 必须包含 task 名
+        if lm_task not in line and task not in line:
+            continue
+
+        # 从 value_col 提取 accuracy
+        parts = line.split("|")
+        if value_col < len(parts):
+            p = parts[value_col].strip()
+            try:
+                val = float(p)
+                if 0 <= val <= 1:
+                    return val
+            except ValueError:
+                pass
+    return None
 
 
 def parse_lm_eval_output(output_dir: str, task: str) -> dict:
     """解析 lm-eval 输出目录，提取 accuracy 和 sample-level details。"""
     import glob as _glob
 
-    # lm-eval 输出结构: output_dir/<run_name>/results.json
-    result_files = _glob.glob(f"{output_dir}/**/results.json", recursive=True)
+    # 使用绝对路径避免 CWD 不一致导致 glob 找不到文件
+    abs_dir = str(Path(output_dir).resolve())
+
+    # lm-eval 输出结构: output_dir/<model_name>/results_*.json 或 results.json
+    result_files = _glob.glob(f"{abs_dir}/**/results_*.json", recursive=True)
     if not result_files:
-        # 尝试直接找 results/*.json
-        result_files = _glob.glob(f"{output_dir}/*.json")
+        result_files = _glob.glob(f"{abs_dir}/**/results.json", recursive=True)
+    if not result_files:
+        result_files = _glob.glob(f"{abs_dir}/*.json")
 
     if not result_files:
-        print(f"  ⚠️ 未找到 lm-eval 结果文件 (在 {output_dir})")
+        print(f"  ⚠️ 未找到 lm-eval 结果文件 (在 {abs_dir})")
+        # 列出目录内容用于调试
+        try:
+            for p in Path(abs_dir).rglob("*.json"):
+                print(f"    发现: {p}")
+        except Exception:
+            pass
         return {}
 
     with open(result_files[0], encoding="utf-8") as f:
@@ -114,7 +189,7 @@ def parse_lm_eval_output(output_dir: str, task: str) -> dict:
                 break
 
     # 提取 sample-level details
-    sample_files = _glob.glob(f"{output_dir}/**/samples/*.jsonl", recursive=True)
+    sample_files = _glob.glob(f"{abs_dir}/**/samples/*.jsonl", recursive=True)
     details = []
     if sample_files:
         with open(sample_files[0], encoding="utf-8") as f:
