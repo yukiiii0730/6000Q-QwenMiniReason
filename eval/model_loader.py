@@ -81,12 +81,13 @@ def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
         )
         load_in_4bit = False
 
-    # 清除 config.json 中内嵌的 quantization_config
+    # 清除 config.json 中内嵌的 quantization_config（仅本地模型）
     cfg_path = Path(model_path) / "config.json"
-    cfg_dict = json.loads(cfg_path.read_text(encoding="utf-8"))
-    if "quantization_config" in cfg_dict:
-        del cfg_dict["quantization_config"]
-        cfg_path.write_text(json.dumps(cfg_dict, indent=2, ensure_ascii=False), encoding="utf-8")
+    if cfg_path.exists():
+        cfg_dict = json.loads(cfg_path.read_text(encoding="utf-8"))
+        if "quantization_config" in cfg_dict:
+            del cfg_dict["quantization_config"]
+            cfg_path.write_text(json.dumps(cfg_dict, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # 检测量化权重：如果 merged 模型包含 uint8 权重，
     # 回退到 base model + adapter 加载（NF4 格式的 merged 模型无法直接加载）
