@@ -189,7 +189,12 @@ def parse_lm_eval_output(output_dir: str, task: str) -> dict:
                 break
 
     # 提取 sample-level details
-    sample_files = _glob.glob(f"{abs_dir}/**/samples/*.jsonl", recursive=True)
+    # lm-eval 将样本存在 outputs__*/*.jsonl 或 samples/*.jsonl 下，兼容两种结构
+    sample_files = (
+        _glob.glob(f"{abs_dir}/**/samples/*.jsonl", recursive=True)
+        or _glob.glob(f"{abs_dir}/**/*.jsonl", recursive=True)
+    )
+    sample_files = [f for f in sample_files if "results" not in f]
     details = []
     if sample_files:
         with open(sample_files[0], encoding="utf-8") as f:
