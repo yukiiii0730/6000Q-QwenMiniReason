@@ -53,6 +53,10 @@ logs/latest
 # 评测结果 JSON（本地或流水线生成，不上传）
 logs/*.json
 
+# lm-eval 运行时输出（根目录）
+results_*.json
+samples_*.jsonl
+
 # 本地打包产物
 local_artifacts.zip
 *.zip
