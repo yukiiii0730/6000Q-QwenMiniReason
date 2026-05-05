@@ -70,7 +70,34 @@ def main():
 
     print("🔀 合并 LoRA 权重...")
     model = model.merge_and_unload()
-    # 加载时已指定 dtype=float16，无需再次转换
+
+    # 反量化 bitsandbytes NF4 层 → 标准 nn.Linear fp16
+    # merge_and_unload() 不一定移除 bnb 层，save_model 会原样保存 uint8 量化权重
+    from bitsandbytes.nn import Linear4bit, Params4bit
+    converted = 0
+    for name, module in model.named_modules():
+        if isinstance(module, Linear4bit):
+            # 反量化: NF4 → fp16
+            w = module.weight.data
+            if hasattr(w, 'quant_state') and w.quant_state is not None:
+                import bitsandbytes.functional as bnb_F
+                w_deq = bnb_F.dequantize_4bit(w, w.quant_state).to(torch.float16)
+            else:
+                w_deq = w.to(torch.float16)
+            # 替换为标准 Linear
+            parent_name = '.'.join(name.split('.')[:-1])
+            attr_name = name.split('.')[-1]
+            parent = dict(model.named_modules()).get(parent_name, model)
+            new_linear = torch.nn.Linear(module.in_features, module.out_features,
+                                         bias=module.bias is not None, dtype=torch.float16)
+            new_linear.weight.data.copy_(w_deq)
+            if module.bias is not None:
+                new_linear.bias.data.copy_(module.bias.data.to(torch.float16))
+            setattr(parent, attr_name, new_linear)
+            converted += 1
+    if converted > 0:
+        model = model.to(torch.float16)
+        print(f"  反量化 {converted} 个 NF4 层 → fp16")
 
     print(f"💾 保存合并模型 → {args.output_path}")
     os.makedirs(args.output_path, exist_ok=True)
