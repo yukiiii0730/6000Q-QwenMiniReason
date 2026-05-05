@@ -49,7 +49,7 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        sys.executable, "-m", "lm_eval",
+        sys.executable, "-u", "-m", "lm_eval",
         "--model", "hf",
         "--model_args", f"pretrained={model_path},dtype=float16,trust_remote_code=True",
         "--tasks", lm_task,
@@ -64,7 +64,8 @@ def run_lm_eval(model_path: str, task: str, limit: int, batch_size: str = "auto"
         cmd += extra_args
 
     print(f"  执行: {' '.join(cmd[-8:])}")
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    env = {**os.environ, "PYTHONUNBUFFERED": "1", "TQDM_DISABLE": "1"}
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
     for line in proc.stdout:
         print(line, end="", flush=True)
     proc.wait()
