@@ -53,15 +53,21 @@ def main():
         return
 
     # 用 transformers 直接加载 fp16 base model（命中 HF 缓存，不重复下载）
+    # 如果 base_model 是 Unsloth 4bit 模型，回退到标准 Qwen 模型
+    load_model = base_model
+    if "unsloth" in base_model.lower() and ("bnb" in base_model.lower() or "4bit" in base_model.lower()):
+        load_model = "Qwen/Qwen2.5-1.5B-Instruct"
+        print(f"  ⚠️ base_model 是 Unsloth 量化模型，回退到: {load_model}")
+
     dtype = torch.float16
     model = AutoModelForCausalLM.from_pretrained(
-        base_model,
-        dtype=dtype,
+        load_model,
+        torch_dtype=dtype,
         device_map="auto",
         token=hf_token or None,
     )
     tokenizer = AutoTokenizer.from_pretrained(
-        base_model,
+        load_model,
         token=hf_token or None,
     )
 
