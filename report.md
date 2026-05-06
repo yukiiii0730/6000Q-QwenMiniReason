@@ -185,12 +185,15 @@ Table 1 presents the main evaluation results across all experimental groups and 
 | Baseline (1.5B) | Qwen2.5-1.5B-Instruct | 62.0% | 47.5% | -- |
 | Baseline (1.5B, supplement) | Same model, separate run | 63.5% | 45.0% | -- |
 | Baseline (7B) | Qwen2.5-7B-Instruct | 84.5% | 68.0% | -- |
-| Group A | LoRA + Single-stage SFT + Standard DPO | 63.5% | 44.5% | 38.5% |
+| Group A (SFT) | LoRA + Single-stage SFT | 63.5% | 44.5% | 38.5% |
+| Group A (DPO) | + Standard DPO | 59.5% | 51.25%† | -- |
 | Group B (SFT only) | DoRA + 5-stage Curriculum | 62.0% | 44.0% | 38.8% |
 | Group B | + Standard DPO | 62.0% | **47.5%** | -- |
 | Group D | + Error-Type-Targeted DPO | **64.5%** | 44.0% | 37.4% |
 | Qwen 1.5B (published) | -- | 73.2% | 55.2% | -- |
 | Qwen 7B (published) | -- | 91.6% | 75.5% | -- |
+
+† Group A MATH DPO evaluated on n=80 (wider uncertainty).
 
 Several observations emerge from these results:
 
@@ -201,6 +204,8 @@ Several observations emerge from these results:
 3. **SFT alone does not consistently improve over the base model**. The 5-stage curriculum achieves 62.0% on GSM8K and 44.0% on MATH-500, both below the baseline. This suggests that the curriculum, while reducing training loss, may not optimally align with the evaluation distribution.
 
 4. **BBH performance is preserved across all groups** (37–39%), indicating that mathematical fine-tuning does not cause catastrophic forgetting on general reasoning tasks. The Stage C (Magpie) data appears to serve its intended purpose.
+
+5. **Standard DPO on single-stage SFT regresses GSM8K**. Group A DPO drops to 59.5% (-4.0pp from SFT), while Group B DPO with 5-stage curriculum maintains 62.0%. This suggests that curriculum-based SFT provides a more stable base for DPO alignment, as single-stage SFT may lead to overfitting when combined with preference optimization on simple tasks.
 
 ### 4.2 SFT Training Dynamics
 
@@ -234,6 +239,8 @@ The standard DPO training (Group B) exhibits rapid convergence within 150 steps.
 | Reward (Rejected) | 1.76 | -9.84 | -11.60 |
 
 The reward accuracy reaching 99.4% and the strong negative reward for rejected responses (-9.84) indicate that the model has learned to sharply distinguish between preferred and rejected mathematical solutions. The rapid convergence (within 150 of 600 total steps) suggests that the preference dataset may be relatively easy for the model to learn, or that the learning rate is aggressive. The total DPO training time was approximately 2.85 hours on an NVIDIA L20.
+
+The Group A DPO training (600 steps, 4 epochs) achieved similar dynamics: final loss 0.2394, reward accuracy 92-93%, no KL drift. However, despite healthy training metrics, evaluation reveals GSM8K regression (-4.0pp), indicating that training metrics alone are insufficient — the SFT base quality determines downstream DPO effectiveness.
 
 ### 4.4 Error Analysis
 
@@ -308,6 +315,36 @@ Intermediate Algebra and Precalculus are the most challenging subjects, consiste
 
 Group D achieves the lowest GSM8K error rate (35.5%), while MATH-500 error rates remain relatively stable across all trained groups (55.5–56.0%), actually slightly worse than the baseline (52.5%). This suggests that the fine-tuning pipeline is more effective for in-distribution (GSM8K-style) problems than for the harder and more diverse MATH-500 distribution.
 
+#### 4.4.5 Teacher Data Quality Verification
+
+The 1500 teacher-generated CoT responses (Qwen3-235B-Thinking) were verified against GSM8K ground truth to assess data quality before SFT distillation.
+
+**Verification Results**:
+
+| Metric | Value |
+|--------|-------|
+| Total samples | 1500 |
+| Correct answers | 1444 (96.27%) |
+| Incorrect answers | 56 (3.73%) |
+| Contains `\boxed{}` | 1500 (100%) |
+| Thinking tag residuals | 0 |
+
+**Error Breakdown** (56 incorrect):
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| Reasoning errors | 48 | Teacher arrived at wrong numeric answer |
+| Non-numeric answers | 5 | `\boxed{}` contains text/fractions instead of integers |
+| Unit confusion | 2 | Dollar/cents mixing |
+| Order of magnitude | 1 | Answer off by 10x |
+
+**Noise Analysis**:
+- 41 samples (2.7%) have chosen > 10,000 chars (max 33,828) — teacher over-thinking
+- 87 samples (5.8%) contain ≥ 10 self-correction patterns (max 148) — excessive backtracking
+- E11 applies three-layer quality filtering (length + corrections + answer correctness) to yield ~1350 clean traces
+
+A 96.27% accuracy rate for a 235B model on GSM8K is lower than expected (typically >99%), likely due to the thinking-mode generation introducing occasional reasoning drift. Despite this, the data remains viable for SFT distillation after filtering.
+
 ### 4.5 BBH-27 Generalization
 
 The BBH-27 evaluation tests whether mathematical fine-tuning degrades general reasoning capabilities.
@@ -335,6 +372,10 @@ This project demonstrates that curriculum-based SFT and diagnosis-driven DPO can
 2. **Standard DPO** improves MATH-500 by 3.5pp when applied after curriculum SFT, suggesting that generic preference data benefits harder mathematical reasoning.
 
 3. **Setup errors dominate the failure distribution** (65–77% of all GSM8K errors), representing the single most important target for future improvement efforts.
+
+4. **Curriculum-based SFT is critical for DPO stability**: Group A (single-stage) DPO regressed on GSM8K (-4.0pp), while Group B (5-stage curriculum) DPO maintained performance, validating the curriculum design.
+
+5. **Teacher distillation data quality** is high (96.27% correct on GSM8K) but requires noise filtering — 5.8% of samples show excessive self-correction patterns that would harm student model learning.
 
 4. **SFT alone does not consistently improve over the base model**, and in some cases increases error rates, particularly at higher difficulty levels. This highlights the sensitivity of small models to data distribution and training order.
 

@@ -198,3 +198,36 @@ MATH 文件不受影响（`math_eval.py` 的 `_strip_string` 已有 `rstrip(".")
 3. **DIAG 诊断 cell**：添加 4 步诊断流程排查 25% accuracy 问题（NF4 检测 + 三模型对比）
 
 **当前状态**：E10 评测正在 Colab 上运行中（GSM8K 已显示 ~35% at 40/200），结果待补充。
+
+### 2026-05-06 · Group A DPO 评测 + Teacher 数据验证 + E11 质量过滤
+
+**Group A DPO 评测结果（新）**：
+
+| 指标 | Group A SFT | Group A DPO | Δ |
+|------|------------|------------|---|
+| GSM8K (n=200) | 63.5% | **59.5%** | **-4.0pp** ⚠️ |
+| MATH (n=80) | 44.5% | **51.25%** | **+6.75pp** |
+| BBH (25 tasks) | 38.5% | — | — |
+
+**关键发现**：
+1. Group A DPO 在 GSM8K 上 **回退 4pp**（63.5%→59.5%）——单段 SFT + Standard DPO 基座不稳定
+2. Group A DPO 在 MATH 上 **提升 6.75pp**（44.5%→51.25%），但 n=80 样本量不足
+3. 对比 Group B DPO（GSM8K +0.5pp, MATH +3.5pp），五段课程 SFT 基座更稳定
+
+**DPO 训练指标（Group A）**：
+- 600 steps, 4 epochs, final loss 0.2394
+- reward accuracy: 92-93%（稳定）
+- 无 KL 漂移
+
+**Teacher 数据质量验证**：
+- 1500 条 Teacher chosen 与 GSM8K GT 比对：**96.27% 正确**（1444/1500）
+- 56 条错误：48 推理错误 + 5 非数字答案 + 2 单位混淆 + 1 数量级错误
+- 41 条超长（>10k chars），87 条过度自我修正（≥10 次）
+
+**E11 质量过滤升级**：
+- 添加三层过滤：长度过滤 + 修正次数过滤 + 答案正确性验证
+- 预计剔除 ~100 条噪声，保留 ~1400 条高质量数据
+
+**Group C 状态**：
+- DPO 训练已完成（从训练日志分析：97.5% reward acc from step 1，数据太简单）
+- 评测结果 **未在 logs 4 中找到**，待补充

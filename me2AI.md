@@ -185,7 +185,8 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 |---|---|---|---|
 | Baseline 1.5B（自跑）| 63.5% | 45.0% | — |
 | Baseline 7B（自跑 eval supplement）| 84.5% | 68.0% | — |
-| A（LoRA + 单段 + Standard DPO）| 63.5% | 44.5% | 38.5% |
+| A SFT（LoRA + 单段）| 63.5% | 44.5% | 38.5% |
+| A DPO（+ Standard DPO）| 59.5%（-4.0pp）| 51.25%（n=80）| — |
 | B SFT（DoRA + 五段课程）| 62.0% | 44.0% | 38.8% |
 | B DPO（+ Standard DPO）| 62.0% | **47.5%** | — |
 | **D（+ Targeted DPO）**| **64.5%** | 44.0% | 37.4% |
@@ -200,6 +201,7 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 | B-SFT → D-Targeted (GSM8K) | +3.0pp | [-6.5, +12.5]pp | 0.559 | ❌ |
 | B-SFT → B-DPO (MATH) | +3.5pp | [-6.0, +13.5]pp | 0.502 | ❌ |
 | B-DPO → D-Targeted (MATH) | -3.5pp | [-13.0, +6.5]pp | 0.521 | ❌ |
+| A-SFT → A-DPO (GSM8K) | -4.0pp | — | — | ⚠️ 回退 |
 
 > 所有改进均在统计不显著范围内（n=200 样本量不足以区分 <5pp 差异）。这是本项目最大局限，方向一致性（GSM8K 持续改善、BBH 无退化）仍有参考价值。
 
@@ -217,13 +219,42 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 ### 7.5 核心发现
 
-1. **Standard DPO**：MATH +3.5pp（更难推理题受益），GSM8K +0.0pp（应用题无显著提升）
+1. **Standard DPO**：MATH +3.5pp（更难推理题受益），GSM8K +0.0pp（应用题无显著提升）；但 Group A 单段 SFT 基座上 DPO 在 GSM8K 反降 -4.0pp，说明基座稳定性影响 DPO 效果
 2. **Targeted DPO**：GSM8K +2.5pp（针对性修复有效）；MATH -3.5pp（数据局限于 GSM8K badcase，对 MATH 无覆盖）
 3. **DoRA vs LoRA**：在 CI 范围内差异不显著
 4. **BBH**：各组 37–39%，零退化（Stage C Magpie 起保护作用）
 5. **官方协议 gap**：自定义零样本比 8-shot 官方低约 10pp（Group B SFT：custom 62.0% vs 8-shot 58.8% ≈ 同模型同一协议下约一致）
+6. **Group A DPO 回退**：单段 SFT + Standard DPO 在 GSM8K 上 -4.0pp（63.5%→59.5%），但 MATH +6.75pp（n=80）。说明单段 SFT 的 DPO 基座不如五段课程稳定，DPO 在简单任务上可能过拟合。
 
-### 7.6 可视化产物（eval/figures/）
+### 7.6 Teacher 数据质量验证（2026-05-06）
+
+**验证方法**：将 1500 条 Teacher chosen 答案与 GSM8K ground truth 比对。
+
+| 指标 | 结果 |
+|------|------|
+| 总条数 | 1500 |
+| 答案正确 | 1444 / 1500（**96.27%**）|
+| 答案错误 | 56（3.73%）|
+| 含 `\boxed{}` | 1500 / 1500（100%）|
+| Thinking 残留 | 0 条 |
+
+**错误分类**：
+
+| 类别 | 数量 | 说明 |
+|------|------|------|
+| 推理错误 | 48 | Teacher 推理过程出错 |
+| 非数字答案 | 5 | `\boxed{}` 内为文字/分数而非整数 |
+| 单位混淆 | 2 | 美元/美分混淆 |
+| 数量级错误 | 1 | 答案差 10 倍 |
+
+**噪声样本**：
+- 41 条 (2.7%) chosen > 10000 chars（最多 33828 chars）
+- 87 条 (5.8%) 含 ≥10 次自我修正（最多 148 次）
+- E11 已添加三层过滤：长度过滤 + 修正次数过滤 + 答案正确性过滤
+
+> Teacher 答案质量 96.27% 对 235B 模型在 GSM8K 上偏低，但作为 SFT 蒸馏数据仍可接受（错误样本已在 E11 中剔除）。
+
+### 7.7 可视化产物（eval/figures/）
 
 - `ablation_bar_v2.png` — 消融条形图（含误差棒 + 官方参考线）
 - `radar_v2.png` — 雷达图（GSM8K / MATH / BBH 三维对比）

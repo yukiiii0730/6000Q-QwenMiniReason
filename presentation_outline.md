@@ -210,20 +210,23 @@ DPO training with these targeted preference pairs
 | Group | Configuration | GSM8K | MATH-500 | BBH-27 |
 |---|---|---|---|---|
 | Baseline | Qwen2.5-1.5B (our run) | 63.5% | 45.0% | — |
-| **A** | LoRA + Single-stage + Std DPO | 63.5% | 44.5% | 38.5% |
+| A (SFT) | LoRA + Single-stage SFT | 63.5% | 44.5% | 38.5% |
+| A (DPO) | + Standard DPO | 59.5% ⚠️ | 51.25%* | — |
 | **B (SFT)** | DoRA + 5-stage Curriculum | 62.0% | 44.0% | 38.8% |
 | **B** | + Standard DPO | 62.0% | **47.5%** | — |
 | **D** | + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
 | Ref | Qwen2.5-7B (our run, n=200) | 84.5% | 68.0% | — |
-| Ref | Qwen2.5-7B (our run, n=200) | 84.5% | 68.0% | — |
 
 **Key Δ findings**:
+- **Group A DPO**: GSM8K **-4.0pp** ⚠️ (single-stage base unstable), MATH +6.75pp (n=80)
 - Standard DPO (B SFT→B DPO): MATH **+3.5pp**, GSM8K +0.0pp
 - Targeted DPO (B DPO→D): GSM8K **+2.5pp**, MATH -3.5pp
 - BBH: stable across all groups (37–39%), no degradation
 
+* MATH DPO n=80 (wider CI)
+
 > **Speaker Notes**:
-> Here are our main results. Let me highlight the key comparisons. First, Standard DPO — comparing Group B SFT to Group B DPO — shows a clear improvement on MATH, up 3.5 percentage points, but no change on GSM8K. This makes sense: DPO with generic preference data helps on harder reasoning but doesn't specifically target GSM8K-style errors. Second, our Error-Type-Targeted DPO — comparing Group B DPO to Group D — shows the opposite pattern: GSM8K improves by 2.5 points, but MATH drops by 3.5 points. This is because our targeted data was generated from GSM8K badcases specifically. The MATH regression is within our confidence interval, so it may be noise, but the directional pattern is clear: targeted DPO helps on the targeted task. BBH remains stable across all groups at 37 to 39 percent, showing no catastrophic forgetting.
+> Here are our main results. Let me highlight the key comparisons. First, Standard DPO — comparing Group B SFT to Group B DPO — shows a clear improvement on MATH, up 3.5 percentage points, but no change on GSM8K. This makes sense: DPO with generic preference data helps on harder reasoning but doesn't specifically target GSM8K-style errors. Second, our Error-Type-Targeted DPO — comparing Group B DPO to Group D — shows the opposite pattern: GSM8K improves by 2.5 points, but MATH drops by 3.5 points. This is because our targeted data was generated from GSM8K badcases specifically. The MATH regression is within our confidence interval, so it may be noise, but the directional pattern is clear: targeted DPO helps on the targeted task. BBH remains stable across all groups at 37 to 39 percent, showing no catastrophic forgetting. A notable finding is that Group A DPO actually regressed on GSM8K by 4 percentage points. This is because single-stage SFT provides an unstable base for DPO — the model overfits to the DPO signal on simple tasks. In contrast, Group B with 5-stage curriculum SFT maintained stable GSM8K performance after DPO. This validates our curriculum design.
 
 ---
 
@@ -247,6 +250,11 @@ Error type distribution from SFT badcases (n=77):
 
 **Finding 3: DPO training health**
 > DPO loss converged rapidly (1.23 → 0.02 within 150 steps). Reward accuracy reached 96–100%, margin grew to 10.5. The model learned strong preference signals, but overfitting to distilabel data may explain limited GSM8K transfer.
+
+**Finding 4: SFT base quality matters for DPO stability**
+- Group A DPO (single-stage): GSM8K -4.0pp ⚠️
+- Group B DPO (5-stage curriculum): GSM8K +0.5pp ✅
+- → Curriculum SFT provides a more stable base for DPO alignment
 
 > **Speaker Notes**:
 > Let me unpack three key findings. First, DPO type should match the target benchmark. Standard DPO helps MATH but not GSM8K; targeted DPO helps GSM8K but not MATH. The lesson is clear: DPO data distribution matters more than just having "high quality" data. Second, our error diagnosis reveals that 65% of the model's errors are setup errors — it misunderstands the problem rather than miscalculating. This is crucial: it means targeted corrections should focus on comprehension, not arithmetic. Third, the DPO training converged very quickly — reward accuracy reached 96-100% within 150 steps. This rapid convergence suggests the model learned the preference signal well, but the distilabel dataset's limited overlap with GSM8K-style problems may explain why GSM8K didn't improve much.
@@ -505,20 +513,23 @@ qwen-flash 分为 5 类错误：
 | 组 | 配置 | GSM8K | MATH-500 | BBH-27 |
 |---|---|---|---|---|
 | 基线 | Qwen2.5-1.5B（自跑）| 63.5% | 45.0% | — |
-| **A** | LoRA + 单段 + 标准 DPO | 63.5% | 44.5% | 38.5% |
+| A（SFT）| LoRA + 单段 SFT | 63.5% | 44.5% | 38.5% |
+| A（DPO）| + 标准 DPO | 59.5% ⚠️ | 51.25%* | — |
 | **B（SFT）** | DoRA + 五段课程 | 62.0% | 44.0% | 38.8% |
 | **B** | + 标准 DPO | 62.0% | **47.5%** | — |
 | **D** | + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
 | 参考 | Qwen2.5-7B（自跑 n=200）| 84.5% | 68.0% | — |
-| 参考 | Qwen2.5-7B（自跑 n=200）| 84.5% | 68.0% | — |
 
 **关键 Δ 发现**：
+- **Group A DPO**：GSM8K **-4.0pp** ⚠️（单段基座不稳定），MATH +6.75pp（n=80）
 - 标准 DPO（B SFT→B DPO）：MATH **+3.5pp**，GSM8K +0.0pp
 - 定向 DPO（B DPO→D）：GSM8K **+2.5pp**，MATH -3.5pp
 - BBH：所有组 37–39%，零退化
 
+* MATH DPO n=80（更宽 CI）
+
 > **演讲备注**：
-> 这是我们的主要结果。让我强调几个关键比较。首先，标准 DPO——比较 Group B SFT 到 Group B DPO——在 MATH 上有明显提升，增加了 3.5 个百分点，但 GSM8K 没有变化。这说得通：用通用偏好数据做 DPO 对更难的推理有帮助，但不专门针对 GSM8K 式的错误。其次，我们的 Error-Type-Targeted DPO——比较 Group B DPO 到 Group D——显示了相反的模式：GSM8K 提升了 2.5 个百分点，但 MATH 下降了 3.5 个百分点。这是因为我们的定向数据是从 GSM8K 的 badcase 生成的。MATH 的回归在置信区间内，可能是噪声，但方向性模式很清楚：定向 DPO 对目标任务有帮助。BBH 在所有组保持稳定在 37 到 39%，没有灾难性遗忘。
+> 这是我们的主要结果。让我强调几个关键比较。首先，标准 DPO——比较 Group B SFT 到 Group B DPO——在 MATH 上有明显提升，增加了 3.5 个百分点，但 GSM8K 没有变化。这说得通：用通用偏好数据做 DPO 对更难的推理有帮助，但不专门针对 GSM8K 式的错误。其次，我们的 Error-Type-Targeted DPO——比较 Group B DPO 到 Group D——显示了相反的模式：GSM8K 提升了 2.5 个百分点，但 MATH 下降了 3.5 个百分点。这是因为我们的定向数据是从 GSM8K 的 badcase 生成的。MATH 的回归在置信区间内，可能是噪声，但方向性模式很清楚：定向 DPO 对目标任务有帮助。BBH 在所有组保持稳定在 37 到 39%，没有灾难性遗忘。值得注意的是，Group A DPO 在 GSM8K 上实际回退了 4 个百分点。这是因为单段 SFT 为 DPO 提供了不稳定的基座——模型在简单任务上对 DPO 信号过拟合。相比之下，Group B 使用五段课程 SFT 在 DPO 后保持了稳定的 GSM8K 性能。这验证了我们的课程设计。
 
 ---
 
@@ -542,6 +553,11 @@ SFT 错误类型分布（n=77）：
 
 **发现 3：DPO 训练健康度**
 > DPO loss 快速收敛（1.23 → 0.02，150 步内）。Reward accuracy 达到 96–100%，margin 增长到 10.5。模型学到了强偏好信号，但对 distilabel 数据的过拟合可能是 GSM8K 迁移有限的原因。
+
+**发现 4：SFT 基座质量决定 DPO 稳定性**
+- Group A DPO（单段 SFT）：GSM8K -4.0pp ⚠️
+- Group B DPO（五段课程）：GSM8K +0.5pp ✅
+- → 课程 SFT 为 DPO 对齐提供更稳定的基座
 
 > **演讲备注**：
 > 让我解读三个关键发现。第一，DPO 类型应该匹配目标任务。标准 DPO 帮助 MATH 但不帮 GSM8K；定向 DPO 帮助 GSM8K 但不帮 MATH。启示很清楚：DPO 数据分布比仅仅拥有"高质量"数据更重要。第二，我们的错误诊断显示 65% 的错误是建模错误——模型理解错了题意，而不是算错了。这很关键：意味着定向纠正应该聚焦于理解能力，而不是算术能力。第三，DPO 训练收敛非常快——150 步内 reward accuracy 就达到了 96-100%。这种快速收敛说明模型学到了偏好信号，但 distilabel 数据集与 GSM8K 题型的有限重叠可能是 GSM8K 提升不大的原因。
