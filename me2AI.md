@@ -174,7 +174,7 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 |------|------|-------|------|
 | Qwen2.5-1.5B（官方公开值）| 8-shot gsm8k_cot | **73.2%** | **55.2%** |
 | Qwen2.5-7B（官方公开值）| 8-shot | **91.6%** | **75.5%** |
-| Qwen2.5-7B（sanity check, n=200）| 自定义 zero-shot | 81.5% | 68.0% |
+| Qwen2.5-7B（eval supplement, n=200）| 自定义 zero-shot | 84.5% | 68.0% |
 | **Group B SFT**（sft_merged_fp16）| **8-shot gsm8k_cot**, n=500 | **58.8%** | — |
 
 > MATH lm-eval zero-shot 对所有组均近零（1-2.5%），为协议问题（需 few-shot+sympy）。自定义协议 MATH 结果更具参考价值。
@@ -183,10 +183,10 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 | 组 | GSM8K | MATH-500 | BBH-27 macro |
 |---|---|---|---|
-| Baseline 1.5B（自跑）| 62.5% | 45.0% | — |
-| Baseline 7B（自跑 sanity）| 81.5% | 68.0% | — |
+| Baseline 1.5B（自跑）| 63.5% | 45.0% | — |
+| Baseline 7B（自跑 eval supplement）| 84.5% | 68.0% | — |
 | A（LoRA + 单段 + Standard DPO）| 63.5% | 44.5% | 38.5% |
-| B SFT（DoRA + 五段课程）| 61.5% | 44.0% | 38.8% |
+| B SFT（DoRA + 五段课程）| 62.0% | 44.0% | 38.8% |
 | B DPO（+ Standard DPO）| 62.0% | **47.5%** | — |
 | **D（+ Targeted DPO）**| **64.5%** | 44.0% | 37.4% |
 | Qwen官方1.5B（8-shot，不同协议）| 73.2% | 55.2% | — |
@@ -217,11 +217,11 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 ### 7.5 核心发现
 
-1. **Standard DPO**：MATH +3.5pp（更难推理题受益），GSM8K +0.5pp（应用题提升有限）
+1. **Standard DPO**：MATH +3.5pp（更难推理题受益），GSM8K +0.0pp（应用题无显著提升）
 2. **Targeted DPO**：GSM8K +2.5pp（针对性修复有效）；MATH -3.5pp（数据局限于 GSM8K badcase，对 MATH 无覆盖）
 3. **DoRA vs LoRA**：在 CI 范围内差异不显著
 4. **BBH**：各组 37–39%，零退化（Stage C Magpie 起保护作用）
-5. **官方协议 gap**：自定义零样本比 8-shot 官方低约 10pp（Group B SFT：custom 61.5% vs 8-shot 58.8% ≈ 同模型同一协议下约一致）
+5. **官方协议 gap**：自定义零样本比 8-shot 官方低约 10pp（Group B SFT：custom 62.0% vs 8-shot 58.8% ≈ 同模型同一协议下约一致）
 
 ### 7.6 可视化产物（eval/figures/）
 

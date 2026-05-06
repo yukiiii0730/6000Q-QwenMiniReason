@@ -137,15 +137,15 @@
 | 组 | 配置 | GSM8K | MATH-500 | BBH-27 macro |
 |---|---|---|---|---|
 | **A** | LoRA + 单段 SFT + Standard DPO | 63.5% | 44.5% | 38.5%（25任务）|
-| **B（SFT only）** | DoRA + 五段课程 | 61.5% | 44.0% | **38.8%**（24任务）|
+| **B（SFT only）** | DoRA + 五段课程 | 62.0% | 44.0% | **38.8%**（24任务）|
 | **B** | + Standard DPO | 62.0% | **47.5%** | TBD |
 | **D** | + Error-Type-Targeted DPO | **64.5%** | 44.0% | 37.4%（27任务）|
 
 **关键发现**：
 
-1. **SFT 阶段**：Group A（LoRA+单段）vs Group B（DoRA+五段）差异在 CI 范围内（2pp），**不显著**——说明增量来自两者都做到的 DPO 阶段，或需更大样本量区分。
+1. **SFT 阶段**：Group A（LoRA+单段）vs Group B（DoRA+五段）差异在 CI 范围内（1.5pp），**不显著**——说明增量来自两者都做到的 DPO 阶段，或需更大样本量区分。
 
-2. **Standard DPO**（B SFT→B DPO）：GSM8K +0.5pp（微弱），MATH **+3.5pp**——DPO 对更难的推理题有效，对简单应用题帮助有限。
+2. **Standard DPO**（B SFT→B DPO）：GSM8K +0.0pp（无显著变化），MATH **+3.5pp**——DPO 对更难的推理题有效，对简单应用题帮助有限。
 
 3. **Targeted DPO**（B DPO→D DPO）：GSM8K **+2.5pp**（targeted 针对 GSM8K badcase，有效），MATH -3.5pp（targeted 数据只来自 GSM8K，对 MATH 无定向优化，轻微遗忘）——**在 CI 范围内，仍需官方协议确认**。
 
@@ -161,3 +161,40 @@
 - [ ] 最终可视化
 
 **评分方向预判**：当前结果支持 **85-90 分**区间，核心短板是 Targeted DPO 的 MATH regression 需要合理解释（已有分析：targeted 数据来源局限），以及官方协议结果待补。
+
+### 2026-05-06 · 答案提取 bug 修复 + 评测结果重算
+
+**问题发现**：GSM8K 评测中 `extract_number` 返回的数字末尾有时带句点（如 "18."），直接字符串比较 "18." == "18" 为 False，导致误判为错误。
+
+**修复内容**：
+1. `eval/gsm8k_eval.py`：添加 `_normalize_num()` 归一化函数，所有 `extract_number` 返回点增加 `rstrip(".")`，比较时用 `_normalize_num` 包裹
+2. `scripts/recalc_eval.py`：新增本地重算脚本，从已有 JSON 日志中用修正后的提取函数重新计算准确率（无需重跑推理）
+3. `notebooks/colab_eval_supplement.ipynb`：所有评测 cell 改为 `is_eval_complete()` 检查，支持断点续跑
+
+**重算结果变化**（GSM8K 提升，MATH 不变）：
+
+| 文件 | 旧 acc | 新 acc | 差值 |
+|---|---|---|---|
+| eval_supplement_7b GSM8K | 81.5% | **84.5%** | +6（"$28.00" vs "28"）|
+| eval_supplement_1.5b GSM8K | 62.5% | **63.5%** | +2 |
+| gsm8k_sft | 61.5% | **62.0%** | +1 |
+| 7B/14B sanity check | 90-92% | **94%** | +2-4 |
+
+MATH 文件不受影响（`math_eval.py` 的 `_strip_string` 已有 `rstrip(".")`）。
+
+### 2026-05-06 · E8/E9/E10 Targeted DPO（Badcase-Driven）实验
+
+**实验设计**：
+- **E8 数据构建**：从 GSM8K SFT badcases（439 条）+ MATH SFT badcases（112 条）构建 DPO 训练对
+  - chosen = gt_raw（正确解题过程），rejected = pred_raw（模型错误输出）
+- **E9 训练**：在 SFT merged fp16 基础上做 DPO（解决 NF4 量化权重问题）
+- **E10 评测**：GSM8K + MATH-500，n=200
+
+**关键技术问题与解决**：
+1. **NF4 量化权重问题**：`outputs/sft_merged` 包含 uint8 NF4 权重，DPO adapter 合并时无法直接加载
+   - 解决：`ensure_fp16_merged()` 先将 SFT merged 反量化为 fp16，再作为 DPO 合并基座
+2. **adapter base_model 不匹配**：DPO adapter 的 `base_model_name_or_path` 指向 Unsloth 4bit 模型
+   - 解决：`merge_lora.py --base_model` 显式指定覆盖
+3. **DIAG 诊断 cell**：添加 4 步诊断流程排查 25% accuracy 问题（NF4 检测 + 三模型对比）
+
+**当前状态**：E10 评测正在 Colab 上运行中（GSM8K 已显示 ~35% at 40/200），结果待补充。

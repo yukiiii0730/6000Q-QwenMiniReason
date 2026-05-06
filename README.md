@@ -104,7 +104,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 
 ---
 
-## Current Experimental Results（v4, as of 2026-05-04）
+## Current Experimental Results（v4, as of 2026-05-06）
 
 > ⚠️ **Note**: Results below use our custom eval protocol（chat-template + zero-shot）.  
 > Absolute values differ from Qwen official numbers（which use lm-evaluation-harness 8-shot）.  
@@ -116,7 +116,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 | Group | Configuration | GSM8K | MATH-500 | BBH-27 |
 |---|---|---|---|---|
 | **A** | LoRA + Single-stage SFT + Standard DPO | 63.5% | 44.5% | 38.5% |
-| **B（SFT only）** | DoRA + 5-stage Curriculum | 61.5% | 44.0% | **38.8%** |
+| **B（SFT only）** | DoRA + 5-stage Curriculum | 62.0% | 44.0% | **38.8%** |
 | **B** | DoRA + 5-stage Curriculum + Standard DPO | 62.0% | **47.5%** | TBD |
 | **D**（innovation）| DoRA + 5-stage + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
 | Qwen2.5-1.5B（official）| — | 73.2% | 55.2% | — |
@@ -124,7 +124,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 
 ### Key Findings
 
-- **Standard DPO（B SFT→B DPO）**: GSM8K +0.5pp, MATH **+3.5pp** — improves harder reasoning
+- **Standard DPO（B SFT→B DPO）**: GSM8K +0.0pp, MATH **+3.5pp** — improves harder reasoning
 - **Targeted DPO（B DPO→D DPO）**: GSM8K **+2.5pp**, MATH -3.5pp — improves targeted task, slight regression on harder MATH（within CI）
 - **BBH**: No catastrophic degradation across any group（37–39%）
 - **Two runs（Colab T4 + GPU L20）reproducible**: loss curves differ by <0.02 across all 5 stages（seed=42）
