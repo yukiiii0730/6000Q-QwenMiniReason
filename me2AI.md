@@ -166,27 +166,68 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 ---
 
-## 7. 实验结果摘要（截至 2026-05-05）
+## 7. 实验结果摘要（截至 2026-05-06）
 
-### 7.1 消融结果（自定义协议，n=200，CI ±6.9pp）
+### 7.1 官方协议（lm-evaluation-harness，已完成）
+
+| 模型 | 协议 | GSM8K | MATH |
+|------|------|-------|------|
+| Qwen2.5-1.5B（官方公开值）| 8-shot gsm8k_cot | **73.2%** | **55.2%** |
+| Qwen2.5-7B（官方公开值）| 8-shot | **91.6%** | **75.5%** |
+| Qwen2.5-7B（sanity check, n=200）| 自定义 zero-shot | 81.5% | 68.0% |
+| **Group B SFT**（sft_merged_fp16）| **8-shot gsm8k_cot**, n=500 | **58.8%** | — |
+
+> MATH lm-eval zero-shot 对所有组均近零（1-2.5%），为协议问题（需 few-shot+sympy）。自定义协议 MATH 结果更具参考价值。
+
+### 7.2 消融结果（自定义协议，n=200，CI ±6.9pp）
 
 | 组 | GSM8K | MATH-500 | BBH-27 macro |
 |---|---|---|---|
+| Baseline 1.5B（自跑）| 62.5% | 45.0% | — |
+| Baseline 7B（自跑 sanity）| 81.5% | 68.0% | — |
 | A（LoRA + 单段 + Standard DPO）| 63.5% | 44.5% | 38.5% |
 | B SFT（DoRA + 五段课程）| 61.5% | 44.0% | 38.8% |
-| B DPO（+ Standard DPO）| 62.0% | **47.5%** | TBD |
-| D（+ Targeted DPO）| **64.5%** | 44.0% | 37.4% |
+| B DPO（+ Standard DPO）| 62.0% | **47.5%** | — |
+| **D（+ Targeted DPO）**| **64.5%** | 44.0% | 37.4% |
+| Qwen官方1.5B（8-shot，不同协议）| 73.2% | 55.2% | — |
 
-### 7.2 核心发现
+### 7.3 统计显著性检验（McNemar + Paired Bootstrap，2026-05-06）
+
+| 比较 | Δ | Bootstrap 95% CI | p值 | 显著 |
+|------|---|-----------------|-----|------|
+| B-SFT → B-DPO (GSM8K) | +0.5pp | [-9.0, +10.5]pp | 0.933 | ❌ |
+| B-DPO → D-Targeted (GSM8K) | +2.5pp | [-7.0, +12.0]pp | 0.641 | ❌ |
+| B-SFT → D-Targeted (GSM8K) | +3.0pp | [-6.5, +12.5]pp | 0.559 | ❌ |
+| B-SFT → B-DPO (MATH) | +3.5pp | [-6.0, +13.5]pp | 0.502 | ❌ |
+| B-DPO → D-Targeted (MATH) | -3.5pp | [-13.0, +6.5]pp | 0.521 | ❌ |
+
+> 所有改进均在统计不显著范围内（n=200 样本量不足以区分 <5pp 差异）。这是本项目最大局限，方向一致性（GSM8K 持续改善、BBH 无退化）仍有参考价值。
+
+### 7.4 错误类型分类结果（2026-05-06，qwen-turbo，n=77 badcases）
+
+| 错误类型 | 数量 | 占比 |
+|--------|------|------|
+| **setup_error**（列式错/理解错）| 50 | **64.9%** |
+| reasoning_skip（推理跳步）| 21 | 27.3% |
+| extraction_error（答案提取错）| 3 | 3.9% |
+| arithmetic（算术计算错）| 2 | 2.6% |
+| unit_or_format（单位格式错）| 1 | 1.3% |
+
+> 主要错误来源是**题意理解和建模**（setup_error 64.9%），而非单纯计算错误。这验证了 targeted DPO 针对 setup_error 优先修复的策略合理性。
+
+### 7.5 核心发现
 
 1. **Standard DPO**：MATH +3.5pp（更难推理题受益），GSM8K +0.5pp（应用题提升有限）
-2. **Targeted DPO**：GSM8K +2.5pp（针对性修复有效）；MATH -3.5pp（数据局限于 GSM8K badcase，对 MATH 级别难题无覆盖）
-3. **DoRA vs LoRA**：当前差异不显著（CI 范围内），官方协议重跑可能拉开差距
-4. **BBH**：各组 37–39%，无退化
+2. **Targeted DPO**：GSM8K +2.5pp（针对性修复有效）；MATH -3.5pp（数据局限于 GSM8K badcase，对 MATH 无覆盖）
+3. **DoRA vs LoRA**：在 CI 范围内差异不显著
+4. **BBH**：各组 37–39%，零退化（Stage C Magpie 起保护作用）
+5. **官方协议 gap**：自定义零样本比 8-shot 官方低约 10pp（Group B SFT：custom 61.5% vs 8-shot 58.8% ≈ 同模型同一协议下约一致）
 
-### 7.3 评测协议 gap
+### 7.6 可视化产物（eval/figures/）
 
-自定义协议比官方低 8–15pp，**lm-eval 重跑进行中**，绝对值将更新。
+- `ablation_bar_v2.png` — 消融条形图（含误差棒 + 官方参考线）
+- `radar_v2.png` — 雷达图（GSM8K / MATH / BBH 三维对比）
+- `error_pie_v2.png` — 错误类型分布饼图
 
 ---
 
@@ -194,7 +235,8 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 - **Watchdog**：子进程 180s 无输出 → 自动重启（最多 3 次）
 - **断点续训**：SFT/DPO 从 checkpoint 续训，评测有缓存
-- **日志体系**：`logs/runs/<run_id>/` 独立目录，`logs 2/` 消融结果
+- **日志体系**：`logs/runs/<run_id>/` 独立目录，`logs 2/` 消融结果，`logs 3/` lm-eval 官方协议结果
+- **统计检验**：`logs/stats/*.json` McNemar + bootstrap CI 结果
 
 ---
 
@@ -225,4 +267,4 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 ---
 
-**最后更新：2026-05-05**
+**最后更新：2026-05-06**

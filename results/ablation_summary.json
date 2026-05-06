@@ -1,0 +1,40 @@
+{
+  "groups": {
+    "A\n(LoRA+1-stage\n+StdDPO)": {
+      "sft": {
+        "gsm8k": null,
+        "math500": null,
+        "bbh_macro": null
+      },
+      "dpo": {
+        "gsm8k": 0.635,
+        "math500": 0.445,
+        "bbh_macro": 0.385
+      }
+    },
+    "B-SFT\n(DoRA+Cur)": {
+      "sft": {
+        "gsm8k": 0.615,
+        "math500": 0.44,
+        "bbh_macro": 0.3875
+      },
+      "dpo": null
+    },
+    "B-DPO\n(+StdDPO)": {
+      "sft": null,
+      "dpo": {
+        "gsm8k": 0.62,
+        "math500": 0.475,
+        "bbh_macro": null
+      }
+    },
+    "D\n(Targeted\nDPO)": {
+      "sft": null,
+      "dpo": {
+        "gsm8k": 0.645,
+        "math500": 0.44,
+        "bbh_macro": 0.374
+      }
+    }
+  }
+}

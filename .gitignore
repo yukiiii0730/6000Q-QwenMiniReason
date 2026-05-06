@@ -21,6 +21,7 @@ data/raw/*
 data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
+!data/processed/sft_gsm8k_badcases.jsonl
 
 # 评估结果图表
 eval/figures/

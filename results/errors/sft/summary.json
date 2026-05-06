@@ -1,0 +1,29 @@
+{
+  "input": "logs 3/gsm8k_sft_badcases.jsonl",
+  "n_total": 77,
+  "distribution": {
+    "arithmetic": 2,
+    "reasoning_skip": 21,
+    "setup_error": 50,
+    "unit_or_format": 1,
+    "extraction_error": 3,
+    "unknown": 0
+  },
+  "distribution_pct": {
+    "arithmetic": 2.6,
+    "reasoning_skip": 27.27,
+    "setup_error": 64.94,
+    "unit_or_format": 1.3,
+    "extraction_error": 3.9,
+    "unknown": 0.0
+  },
+  "model": "qwen-turbo",
+  "by_type_files": {
+    "arithmetic": "results/errors/sft/by_type/arithmetic.jsonl",
+    "reasoning_skip": "results/errors/sft/by_type/reasoning_skip.jsonl",
+    "setup_error": "results/errors/sft/by_type/setup_error.jsonl",
+    "unit_or_format": "results/errors/sft/by_type/unit_or_format.jsonl",
+    "extraction_error": "results/errors/sft/by_type/extraction_error.jsonl",
+    "unknown": "results/errors/sft/by_type/unknown.jsonl"
+  }
+}
