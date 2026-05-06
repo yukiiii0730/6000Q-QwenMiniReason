@@ -125,9 +125,9 @@ def load_model_and_tokenizer(model_path: str, load_in_4bit: bool = False):
         )
     else:
         if torch.cuda.is_available() or _mps_ok():
-            model_kwargs["dtype"] = torch.float16
+            model_kwargs["torch_dtype"] = torch.float16
         else:
-            model_kwargs["dtype"] = torch.float32
+            model_kwargs["torch_dtype"] = torch.float32
 
     model_kwargs["ignore_mismatched_sizes"] = True
     model = AutoModelForCausalLM.from_pretrained(model_path, **model_kwargs)
@@ -152,7 +152,7 @@ def _load_with_adapters(adapter_dirs: list[str], tokenizer, load_in_4bit: bool =
         )
     else:
         dtype = torch.float16 if (_mps_ok() or torch.cuda.is_available()) else torch.float32
-        model_kwargs["dtype"] = dtype
+        model_kwargs["torch_dtype"] = dtype
 
     model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, **model_kwargs)
     model.config.pad_token_id = tokenizer.pad_token_id
