@@ -15,6 +15,19 @@ from model_loader import load_model_and_tokenizer
 CHECKPOINT_EVERY = 20  # 每 N 条保存一次断点 + 打印进度
 
 
+def _normalize_num(s: str) -> str:
+    """归一化数字字符串：18.0 → 18，去除尾部句点。"""
+    s = s.rstrip(".")
+    if "." in s:
+        try:
+            f = float(s)
+            if f == int(f):
+                return str(int(f))
+        except ValueError:
+            pass
+    return s
+
+
 def extract_number(text: str) -> str:
     """从模型输出鲁棒地抽取最终数字答案。
     优先级：\\boxed{...} > #### N > "答案"/"answer is" 标志 > 末段最后一个数字。"""
@@ -24,10 +37,10 @@ def extract_number(text: str) -> str:
 
     m = re.findall(r"\\boxed\{\s*(-?\d+(?:\.\d+)?)\s*\}", s)
     if m:
-        return m[-1]
+        return m[-1].rstrip(".")
     m = re.findall(r"####\s*(-?\d+(?:\.\d+)?)", s)
     if m:
-        return m[-1]
+        return m[-1].rstrip(".")
     for pat in [
         r"答案\s*[:：是为等于]+\s*\$?\s*(-?\d+(?:\.\d+)?)",
         r"final answer\s*(?:is|:)?\s*\$?\s*(-?\d+(?:\.\d+)?)",
@@ -36,13 +49,13 @@ def extract_number(text: str) -> str:
     ]:
         m = re.findall(pat, s, flags=re.IGNORECASE)
         if m:
-            return m[-1]
+            return m[-1].rstrip(".")
     tail = s[-300:]
     nums = re.findall(r"-?\d+(?:\.\d+)?", tail)
     if nums:
-        return nums[-1]
+        return nums[-1].rstrip(".")
     nums = re.findall(r"-?\d+(?:\.\d+)?", s)
-    return nums[-1] if nums else ""
+    return nums[-1].rstrip(".") if nums else ""
 
 
 def select_eval_subset(ds, max_samples: int, sampling_mode: str, seed: int):
@@ -199,8 +212,8 @@ def main():
             continue
         prompt = build_prompt(tokenizer, ex["question"])
         pred_raw = generate_answer(model, tokenizer, prompt, max_new_tokens=args.max_new_tokens)
-        pred_num = extract_number(pred_raw)
-        gt_num = extract_number(ex["answer"])
+        pred_num = _normalize_num(extract_number(pred_raw))
+        gt_num = _normalize_num(extract_number(ex["answer"]))
         ok = pred_num == gt_num and pred_num != ""
         correct += int(ok)
         details.append(
