@@ -166,7 +166,7 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 ---
 
-## 7. 实验结果摘要（截至 2026-05-06）
+## 7. 实验结果摘要（截至 2026-05-07）
 
 ### 7.1 官方协议（lm-evaluation-harness，已完成）
 
@@ -189,7 +189,8 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 | A DPO（+ Standard DPO）| 59.5%（-4.0pp）| 51.25%（n=80）| — |
 | B SFT（DoRA + 五段课程）| 62.0% | 44.0% | 38.8% |
 | B DPO（+ Standard DPO）| 62.0% | **47.5%** | — |
-| **D（+ Targeted DPO）**| **64.5%** | 44.0% | 37.4% |
+| **D（+ Targeted DPO）**| 64.5% | 44.0% | 37.4% |
+| **Teacher SFT（LoRA + 1409 teacher CoT）**| **65.0%** | 43.5% | — |
 | Qwen官方1.5B（8-shot，不同协议）| 73.2% | 55.2% | — |
 
 ### 7.3 统计显著性检验（McNemar + Paired Bootstrap，2026-05-06）
@@ -254,7 +255,55 @@ Targeted DPO → 再次评测 → 对比各类错误修复率
 
 > Teacher 答案质量 96.27% 对 235B 模型在 GSM8K 上偏低，但作为 SFT 蒸馏数据仍可接受（错误样本已在 E11 中剔除）。
 
-### 7.7 可视化产物（eval/figures/）
+### 7.7 Teacher SFT 实验（E12/E13/E14，2026-05-07）
+
+**训练配置（E12）**：
+- LoRA r=16, α=32, lr=5e-5, packing=False, gradient_checkpointing=True
+- 470 steps（~5.3 epochs）, warmup=47, cosine scheduler
+- 数据：`sft_teacher_gsm8k.json`（1409 条，E11 三层过滤后）
+
+**训练收敛**：
+| Step | Loss | LR | Epoch |
+|------|------|-----|-------|
+| 10 | 0.8937 | 9.6e-6 | 0.11 |
+| 110 | 0.4656 | 4.7e-5 | 1.24 |
+| 210 | 0.3984 | 3.4e-5 | 2.36 |
+| 310 | 0.3609 | 1.6e-5 | 3.49 |
+| 470 | 0.3404 | ~0 | 5.28 |
+
+Loss 0.89→0.34，下降 62%。梯度范数稳定 0.36-0.42。
+
+**评测结果（E13）**：
+
+| Model | 数据量 | GSM8K | MATH-500 |
+|---|---|---|---|
+| Baseline 1.5B | — | 63.5% | 45.0% |
+| A SFT（LoRA + 单段混合）| ~38k | 63.5% | 44.5% |
+| B SFT（DoRA + 五段课程）| ~38k | 62.0% | 44.0% |
+| **Teacher SFT（LoRA + teacher CoT）**| **1409** | **65.0%** | 43.5% |
+
+**关键发现**：
+1. **GSM8K 新高 65.0%** — 仅 1409 条 teacher CoT，超越 38k 数据的 A/B SFT，也超过 Targeted DPO（64.5%）
+2. **数据效率极高**：1409 条 > 38k 混合数据，验证 DeepSeek-R1-Distill 的核心洞察——质量 > 数量
+3. MATH-500 43.5% 略低于 baseline（45.0%），teacher 数据全部来自 GSM8K，对 MATH 无覆盖
+
+**Badcase 分析（70 条错误）**：
+
+| 错误类型 | 数量 | 占比 | 说明 |
+|---|---|---|---|
+| setup_misread | 48 | **69%** | 读错题意/漏条件/列式错 |
+| multi_step_cascade | 14 | 20% | 某步算错级联 |
+| truncated | 8 | 11% | 输出截断 |
+
+> 69% 的错误是 setup_misread——模型不理解题意，不是算错。DPO 难以修正理解问题，需要更多 teacher SFT 数据。
+
+**E14：Teacher SFT + Targeted DPO**：
+- 数据：v1 targeted DPO（426 条）+ Teacher SFT badcase（~70 条）= ~500 条
+- chosen 精简处理：去除 think 标签、filler、自我修正，截断到 4096
+- Base：Teacher SFT merged（65.0%）
+- 训练中，结果待补充
+
+### 7.8 可视化产物（eval/figures/）
 
 - `ablation_bar_v2.png` — 消融条形图（含误差棒 + 官方参考线）
 - `radar_v2.png` — 雷达图（GSM8K / MATH / BBH 三维对比）

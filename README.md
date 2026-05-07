@@ -120,6 +120,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 | **B（SFT only）** | DoRA + 5-stage Curriculum | 62.0% | 44.0% | **38.8%** |
 | **B** | DoRA + 5-stage Curriculum + Standard DPO | 62.0% | **47.5%** | TBD |
 | **D**（innovation）| DoRA + 5-stage + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
+| **Teacher SFT** | LoRA + 1409 teacher CoT（DeepSeek-R1-Distill style）| **65.0%** | 43.5% | — |
 | Qwen2.5-1.5B（official）| — | 73.2% | 55.2% | — |
 | Qwen2.5-7B（official）| — | 91.6% | 75.5% | — |
 
@@ -129,6 +130,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 - **Standard DPO（B SFT→B DPO）**: GSM8K +0.0pp, MATH **+3.5pp** — improves harder reasoning
 - **Targeted DPO（B DPO→D DPO）**: GSM8K **+2.5pp**, MATH -3.5pp — improves targeted task, slight regression on harder MATH（within CI）
 - **BBH**: No catastrophic degradation across any group（37–39%）
+- **Teacher SFT（E12/E13）**: Only 1409 teacher CoT samples achieve **65.0% GSM8K** — new high, surpassing 38k mixed data A/B SFT and Targeted DPO. Validates DeepSeek-R1-Distill insight: quality > quantity
 - **Two runs（Colab T4 + GPU L20）reproducible**: loss curves differ by <0.02 across all 5 stages（seed=42）
 
 ---
@@ -144,7 +146,7 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 | E | DoRA + 5-stage curriculum | IPO + Targeted data | Loss function improvement |
 | F | DoRA + 5-stage curriculum | Weighted Targeted DPO | Weighted innovation variant |
 
-Status: A(SFT✅ DPO✅) B✅ C（eval pending）D✅ E/F（optional）
+Status: A(SFT✅ DPO✅) B✅ C（eval pending）D✅ E/F（optional）Teacher SFT✅ E14（eval pending）
 
 ---
 

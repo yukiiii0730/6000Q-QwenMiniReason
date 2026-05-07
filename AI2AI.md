@@ -231,3 +231,29 @@ MATH 文件不受影响（`math_eval.py` 的 `_strip_string` 已有 `rstrip(".")
 **Group C 状态**：
 - DPO 训练已完成（从训练日志分析：97.5% reward acc from step 1，数据太简单）
 - 评测结果 **未在 logs 4 中找到**，待补充
+
+### 2026-05-07 · Teacher SFT 实验（E12/E13）+ E14 Targeted DPO
+
+**Teacher SFT 结果（E12/E13）**：
+- 训练：LoRA r=16, lr=5e-5, 470 steps (~5.3 epochs), 1409 条 teacher CoT
+- Loss: 0.89→0.34（-62%），梯度稳定
+- **GSM8K: 65.0%（新高）**，MATH-500: 43.5%
+- 仅 1409 条数据超越 38k 的 A/B SFT 和 Targeted DPO（64.5%）
+- 数据效率验证：质量 > 数量（DeepSeek-R1-Distill 核心洞察）
+
+**Badcase 分析**（70 条，35% 错误率）：
+- setup_misread: 48 条（69%）— 模型不理解题意
+- multi_step_cascade: 14 条（20%）— 某步算错级联
+- truncated: 8 条（11%）— 输出截断
+- 提取 bug: 0 条 — 评测提取逻辑正确
+
+**E14 设计**：
+- 数据：v1 targeted DPO（426 条）+ Teacher SFT badcase（~70 条）
+- chosen 精简：去除 think 标签、filler、自我修正，截断到 4096
+- Base：Teacher SFT merged（65.0%）
+- DPO 参数：beta=0.1, lr=1e-5, LoRA r=16, ~188 steps
+- 评测中，结果待补充
+
+**Group C 状态**：
+- DPO 训练已完成（从训练日志分析：97.5% reward acc from step 1，数据太简单）
+- 评测结果 **未在 logs 4 中找到**，待补充
