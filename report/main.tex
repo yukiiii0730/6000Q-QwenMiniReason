@@ -1,0 +1,343 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{float}
+
+\title{\textbf{SSP-Reasoner: Enhancing Mathematical Reasoning in Small Language Models via Curriculum SFT and Error-Type-Targeted DPO}\\[0.5em]
+\large DSAA-6000Q Project Final Report}
+\author{
+Team SSP \\
+Xiaoye Su, Zhehao Lei, Junming Lin, Yueqi Wang \\[0.5em]
+\textit{The Hong Kong University of Science and Technology (Guangzhou)} \\
+Date: May 17, 2026
+}
+\date{}
+
+\usepackage{natbib}
+
+\begin{document}
+
+\maketitle
+
+% ============================================================================
+\begin{abstract}
+We present SSP-Reasoner, a multi-stage fine-tuning framework that enhances the mathematical reasoning capability of Qwen2.5-1.5B-Instruct. Our approach combines (1) a five-stage Supervised Fine-Tuning (SFT) curriculum that progressively builds mathematical reasoning from basic arithmetic to competition-level problems, and (2) an innovative Error-Type-Targeted DPO pipeline that diagnoses specific failure modes and creates targeted preference pairs. Using DoRA for parameter-efficient fine-tuning on approximately 38,000 curated samples, our best model achieves 64.5\% on GSM8K (+2.5pp over baseline) and maintains stable performance on BBH-27, demonstrating no catastrophic forgetting of general reasoning. Error analysis reveals that ``setup errors'' (problem misinterpretation) account for 65--77\% of failures, identifying the primary bottleneck for future improvement.
+\end{abstract}
+
+\line(1,0){500}
+
+% ============================================================================
+\section{Introduction}
+
+\subsection{Background and Motivation}
+Large Language Models (LLMs) have demonstrated remarkable reasoning capabilities, particularly in mathematical problem-solving \citep{qwen2025qwen25}. However, deploying models with tens or hundreds of billions of parameters is prohibitively expensive for many real-world applications. Small language models (SLMs) with 1--3B parameters offer a compelling alternative for resource-constrained scenarios---edge deployment, real-time applications, and educational tools---where latency and cost are critical constraints.
+
+The performance gap is significant: on GSM8K, Qwen2.5-1.5B-Instruct scores 62.0\% compared to Qwen2.5-7B-Instruct's 84.5\%---an 18+ percentage point difference. The central question we address is: \textit{Can we narrow this performance gap without increasing model size, using only efficient fine-tuning techniques?}
+
+\subsection{Research Objectives}
+Our project has three main objectives:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Curriculum SFT:} Design and evaluate a five-stage supervised fine-tuning curriculum for Qwen2.5-1.5B-Instruct that progresses from basic arithmetic to diverse mathematical and general reasoning tasks.
+    \item \textbf{Diagnosis-Driven DPO:} Develop an Error-Type-Targeted DPO pipeline that classifies model failures, creates custom training examples for each error type, and tests whether this outperforms standard DPO.
+    \item \textbf{Comprehensive Error Analysis:} Create a fine-grained error taxonomy to pinpoint the most critical failure modes across different benchmarks, difficulty levels, and mathematical subjects.
+\end{enumerate}
+
+\subsection{Contributions}
+\begin{itemize}[noitemsep]
+    \item A five-stage SFT curriculum design (GSM8K $\to$ OpenR1-Math $\to$ Orca-Math $\to$ NuminaMath $\to$ Magpie-Reasoning) that provides a stable foundation for preference optimization.
+    \item An Error-Type-Targeted DPO method that achieves +2.5pp on GSM8K by generating preference pairs specifically addressing diagnosed failure modes.
+    \item A detailed error taxonomy revealing that ``setup errors'' (problem misinterpretation) dominate at 65--77\%, identifying the key bottleneck for small model math reasoning.
+    \item Evidence that curriculum-based SFT is critical for DPO stability---naive SFT approaches lead to performance regression under DPO.
+    \item Demonstration that specialized math training preserves general reasoning (stable BBH-27 performance).
+\end{itemize}
+
+% ============================================================================
+\section{Related Works}
+
+\subsection{Parameter-Efficient Fine-Tuning (PEFT)}
+\citet{hu2022lora} introduced LoRA, a parameter-efficient fine-tuning method that injects trainable low-rank matrices into transformer layers while keeping the pre-trained weights frozen. DoRA (Weight-Decomposed Low-Rank Adaptation) \citep{liu2024dora} extends LoRA by decomposing weights into magnitude and direction components, achieving better performance. We adopt DoRA in our work, training only $\sim$1.18\% of total parameters.
+
+\subsection{Curriculum Learning for LLMs}
+Training models on data ordered by difficulty mimics human learning and has been shown to improve performance. DeepSeek-R1 \citep{deepseekr1} and Qwen2.5-Math \citep{qwen2025qwen25} have successfully utilized multi-stage pipelines to achieve state-of-the-art results. Our five-stage curriculum is inspired by this principle, progressively building reasoning depth and breadth.
+
+\subsection{Direct Preference Optimization (DPO)}
+\citet{rafailov2023direct} proposed DPO as a simpler alternative to RLHF, directly optimizing a policy model using preference pairs without requiring a separate reward model. The DPO loss is:
+\begin{equation}
+\mathcal{L}_{\text{DPO}}(\pi_\theta; \pi_{\text{ref}}) = -\mathbb{E}_{(x, y_w, y_l)} \left[ \log \sigma \left( \beta \log \frac{\pi_\theta(y_w|x)}{\pi_{\text{ref}}(y_w|x)} - \beta \log \frac{\pi_\theta(y_l|x)}{\pi_{\text{ref}}(y_l|x)} \right) \right]
+\end{equation}
+where $\beta$ controls the deviation from the reference policy. Our innovation is to create \textit{targeted} preference pairs by diagnosing specific error types, rather than using generic preference data.
+
+\subsection{Mathematical Reasoning Benchmarks}
+GSM8K \citep{cobbe2021gsm8k} contains 8,500 grade-school math word problems requiring multi-step arithmetic reasoning. MATH-500 provides competition-level mathematics problems. BIG-Bench Hard (BBH) \citep{suzgun2022bbh} comprises 27 challenging tasks testing diverse logical reasoning capabilities.
+
+% ============================================================================
+\section{Methodology}
+
+\subsection{Overview}
+Our pipeline consists of two main phases:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Phase 1 --- Five-Stage Curriculum SFT:} Progressively fine-tune Qwen2.5-1.5B-Instruct through five carefully ordered stages using DoRA adapters.
+    \item \textbf{Phase 2 --- Error-Type-Targeted DPO:} Diagnose model failures, classify errors, generate targeted preference pairs, and apply DPO training.
+\end{enumerate}
+
+\subsection{The Five-Stage SFT Curriculum}
+
+We designed a sequential curriculum where each stage builds a specific capability:
+
+\begin{table}[H]
+\centering
+\caption{Five-stage SFT curriculum design}
+\begin{tabular}{clll}
+\toprule
+\textbf{Stage} & \textbf{Dataset} & \textbf{Purpose} & \textbf{Capability} \\
+\midrule
+A & openai/gsm8k & In-distribution anchor & Baseline alignment \\
+B1 & open-r1/OpenR1-Math & Reasoning depth & Long chain-of-thought \\
+B2 & microsoft/orca-math & Problem breadth & Diverse word problems \\
+B3 & AI-MO/NuminaMath-CoT & Problem diversity & Competition-level \\
+C & Magpie-Align/Magpie-Reasoning & General reasoning & Prevent forgetting \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Total training samples: $\sim$38,000 unique samples after deduplication and filtering. The rationale for this ordering is:
+\begin{itemize}[noitemsep]
+    \item \textbf{Stage A} establishes alignment with the primary evaluation benchmark.
+    \item \textbf{Stages B1--B3} progressively increase difficulty and diversity.
+    \item \textbf{Stage C} prevents catastrophic forgetting of general reasoning after intensive math training.
+\end{itemize}
+
+\subsection{Error-Type-Targeted DPO}
+
+Our core innovation is a diagnosis-driven feedback loop:
+
+\begin{enumerate}[noitemsep]
+    \item \textbf{Evaluate \& Collect:} Run the SFT model on evaluation problems and collect all incorrectly answered problems (badcases).
+    \item \textbf{Error Classification:} Use a teacher model to classify each badcase into one of five error categories (e.g., \texttt{setup\_error}, \texttt{arithmetic}, \texttt{logic\_error}, \texttt{incomplete\_reasoning}, \texttt{other}).
+    \item \textbf{Targeted Pair Construction:} Use a teacher model to generate a \textit{correct} solution that specifically addresses the identified failure mode. The model's wrong answer becomes ``rejected''; the teacher's targeted correction becomes ``chosen.''
+    \item \textbf{DPO Training:} Fine-tune the model on the targeted (chosen/rejected) preference pairs, ensuring the model learns to fix its specific, most frequent mistakes.
+\end{enumerate}
+
+This differs from standard DPO in that preference pairs are \textit{generated based on the model's actual errors}, rather than using generic pre-existing preference data.
+
+\subsection{Model Architecture and DoRA Configuration}
+We fine-tune \textbf{Qwen2.5-1.5B-Instruct} using DoRA (Weight-Decomposed Low-Rank Adaptation):
+\begin{itemize}[noitemsep]
+    \item Rank $r = 16$, scaling $\alpha = 32$, dropout = 0.
+    \item Target modules: \texttt{q\_proj, k\_proj, v\_proj, o\_proj, gate\_proj, up\_proj, down\_proj}.
+    \item Trainable parameters: $\sim$1.18\% of total model parameters.
+    \item 4-bit quantization (NF4) for memory efficiency.
+    \item Gradient checkpointing enabled (Unsloth optimized).
+\end{itemize}
+
+\subsection{Training Configuration}
+
+\begin{table}[H]
+\centering
+\caption{Training hyperparameters}
+\begin{tabular}{lll}
+\toprule
+\textbf{Parameter} & \textbf{SFT} & \textbf{DPO} \\
+\midrule
+Max sequence length & 2048 & 2048 \\
+Effective batch size & 16 & 16 \\
+Learning rate & 8e-5 (cosine) & 3e-6 (cosine) \\
+Total steps & $\sim$3,900 (all stages) & 500 \\
+Optimizer & PagedAdamW 8-bit & PagedAdamW 8-bit \\
+Precision & bf16 & bf16 \\
+$\beta$ (DPO) & --- & 0.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Computational Resources}
+\begin{itemize}[noitemsep]
+    \item \textbf{Google Colab}: A100-80GB for rapid prototyping and ablation experiments.
+    \item \textbf{HPC (H20 GPU)}: Primary platform for full training runs with stable environment.
+\end{itemize}
+
+\subsection{Evaluation Protocol}
+We evaluate on three benchmarks using zero-shot prompting with $n=200$ samples:
+\begin{itemize}[noitemsep]
+    \item \textbf{GSM8K}: Grade-school math word problems, answer extraction via regex, exact match.
+    \item \textbf{MATH-500}: Competition-level mathematics, testing advanced reasoning.
+    \item \textbf{BBH-27}: 27 BIG-Bench Hard subtasks, testing general logical reasoning (monitors for catastrophic forgetting).
+\end{itemize}
+
+We also benchmark against \textbf{Qwen2.5-7B-Instruct} as an upper-bound reference.
+
+% ============================================================================
+\section{Results}
+
+\subsection{Main Evaluation Results}
+
+\begin{table}[H]
+\centering
+\caption{Main evaluation results (zero-shot, $n=200$)}
+\label{tab:main_results}
+\begin{tabular}{llcc}
+\toprule
+\textbf{Group} & \textbf{Configuration} & \textbf{GSM8K} & \textbf{MATH-500} \\
+\midrule
+Baseline (1.5B) & Qwen2.5-1.5B-Instruct & 62.0\% & 44.0\% \\
+Group B & DoRA + 5-Stage SFT + Standard DPO & 62.0\% & \textbf{47.5\%} \\
+Group D & DoRA + 5-Stage SFT + Error-Targeted DPO & \textbf{64.5\%} & 44.0\% \\
+\midrule
+Baseline (7B) & Qwen2.5-7B-Instruct & 84.5\% & 68.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key findings:}
+\begin{enumerate}[noitemsep]
+    \item \textbf{Targeted DPO is effective:} Our Error-Type-Targeted DPO (Group D) achieved the highest GSM8K accuracy at 64.5\%, a +2.5pp improvement over the 1.5B baseline, demonstrating that optimizing for identified error types is an effective strategy.
+    \item \textbf{Standard DPO excels on harder tasks:} Standard DPO (Group B) showed a significant +3.5pp gain on the difficult MATH-500 benchmark, proving its value for complex reasoning beyond in-distribution data.
+    \item \textbf{Curriculum SFT is critical for stability:} Simpler, naive SFT approaches led to performance regression under DPO. Our five-stage curriculum provides a stable foundation for DPO to build upon.
+    \item \textbf{General reasoning is preserved:} BBH-27 performance remained stable across all configurations, confirming no catastrophic forgetting of general reasoning skills.
+\end{enumerate}
+
+\subsection{SFT Training Dynamics}
+
+\begin{table}[H]
+\centering
+\caption{Per-stage training loss convergence}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Stage} & \textbf{Init Loss} & \textbf{Final Loss} & \textbf{Drop} \\
+\midrule
+A (GSM8K) & 1.286 & 0.225 & $-$82\% \\
+B1 (OpenR1-Math) & 0.952 & 0.641 & $-$33\% \\
+B2 (Orca-Math) & 0.549 & 0.347 & $-$37\% \\
+B3 (NuminaMath) & 0.616 & 0.531 & $-$14\% \\
+C (Magpie-Reasoning) & 0.623 & 0.517 & $-$17\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Key observations:
+\begin{itemize}[noitemsep]
+    \item \textbf{Stage A rapid alignment:} GSM8K anchor produced an 82\% loss reduction, quickly establishing a stable distribution baseline.
+    \item \textbf{Stage B3 --- hardest to converge:} Olympiad-level NuminaMath data exposed the ceiling of 1.5B parameters, with the slowest loss descent ($-$14\%).
+    \item \textbf{Full convergence at $\sim$3,900 steps:} All five stages completed stably with no divergence, validating the curriculum ordering strategy.
+\end{itemize}
+
+\subsection{Error Analysis}
+
+Our error analysis on GSM8K reveals a striking finding: the primary bottleneck for the 1.5B model is \textit{not} calculation precision or logical deduction, but rather \textbf{problem misinterpretation}.
+
+\textbf{Error type distribution on GSM8K:}
+\begin{itemize}[noitemsep]
+    \item \textbf{Setup errors (65--77\%):} The model misinterprets the problem statement, fails to parse the question's intent, or sets up incorrect equations.
+    \item \textbf{Arithmetic errors:} Calculation mistakes during the solution process.
+    \item \textbf{Logic errors:} Incorrect reasoning steps despite correct problem setup.
+    \item \textbf{Incomplete reasoning:} Truncated or abandoned solution chains.
+\end{itemize}
+
+This insight is critical: improving a small model's mathematical ability requires focusing on \textit{problem comprehension}, not just computational accuracy.
+
+\subsection{Limitations}
+\begin{itemize}[noitemsep]
+    \item The gap to 7B performance (84.5\% vs.\ 64.5\% on GSM8K) remains substantial, suggesting fundamental capacity limitations at 1.5B scale.
+    \item Error-Targeted DPO improved GSM8K but did not transfer to MATH-500, indicating potential overfitting to in-distribution error patterns.
+    \item Setup error mitigation remains an open challenge requiring dedicated intervention strategies.
+\end{itemize}
+
+% ============================================================================
+\section{Conclusion}
+
+\subsection{Summary of Findings}
+\begin{enumerate}[noitemsep]
+    \item \textbf{Targeted DPO works:} Error-Type-Targeted DPO improved GSM8K accuracy by +2.5pp, demonstrating that optimizing specifically for identified error types is effective.
+    \item \textbf{Setup errors are the key bottleneck:} Accounting for 65--77\% of failures, problem misinterpretation represents the biggest opportunity for future improvement.
+    \item \textbf{Curriculum SFT is critical:} A stable, curriculum-based SFT foundation is necessary for effective DPO; naive approaches lead to regression.
+    \item \textbf{General reasoning is preserved:} Specialized math training did not cause catastrophic forgetting, as confirmed by stable BBH-27 performance.
+\end{enumerate}
+
+\subsection{Challenges Met}
+\begin{itemize}[noitemsep]
+    \item Designing an effective curriculum ordering required extensive experimentation to prevent catastrophic forgetting.
+    \item Building the error classification pipeline required careful prompt engineering for the teacher model.
+    \item Balancing in-distribution improvement (GSM8K) with out-of-distribution generalization (MATH-500) proved challenging.
+\end{itemize}
+
+\subsection{Future Directions}
+\begin{enumerate}[noitemsep]
+    \item \textbf{Rejection Sampling:} Generate multiple solutions and only keep correct ones for training.
+    \item \textbf{Teacher Distillation:} Leverage larger teacher models to generate high-quality reasoning traces for SFT.
+    \item \textbf{Iterative DPO:} Create a self-improving loop by continuously generating new training pairs from the current model.
+    \item \textbf{Process-Level DPO:} Provide fine-grained feedback on each reasoning step, not just the final answer.
+    \item \textbf{Setup Error Mitigation:} Develop dedicated interventions for problem comprehension, such as training on problem paraphrases or structured decomposition.
+\end{enumerate}
+
+% ============================================================================
+\section{Contributions}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcp{8cm}}
+\toprule
+\textbf{Member} & \textbf{\%} & \textbf{Responsibilities} \\
+\midrule
+Yueqi Wang & 25\% & Pipeline design, curriculum SFT training, evaluation framework, Data curation \\
+Junming Lin & 25\% & Error-Type-Targeted DPO design, error classification, presentation \\
+Zhehao Lei & 25\% & DoRA experiments, HPC deployment, training dynamics analysis \\
+Xiaoye Su & 25\% & Error analysis, DPO training, literature review, report writing\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================================
+\section{Report Format}
+The report follows the DSAA-6000Q project template. All code is available at: \url{https://github.com/yukiiii0730/6000Q-QwenMiniReason} (branch: main).
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+% ============================================================================
+\appendix
+\section{Appendix: Reproducibility}
+
+\subsection{One-Command Training}
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single]
+# Quick test (~10 min)
+bash run_train.sh --quick
+
+# Full training
+bash run_train.sh
+\end{lstlisting}
+
+\subsection{Key Configuration Files}
+\begin{itemize}[noitemsep]
+    \item \texttt{config/sft\_config.yaml}: SFT hyperparameters
+    \item \texttt{config/dpo\_config.yaml}: DPO hyperparameters
+    \item \texttt{config/benchmark\_models.yaml}: Reference model API configuration
+\end{itemize}
+
+\subsection{Error Classification Taxonomy}
+\begin{table}[H]
+\centering
+\caption{Error type definitions used for targeted DPO pair construction}
+\begin{tabular}{lp{10cm}}
+\toprule
+\textbf{Error Type} & \textbf{Definition} \\
+\midrule
+\texttt{setup\_error} & Model misinterprets the problem, parses wrong quantities, or sets up incorrect equations \\
+\texttt{arithmetic} & Correct setup but numerical calculation error \\
+\texttt{logic\_error} & Incorrect reasoning step despite correct problem understanding \\
+\texttt{incomplete} & Solution abandoned or truncated before reaching final answer \\
+\texttt{other} & Formatting issues, refusals, or unclassifiable errors \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
