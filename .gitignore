@@ -16,12 +16,12 @@ gpu/
 *.pth
 *.tar.gz
 
-# 数据（原始数据不上传）
+# 数据（不上传）
 data/raw/*
 data/processed/*
+data/processed 1/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
-!data/processed/sft_gsm8k_badcases.jsonl
 
 # 评估结果图表
 eval/figures/
