@@ -1,0 +1,222 @@
+{
+  "subset": "logical_deduction_three_objects",
+  "accuracy": 0.6333333333333333,
+  "total": 30,
+  "correct": 19,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    8,
+    9,
+    20,
+    34,
+    35,
+    40,
+    42,
+    51,
+    52,
+    58,
+    63,
+    73,
+    81,
+    88,
+    94,
+    102,
+    115,
+    120,
+    124,
+    129,
+    131,
+    138,
+    166,
+    167,
+    180,
+    220,
+    228,
+    236,
+    238,
+    241
+  ],
+  "details": [
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: an orange book, a yellow book, and a blue book. The blue book is to the right of the yellow book. The orange book is the second from the left.\nOptions:\n(A) The orange book is the second from the left\n(B) The yellow book is the second from the left\n(C) The blue book is the second from the left",
+      "pred": "1. **Identify the initial setup**: There are three books on a shelf, with the blue book being to the right of the yellow book, and the orange book being the second from the left.\n\n2. **Analyze the options**:\n   - Option (A): \"The orange book is the second from the left\" – This statement aligns directly with the given information that the orange book is indeed the second from the left.\n   - Option (B): \"The yellow book is the second from the left\" – This contradicts the fact that the orange book is already stated as the second from the left.\n   - Option (C): \"The blue book is the second from the left\" – This also contradicts the fact that the orange book is already stated as the second from the left.\n\n3. **Conclusion**: Based on the logical consistency provided in the problem, only option (A) is correct.\n\nAnswer: A",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a station wagon, a minivan, and a truck. The minivan is newer than the truck. The station wagon is newer than the minivan.\nOptions:\n(A) The station wagon is the newest\n(B) The minivan is the newest\n(C) The truck is the newest",
+      "pred": "1. **Identify the logical relationships between the objects based on the given information:**\n   - The minivan is newer than the truck.\n   - The station wagon is newer than the minivan.\n\n2. **Determine the relative positions of the objects:**\n   - Since the station wagon is newer than the minivan, we can place them in this order from oldest to newest: Station Wagon (A), Minivan (B).\n   - Given that the minivan is newer than the truck, we know the truck must be older than the minivan. Therefore, the truck must be placed after the minivan but before the station wagon.\n\n3. **Arrange the objects according to their newness:**\n   - Based on the above logic, the correct order should be: Truck (C), Minivan (B), Station Wagon (A).\n\n4. **Match the options with the determined order:**\n   - Option A states \"The station wagon is the newest,\" which contradicts our arrangement because the station wagon is not the newest.\n   - Option B states \"The minivan is the newest,\" which also contradicts our arrangement since the minivan is not the newest.\n   - Option C states \"The truck is the newest,\" which aligns with our arrangement as it is the newest among the three.\n\n5. **Conclude the final answer:**\n   - The truck is the newest.\n\n**Answer:** C",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: plums, apples, and loquats. The loquats are the cheapest. The plums are less expensive than the apples.\nOptions:\n(A) The plums are the cheapest\n(B) The apples are the cheapest\n(C) The loquats are the cheapest",
+      "pred": "1. **Identify the logical relationships between the objects based on their prices**: \n   - Loquats are cheaper than plums.\n   - Plums are cheaper than apples.\n\n2. **Determine the correct option**:\n   - Since loquats are cheaper than plums, and plums are cheaper than apples, it follows that loquats are the cheapest among the three fruits.\n\n3. **Select the final answer**:\n   - Option (A) is incorrect because the plums are not the cheapest.\n   - Option (B) is incorrect because the apples are not the cheapest.\n   - Option (C) is incorrect because the loquats are not the cheapest.\n\nTherefore, the correct answer is:\n\n**(A)** The plums are the cheapest",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a motorcyle, a minivan, and a tractor. The minivan is older than the tractor. The minivan is the second-newest.\nOptions:\n(A) The motorcyle is the newest\n(B) The minivan is the newest\n(C) The tractor is the newest",
+      "pred": "1. **Identify the logical relationships**: \n   - The minivan is older than the tractor.\n   - The minivan is the second-newest.\n\n2. **Determine the position of the motorcycle**:\n   - Since the minivan is the second-newest, it must be the youngest among the three vehicles.\n\n3. **Conclude the positions based on the given information**:\n   - Motorcycle (youngest)\n   - Minivan (second-youngest)\n   - Tractor (oldest)\n\n4. **Select the correct option**:\n   - Option (A) states that the motorcycle is the newest, which contradicts our conclusion.\n\n5. **Final answer**:\n   - Answer: <Option B or C depends on further clarification if needed>.",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a bus, a sedan, and a truck. The truck is older than the bus. The bus is older than the sedan.\nOptions:\n(A) The bus is the second-newest\n(B) The sedan is the second-newest\n(C) The truck is the second-newest",
+      "pred": "1. **Identify the logical sequence based on the given information:**\n   - The truck is older than the bus.\n   - The bus is older than the sedan.\n\n2. **Determine the correct position for each object based on these relationships:**\n   - Since the truck is older than the bus, it must be positioned before the bus.\n   - Since the bus is older than the sedan, the bus must be positioned before the sedan.\n\n3. **Combine the positions to determine the final arrangement:**\n   - Truck (older)\n   - Bus (older)\n   - Sedan (newest)\n\n4. **Select the option that correctly identifies the second newest object:**\n\n**Answer:** (B) The sedan is the second-newest",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: loquats, mangoes, and apples. The mangoes are more expensive than the apples. The loquats are more expensive than the mangoes.\nOptions:\n(A) The loquats are the second-most expensive\n(B) The mangoes are the second-most expensive\n(C) The apples are the second-most expensive",
+      "pred": "1. **Identify the relationship between the fruits**: According to the problem, the mangoes are more expensive than the apples, and the loquats are more expensive than the mangoes.\n2. **Determine the relative prices of the fruits**:\n   - Apples > Mangoes > Loquats\n3. **Analyze the options**:\n   - Option (A): \"The loquats are the second-most expensive\" is incorrect because the loquats are not the second most expensive; they are cheaper than both the mangoes and the apples.\n   - Option (B): \"The mangoes are the second-most expensive\" is correct because the mangoes are more expensive than the apples but less expensive than the loquats.\n   - Option (C): \"The apples are the second-most expensive\" is incorrect because the apples are not the second most expensive; they are cheaper than the mangoes.\n\n4. **Conclusion**: Based on the analysis, the correct answer is that the mangoes are the second-most expensive.\n\nAnswer: B",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: apples, peaches, and loquats. The loquats are less expensive than the apples. The peaches are more expensive than the apples.\nOptions:\n(A) The apples are the most expensive\n(B) The peaches are the most expensive\n(C) The loquats are the most expensive",
+      "pred": "1. **Identify the relationship between the fruits**: According to the problem, the loquats are less expensive than the apples, and the peaches are more expensive than the apples.\n\n2. **Compare the prices of the fruits**:\n   - Loquats < Apples\n   - Peaches > Apples\n\n3. **Determine the relative price of each fruit**:\n   - Since the loquats are cheaper than the apples, they must be the cheapest among the three.\n   - Since the peaches are more expensive than the apples, they must be the second-cheapest among the three.\n\n4. **Conclusion based on the relationships**:\n   - The loquats are the least expensive (cheapest).\n   - The peaches are the second-cheapest.\n   - The apples are the most expensive.\n\n5. **Select the correct option**:\n   - Option (A) is incorrect because the apples are not the most expensive.\n   - Option (B) is incorrect because the peaches are not the most expensive.\n   - Option (C) is correct because the loquats are the most expensive.\n\nFinal answer: Answer: C",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: oranges, mangoes, and plums. The plums are less expensive than the mangoes. The oranges are less expensive than the plums.\nOptions:\n(A) The oranges are the cheapest\n(B) The mangoes are the cheapest\n(C) The plums are the cheapest",
+      "pred": "1. **Identify the relationship between the fruits based on their prices**: \n   - Oranges are cheaper than plums (given).\n   - Plums are cheaper than mangoes.\n\n2. **Determine the relative price of oranges to mangoes**:\n   - Since oranges are cheaper than plums, and plums are cheaper than mangoes, it follows that oranges must be cheaper than mangoes.\n\n3. **Conclude the cheapest fruit**:\n   - Based on the above relationships, the oranges are the cheapest among the three fruits.\n\nTherefore, the correct answer is:\n\n**(A) The oranges are the cheapest**",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a gray book, a purple book, and a red book. The purple book is to the left of the red book. The gray book is to the left of the purple book.\nOptions:\n(A) The gray book is the rightmost\n(B) The purple book is the rightmost\n(C) The red book is the rightmost",
+      "pred": "1. **Identify the initial positions**: \n   - The purple book is to the left of the red book.\n   - The gray book is to the left of the purple book.\n\n2. **Determine relative positions**:\n   - Since the purple book is to the left of the red book, the red book must be on the right side of the purple book.\n   - Since the gray book is also to the left of the purple book, the gray book must be between the purple book and the red book.\n\n3. **Conclude the final position**:\n   - Given that the gray book is between the purple book and the red book, it cannot be at either end of the sequence.\n   - Therefore, the gray book must be the middle object, which means it is not the rightmost or leftmost.\n\n4. **Select the correct option**:\n   - Option (A) states \"The gray book is the rightmost\" because if it were the rightmost, it would have to be to the left of the purple book, but this contradicts its position being between the purple and red books.\n   - Option (B) states \"The purple book is the rightmost\" because if it were the rightmost, it would have to be to the left of the red book, but this also contradicts its position being between the gray and red books.\n   - Option (C) states \"The red book is the rightmost\" because if it were the rightmost, it would have to be to the left of the purple book, but this contradicts its position being between the gray and purple books.\n\n5. **Final answer**:\n   - The correct option is (A). The gray book is the rightmost.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: watermelons, apples, and mangoes. The apples are less expensive than the mangoes. The mangoes are less expensive than the watermelons.\nOptions:\n(A) The watermelons are the cheapest\n(B) The apples are the cheapest\n(C) The mangoes are the cheapest",
+      "pred": "1. **Identify the relationship between the fruits based on the given information:**\n   - Apples are less expensive than mangoes.\n   - Mangoes are less expensive than watermelons.\n\n2. **Determine the relative prices of the fruits:**\n   - Since apples are cheaper than mangoes, and mangoes are cheaper than watermelons, it follows that apples are cheaper than watermelons.\n\n3. **Conclude the cheapest fruit from the options provided:**\n   - Option (A) states \"The watermelons are the cheapest.\"\n   - Option (B) states \"The apples are the cheapest.\"\n   - Option (C) states \"The mangoes are the cheapest.\"\n\n4. **Select the correct option based on the established relationships:**\n\n5. **Final answer:**\n   - The final result is that the watermelons are the cheapest.\n\nAnswer: (A) The watermelons are the cheapest.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: pears, plums, and kiwis. The pears are less expensive than the plums. The kiwis are less expensive than the pears.\nOptions:\n(A) The pears are the second-most expensive\n(B) The plums are the second-most expensive\n(C) The kiwis are the second-most expensive",
+      "pred": "1. **Identify the relationship between the fruits**: According to the problem, the pears are less expensive than the plums, and the kiwis are less expensive than the pears.\n\n2. **Determine the relative prices of the fruits**:\n   - Pears < Plums\n   - Kiwis < Pears\n\n3. **Analyze the options**:\n   - Option (A): \"The pears are the second-most expensive\" – This is incorrect because if the pears are cheaper than both the plums and kiwis, they cannot be the second most expensive.\n   - Option (B): \"The plums are the second-most expensive\" – This is correct because if the pears are cheaper than the plums, then the plums must be more expensive than the pears but still less expensive than the kiwis.\n   - Option (C): \"The kiwis are the second-most expensive\" – This is incorrect because if the kiwis are cheaper than the pears, they cannot be the second most expensive.\n\n4. **Conclusion**: Based on the logical relationships established, the correct answer is that the plums are the second-most expensive.\n\nAnswer: B",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: kiwis, loquats, and cantaloupes. The kiwis are less expensive than the loquats. The cantaloupes are less expensive than the kiwis.\nOptions:\n(A) The kiwis are the second-most expensive\n(B) The loquats are the second-most expensive\n(C) The cantaloupes are the second-most expensive",
+      "pred": "1. **Identify the relationship between kiwis, loquats, and cantaloupes based on their prices**: \n   - Kiwis are less expensive than loquats.\n   - Cantaloupes are less expensive than kiwis.\n\n2. **Determine the relative positions of kiwis, loquats, and cantaloupes**:\n   - Since loquats are more expensive than kiwis (kiwis are less expensive than loquats), loquats must be the most expensive.\n   - Cantaloupes are cheaper than kiwis but more expensive than loquats, so they must be the second most expensive.\n\n3. **Conclusion**:\n   - Loquats are the second-most expensive.\n\nTherefore, the correct answer is:\n\n**(B) The loquats are the second-most expensive.**",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Amy, Ana, and Joe. Amy finished below Ana. Ana finished below Joe.\nOptions:\n(A) Amy finished second\n(B) Ana finished second\n(C) Joe finished second",
+      "pred": "1. **Identify the logical sequence**: \n   - Amy is below Ana.\n   - Ana is below Joe.\n\n2. **Determine the position of Amy**:\n   - Since Amy is below Ana, she must be third or fourth (since Ana is also below Joe).\n\n3. **Determine the position of Ana**:\n   - If Amy is third, then Ana must be first because she is below Amy.\n   - If Amy is fourth, then Ana would need to be above Amy but still below Joe, which contradicts her being below Joe.\n\n4. **Conclude the positions**:\n   - Amy is first.\n   - Ana is second.\n   - Joe is last.\n\n5. **Select the correct option**:\n   - Option (B) Ana finished second is correct.\n\nAnswer: <Ana finished second>",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: loquats, watermelons, and cantaloupes. The watermelons are the second-most expensive. The loquats are more expensive than the cantaloupes.\nOptions:\n(A) The loquats are the cheapest\n(B) The watermelons are the cheapest\n(C) The cantaloupes are the cheapest",
+      "pred": "1. **Identify the relationship between the fruits based on their prices**: \n   - Watermelons are described as being the second most expensive.\n   - Loquats are stated to be more expensive than cantaloupes.\n\n2. **Determine the relative positions of the fruits**:\n   - Since watermelons are the second most expensive, they must be cheaper than both loquats and cantaloupes.\n   - Loquats are more expensive than cantaloupes, so loquats cannot be the cheapest.\n\n3. **Conclude the position of the fruits**:\n   - Given that watermelons are cheaper than loquats but not cheaper than cantaloupes, watermelons must be the third most expensive.\n   - Cantaloupes are cheaper than loquats, making them the cheapest.\n\n4. **Select the correct option**:\n   - Option (A) is incorrect because the loquats are not the cheapest.\n   - Option (B) is incorrect because the watermelons are not the cheapest.\n   - Option (C) is incorrect because the cantaloupes are not the cheapest.\n\n5. **Final answer**:\n   - The final result is that the cantaloupes are the cheapest.\n\nAnswer: C",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: an orange book, a white book, and a purple book. The orange book is to the left of the white book. The purple book is the rightmost.\nOptions:\n(A) The orange book is the leftmost\n(B) The white book is the leftmost\n(C) The purple book is the leftmost",
+      "pred": "1. **Identify the initial arrangement**: According to the problem, the orange book is to the left of the white book on the shelf.\n2. **Consider the final position of the purple book**: The statement says that the purple book is the rightmost.\n3. **Determine the relative positions based on the given information**:\n   - Since the orange book is to the left of the white book, the white book must be to the right of the orange book.\n4. **Analyze the options**:\n   - Option (A): \"The orange book is the leftmost\" – This contradicts the fact that the orange book is already identified as being to the left of the white book.\n   - Option (B): \"The white book is the leftmost\" – This also contradicts the established order because the white book should be to the right of the orange book.\n   - Option (C): \"The purple book is the leftmost\" – This aligns with the information provided since it states that the purple book is the rightmost.\n\nTherefore, the correct answer is:\n\n**(C)** The purple book is the leftmost.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a convertible, a limousine, and a bus. The limousine is older than the bus. The bus is older than the convertible.\nOptions:\n(A) The convertible is the oldest\n(B) The limousine is the oldest\n(C) The bus is the oldest",
+      "pred": "1. **Identify the relationship between the objects**: \n   - The limousine is older than the bus.\n   - The bus is older than the convertible.\n\n2. **Determine the logical sequence**:\n   - Since the limousine is older than the bus, and the bus is older than the convertible, it follows that the limousine must be older than the convertible.\n\n3. **Conclusion**:\n   - Therefore, the limousine is the oldest among the three objects.\n\nFinal answer: (B) The limousine is the oldest.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: apples, pears, and loquats. The pears are more expensive than the loquats. The pears are less expensive than the apples.\nOptions:\n(A) The apples are the second-most expensive\n(B) The pears are the second-most expensive\n(C) The loquats are the second-most expensive",
+      "pred": "1. **Identify the relationship between the fruits based on their prices**: \n   - Apples are more expensive than pears (since they sell at $3).\n   - Pears are cheaper than apples.\n\n2. **Determine the relative price of loquats**:\n   - Since pears are more expensive than loquats, loquats must be cheaper than pears.\n\n3. **Compare the prices of apples and pears to determine their positions**:\n   - Given that apples are more expensive than pears, apples should be listed before pears in any arrangement.\n\n4. **Conclude the position of loquats**:\n   - Loquats being cheaper than both apples and pears, they would likely be listed last or third if we consider the most expensive first.\n\n5. **Analyze the options**:\n   - Option (A): \"The apples are the second-most expensive\" is incorrect because apples are already the most expensive.\n   - Option (B): \"The pears are the second-most expensive\" is correct as per our analysis.\n   - Option (C): \"The loquats are the second-most expensive\" is incorrect since loquats are cheaper than pears but not necessarily the second most expensive.\n\n6. **Final answer**:\n   - The final result is that the pears are the second-most expensive.\n\nAnswer: B",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Eve, Rob, and Mel. Rob finished below Mel. Mel finished below Eve.\nOptions:\n(A) Eve finished last\n(B) Rob finished last\n(C) Mel finished last",
+      "pred": "1. **Identify the logical sequence based on the given information:**\n   - Rob finished below Mel.\n   - Mel finished below Eve.\n\n2. **Determine the correct order from the options provided:**\n   - Option (A): Eve finished last.\n   - Option (B): Rob finished last.\n   - Option (C): Mel finished last.\n\n3. **Verify which option fits the logical sequence:**\n   - Since Rob is below Mel, he cannot be last.\n   - Mel being below Eve means Mel must be before Eve.\n\n4. **Conclude with the final answer:**\n\nAnswer: (C) Mel finished last",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. A fruit stand sells three fruits: apples, pears, and loquats. The pears are more expensive than the loquats. The pears are less expensive than the apples.\nOptions:\n(A) The apples are the cheapest\n(B) The pears are the cheapest\n(C) The loquats are the cheapest",
+      "pred": "1. **Identify the relationship between the fruits based on the given information:**\n   - Pears are more expensive than loquats.\n   - Pears are less expensive than apples.\n\n2. **Determine the relative prices of the fruits:**\n   - Since apples are cheaper than pears (which are cheaper than loquats), apples must be the most expensive among the three fruits.\n\n3. **Conclude the cheapest fruit from the options provided:**\n   - Option (A) states that the apples are the cheapest.\n   - Option (B) states that the pears are the cheapest.\n   - Option (C) states that the loquats are the cheapest.\n\n4. **Select the correct option based on the established relationships:**\n\n**Final Answer:** The apples are the cheapest. Therefore, the answer is (A).",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Eli, Mya, and Eve. Eli finished last. Mya finished second.\nOptions:\n(A) Eli finished second\n(B) Mya finished second\n(C) Eve finished second",
+      "pred": "1. **Identify the logical sequence**: According to the given information, Eli finished last, and Mya finished second.\n2. **Determine the correct position for Eve**: Since there are only three golfers (Eli, Mya, and Eve), and we know their relative positions, Eve must have finished first.\n3. **Verify the options**:\n   - Option A: \"Eli finished second\" is incorrect because Eli finished last.\n   - Option B: \"Mya finished second\" is correct as per the given information.\n   - Option C: \"Eve finished second\" contradicts the fact that Mya finished second.\n4. **Conclude with the final answer**: The correct option is (B).\n\nAnswer: (B) Mya finished second",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a purple book, a red book, and a yellow book. The purple book is to the right of the yellow book. The yellow book is to the right of the red book.\nOptions:\n(A) The purple book is the second from the left\n(B) The red book is the second from the left\n(C) The yellow book is the second from the left",
+      "pred": "1. **Identify the positions of the books**: \n   - Purple book (P) is to the right of Yellow book (Y).\n   - Yellow book (Y) is to the right of Red book (R).\n\n2. **Determine the relative positions**:\n   - Since P > Y > R, we can deduce that P is at the farthest right.\n\n3. **Place the books on the shelf**:\n   - P (Purple) is to the right of Y (Yellow), so P must be placed before Y.\n   - Y (Yellow) is to the right of R (Red), so Y must be placed after both P and R.\n\n4. **Finalize the arrangement**:\n   - P (Purple) is first.\n   - Y (Yellow) comes next.\n   - R (Red) is last.\n\n5. **Verify the options**:\n   - Option A: \"The purple book is the second from the left\" – Incorrect because P is not the second from the left.\n   - Option B: \"The red book is the second from the left\" – Correct because R is the second from the left.\n   - Option C: \"The yellow book is the second from the left\" – Incorrect because Y is not the second from the left.\n\n6. **Conclusion**:\n   - The correct answer is B: The red book is the second from the left.\n\nAnswer: B",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Ana, Rob, and Joe. Joe finished above Ana. Rob finished above Joe.\nOptions:\n(A) Ana finished last\n(B) Rob finished last\n(C) Joe finished last",
+      "pred": "1. **Identify the logical sequence based on the given information**:\n   - Joe finished above Ana.\n   - Rob finished above Joe.\n\n2. **Determine the relative positions**:\n   - Since Joe is above Ana, Ana must be before Joe.\n   - Since Rob is above Joe, Rob must be after Joe.\n\n3. **Combine the sequences to find the overall order**:\n   - Ana < Joe < Rob\n\n4. **Select the correct option that matches this sequence**:\n   - Option (B) Rob finished last fits the sequence.\n\n5. **Conclusion**:\n   - The final answer is (B).",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Amy, Ana, and Joe. Amy finished below Ana. Ana finished below Joe.\nOptions:\n(A) Amy finished last\n(B) Ana finished last\n(C) Joe finished last",
+      "pred": "1. **Identify the logical sequence based on the given information**:\n   - Amy finished below Ana.\n   - Ana finished below Joe.\n\n2. **Determine the final position based on these relationships**:\n   - Since Amy is below Ana, and Ana is below Joe, it follows that Joe must be at the top because he is the only one who can't be below anyone else.\n\n3. **Conclude the final positions**:\n   - Joe finished first.\n   - Amy finished second.\n   - Ana finished third.\n\n4. **Select the correct option based on the determined positions**:\n   - Option (C) Joe finished last does not match our conclusion.\n\n5. **Final answer**:\n   - Answer: <Joe finished last>.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a branch, there are three birds: a crow, a falcon, and a hummingbird. The crow is to the left of the falcon. The hummingbird is to the left of the crow.\nOptions:\n(A) The crow is the leftmost\n(B) The falcon is the leftmost\n(C) The hummingbird is the leftmost",
+      "pred": "1. **Identify the positions of the birds relative to each other based on the given information**:\n   - The crow is to the left of the falcon.\n   - The hummingbird is to the left of the crow.\n\n2. **Determine the correct position for each bird**:\n   - Since the crow is to the left of the falcon, the falcon must be at the right end (farthest from the crow).\n   - The hummingbird is also to the left of the crow, so it must be somewhere between the crow and the falcon.\n\n3. **Conclude the final arrangement**:\n   - The crow is to the left of the hummingbird.\n   - The hummingbird is to the left of the falcon.\n\n4. **Select the option that correctly represents this arrangement**:\n   - Option A states \"The crow is the leftmost,\" which is incorrect because the crow is not the farthest left.\n   - Option B states \"The falcon is the leftmost,\" which is incorrect because the falcon is not the farthest left.\n   - Option C states \"The hummingbird is the leftmost,\" which is correct because the hummingbird is the farthest left.\n\n5. **Final answer**: Answer: C",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a bus, a sedan, and a truck. The truck is older than the bus. The bus is older than the sedan.\nOptions:\n(A) The bus is the oldest\n(B) The sedan is the oldest\n(C) The truck is the oldest",
+      "pred": "1. **Identify the logical sequence**: According to the given information, the truck is older than the bus, and the bus is older than the sedan. This establishes the relative ages of the vehicles as follows: Truck > Bus > Sedan.\n\n2. **Analyze the options**:\n   - Option (A): \"The bus is the oldest\" – This statement aligns with our established age hierarchy where the bus is indeed the oldest among the three vehicles.\n   - Option (B): \"The sedan is the oldest\" – This contradicts the established age hierarchy because the truck is older than the bus, which means the truck must be older than the sedan, making the truck the oldest.\n   - Option (C): \"The truck is the oldest\" – This also contradicts the established age hierarchy for similar reasons.\n\n3. **Conclusion**: Based on the logical consistency provided in the problem, the correct answer is that the bus is the oldest.\n\nAnswer: A",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a station wagon, a truck, and a motorcyle. The truck is newer than the station wagon. The motorcyle is the oldest.\nOptions:\n(A) The station wagon is the newest\n(B) The truck is the newest\n(C) The motorcyle is the newest",
+      "pred": "1. **Identify the logical relationships**: \n   - The truck is newer than the station wagon.\n   - The motorcycle is the oldest.\n\n2. **Determine the relative positions**:\n   - Since the truck is newer than the station wagon, it must be positioned before the station wagon.\n   - The motorcycle being the oldest means it should be positioned at the end of the sequence.\n\n3. **Arrange the objects based on these relationships**:\n   - Truck (newest)\n   - Station Wagon\n   - Motorcycle (oldest)\n\n4. **Select the correct option**:\n   - Option A states that the station wagon is the newest, which contradicts our arrangement where the station wagon is not the newest.\n   - Option B states that the truck is the newest, which aligns with our arrangement.\n   - Option C states that the motorcycle is the newest, but this does not match our arrangement.\n\n5. **Conclusion**:\n   - The correct answer is B.\n\nAnswer: B",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In a golf tournament, there were three golfers: Eli, Mya, and Eve. Eli finished last. Mya finished second.\nOptions:\n(A) Eli finished last\n(B) Mya finished last\n(C) Eve finished last",
+      "pred": "1. **Identify the logical consistency**: Each statement is logically consistent with the previous one. \n2. **Analyze the given information**:\n   - Eli finished last.\n   - Mya finished second.\n3. **Determine the correct answer based on the logical flow**:\n   - Since Eli finished last (statement A), it means that Mya must have finished second because she came after him.\n4. **Verify the options**:\n   - Option A: \"Eli finished last\" aligns with the given information.\n   - Option B: \"Mya finished last\" contradicts the fact that Eli finished last.\n   - Option C: \"Eve finished last\" does not follow from the information provided about Eli and Mya's positions.\n5. **Conclude**:\n   - The only option that maintains logical consistency with the given information is Option A.\n\nAnswer: (A) Eli finished last",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. In an antique car show, there are three vehicles: a sedan, a minivan, and a motorcyle. The motorcyle is the second-newest. The minivan is newer than the motorcyle.\nOptions:\n(A) The sedan is the newest\n(B) The minivan is the newest\n(C) The motorcyle is the newest",
+      "pred": "1. **Identify the logical relationships**: \n   - Motorcyle is the second newest.\n   - Minivan is newer than the motorcycle.\n\n2. **Determine the position of the minivan**:\n   - Since the minivan is newer than the motorcycle (second newest), it must be the third newest.\n\n3. **Determine the position of the sedan**:\n   - The sedan cannot be the newest because the minivan is newer than the motorcycle, so the sedan must be the oldest.\n\n4. **Conclusion**:\n   - The sedan is the newest.\n\nTherefore, the correct answer is:\n\n**(A) The sedan is the newest**.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a branch, there are three birds: a hawk, a crow, and a raven. The raven is to the right of the hawk. The crow is the rightmost.\nOptions:\n(A) The hawk is the rightmost\n(B) The crow is the rightmost\n(C) The raven is the rightmost",
+      "pred": "1. **Identify the positions of the objects on the branch**: \n   - Hawk (H)\n   - Crow (C)\n   - Raven (R)\n\n2. **Determine the logical consistency**:\n   - According to the statement \"the raven is to the right of the hawk\", we know R > H.\n   - Also, according to the statement \"the crow is the rightmost\", C is at the end.\n\n3. **Analyze the options**:\n   - Option A: The hawk is the rightmost. This contradicts the given information that the crow is the rightmost.\n   - Option B: The crow is the rightmost. This aligns with the given information.\n   - Option C: The raven is the rightmost. This contradicts the given information that the raven is not the rightmost.\n\n4. **Conclusion**:\n   - Based on the logical consistency provided in the paragraph, the correct answer must be option B.\n\nAnswer: B",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "The following paragraphs each describe a set of three objects arranged in a fixed order. The statements are logically consistent within each paragraph. On a shelf, there are three books: a gray book, a purple book, and a red book. The purple book is to the left of the red book. The gray book is to the left of the purple book.\nOptions:\n(A) The gray book is the second from the left\n(B) The purple book is the second from the left\n(C) The red book is the second from the left",
+      "pred": "1. **Identify the positions of the books**: \n   - Purple book (P) is to the left of Red book (R).\n   - Gray book (G) is to the left of Purple book (P).\n\n2. **Determine the relative position of G**:\n   - Since G is to the left of P, and P is already determined as being to the left of R, G must be between P and R.\n\n3. **Conclusion**:\n   - G is the second from the left on the shelf.\n\nTherefore, the correct answer is:\n\n**(A) The gray book is the second from the left**.",
+      "gt": "(B)",
+      "correct": false
+    }
+  ]
+}

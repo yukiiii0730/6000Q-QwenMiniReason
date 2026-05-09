@@ -1,0 +1,8 @@
+⚠️  未配置 hf_token，如访问受限数据集请先填写 config/sft_config.yaml
+⏭️  SFT 缓存已存在，跳过下载: data/processed/sft_train.json
+⏭️  DPO 缓存已存在，跳过下载: data/processed/dpo_train.json
+✅ config 已切换为本地缓存模式
+
+📦 数据集摘要：
+   SFT : data/processed/sft_train.json
+   DPO : data/processed/dpo_train.json

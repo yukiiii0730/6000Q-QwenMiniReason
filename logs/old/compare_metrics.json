@@ -1,0 +1,64 @@
+{
+  "rows": [
+    {
+      "label": "Qwen2.5-1.5B-Instruct (Baseline)",
+      "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "gsm8k": 0.46,
+      "math500": null,
+      "bbh_macro": 0.8,
+      "source": {
+        "gsm8k": "self",
+        "math500": "na",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "Qwen2.5-7B-Instruct (官方/sanity)",
+      "model_id": "Qwen/Qwen2.5-7B-Instruct",
+      "gsm8k": 0.82,
+      "math500": 0.7,
+      "bbh_macro": 0.78,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "Qwen2.5-14B-Instruct (官方/sanity)",
+      "model_id": "Qwen/Qwen2.5-14B-Instruct",
+      "gsm8k": 0.64,
+      "math500": 0.78,
+      "bbh_macro": 0.68,
+      "source": {
+        "gsm8k": "self",
+        "math500": "self",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "我们 SFT only",
+      "model_id": "ours_sft",
+      "gsm8k": 0.5,
+      "math500": null,
+      "bbh_macro": 0.86,
+      "source": {
+        "gsm8k": "self",
+        "math500": "na",
+        "bbh": "self"
+      }
+    },
+    {
+      "label": "我们 SFT + DPO",
+      "model_id": "ours_sft_dpo",
+      "gsm8k": 0.4,
+      "math500": null,
+      "bbh_macro": 0.84,
+      "source": {
+        "gsm8k": "self",
+        "math500": "na",
+        "bbh": "self"
+      }
+    }
+  ]
+}

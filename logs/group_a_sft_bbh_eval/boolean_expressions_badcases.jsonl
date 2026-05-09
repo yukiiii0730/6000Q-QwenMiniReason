@@ -1,0 +1,1 @@
+{"input": "( not not not True and True ) is", "pred": "1. 首先，计算括号内的逻辑运算。\n2. 由于 `not` 是一个否定操作符，所以 `not not not True` 等价于 `True`。\n3. 接着进行与操作，因为 `True` 和 `True` 的逻辑乘积为 `True`。\n4. 最终结果是 `True`。", "gt": "False", "correct": false}

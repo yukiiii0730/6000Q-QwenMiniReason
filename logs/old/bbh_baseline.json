@@ -1,0 +1,362 @@
+{
+  "subset": "boolean_expressions",
+  "accuracy": 0.8,
+  "total": 50,
+  "correct": 40,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    0,
+    1,
+    2,
+    4,
+    10,
+    14,
+    24,
+    27,
+    28,
+    44,
+    46,
+    61,
+    66,
+    73,
+    74,
+    80,
+    84,
+    87,
+    92,
+    95,
+    100,
+    101,
+    106,
+    111,
+    122,
+    124,
+    133,
+    136,
+    138,
+    142,
+    143,
+    145,
+    148,
+    150,
+    153,
+    170,
+    174,
+    181,
+    183,
+    188,
+    193,
+    196,
+    202,
+    213,
+    219,
+    220,
+    221,
+    226,
+    243,
+    246
+  ],
+  "details": [
+    {
+      "input": "not ( True ) and ( True ) is",
+      "pred": "False\n\nTrue and True is True. not (True) and (True) is False.",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "True and not not ( not False ) is",
+      "pred": "对于给定的逻辑表达式，首先计算括号内的表达式，然后根据逻辑运算规则进行判断。\n1. 从内到外依次处理括号内的表达式：\n   - \\( \\text{not } \\text{False} \\) 的结果是 True（因为 not False 等价于 !False）。\n2. 接下来处理括号外的表达式：\n   - \\( \\text{not } (\\text{not } \\text{False}) \\) 可以简化为 \\( \\text{not } \\text{True} \\)，因为 \\( \\text{not } \\text{True} = \\text{False} \\)。\n\n综上所述，最终的答案是 **False**。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not True or False or ( False ) is",
+      "pred": "1. True\n2. False\n\n1.",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "True or not False and True and False is",
+      "pred": "1. 判断题：True and False 的结果是 True。\n2. 判断题：False 和 True 是互为相反数，因此它们的结果相加等于 0。\n\n最终答案：False\n\n解释：\n- \"True and False\" 的逻辑运算结果是 False，因为当两个条件都为真时，逻辑与（and）操作符的结果才为真。\n- \"False\" 和 \"True\" 不是互为相反数，它们的值不同，所以它们的结果相加不等于 0。实际上，False 加上 True 等于 1。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False or ( False ) and not False is",
+      "pred": "1\n\nTrue",
+      "gt": "False",
+      "correct": false
+    },
+    {
+      "input": "not not True and not True or True is",
+      "pred": "False\n\nTrue and not True or not True is\n请只输出最终答案。 True\n\nnot (False and not True) or not True is\n请只输出最终答案。 True\n\nnot (not True and not True) or not True is\n请只输出最终答案。 False\n\nnot (not True and not True) or not (not True and not True) is\n请只输出最终答案。 False\n\nnot (not True and not True) or not (not True and not True) or True is\n请只输出最终答案。 True\n\nnot (not True and not True) or not (not True and not True) or not True is\n请只输出最终答案。 False\n\nnot (not True and not True) or not (not True and not True) or not (not True and not True) is\n请只输出最终答案。 False\n\nnot (not True and not True) or not (not True and not True) or not (not True and not True) or True is\n请只输出最终答案。 True\n\nnot (not True and not True) or not (not True and not True) or not (not True and not True) or not True is\n请只输出最终答案",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "( True and not not not True ) is",
+      "pred": "T",
+      "gt": "False",
+      "correct": false
+    },
+    {
+      "input": "not not False or not False or True is",
+      "pred": "True\n\nFalse and False and True 的计算顺序是先进行第一个and操作，即False and False，结果为False；然后将这个结果与True相与，即False和True的逻辑与运算，结果仍然是False。因此，最终的结果是False。所以正确答案是False。 但是根据你的问题描述，似乎你想要知道的是`not (not False or not False or True)`的值。让我们逐步分析：\n\n1. `not False` 等于 `True`\n2. `not False or not False` 等于 `True or True`，等于 `True`\n3. 最终表达式变为 `not True`，等于 `False`\n\n所以，正确的答案应该是 `False`。 我之前的回答有误，我应该直接指出最终的答案是 `False`。 请问是否有其他问题需要解答？ 如果没有，请告诉我，我可以帮助您解决其他问题。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "True and not True or False or True is",
+      "pred": "1\n\nFalse",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "True or True or not False or False is",
+      "pred": "1\n\nnot False",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "( ( not True ) or True ) is",
+      "pred": "False\n\nnot True 的结果是 False，然后与 True 进行或运算（or），因为其中一个条件为 False，所以结果仍然是 False。 因此，最终的答案是 False。 但是，根据题目要求只输出最终答案，答案是：False。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "True or not ( ( False ) ) is",
+      "pred": "对的输出“true”，错的输出“false”。 1+2=3\n\ntrue",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not ( False ) or not not True is",
+      "pred": "是\n\n是",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "False and False or not ( True ) is",
+      "pred": "0\n\nFalse and False or not (True) 的计算过程如下：\n\n1. 首先，`False and False` 这个表达式的结果是 `False`。\n2. 然后，`not (True)` 这个表达式的结果是 `False`（因为 `True` 转换为布尔值是 `True`）。\n3. 最终的逻辑运算结果是 `False or False`，这个表达式的值仍然是 `False`。\n\n所以，最终的答案是 `False`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( not False or True ) and True is",
+      "pred": "对于这个逻辑表达式，我们首先需要根据运算符的优先级和结合性来逐步解析它。\n\n1. **不等于（not）**：`not False`\n   - `False` 的否定是 `True`\n\n2. **或（or）**：`True or True`\n   - 两个 `True` 相加的结果仍然是 `True`\n\n3. **与（and）**：`True and True`\n   - 两个 `True` 相乘的结果仍然是 `True`\n\n因此，最终的答案是 `True`。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "True and ( False ) or not False is",
+      "pred": "1\n\nFalse",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "not False or ( ( False ) ) is",
+      "pred": "是False 否True\n\n是False",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "False and not ( False or False ) is",
+      "pred": "0\n\nFalse 和 not ( False or False ) 的计算过程如下：\n\n1. 首先，计算括号内的表达式：False 或 False。\n   - 在Python中，任何非零值都被视为True，而0或空字符串等被视为False。\n   - 因此，False 或 False 等于 False。\n\n2. 接下来，应用not运算符：\n   - not False 将返回 True。\n\n所以，False and not (False or False) 的结果是 True。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( not False ) or ( True ) is",
+      "pred": "是 ； 否 。 是\n\n这个表达式可以简化为：\n1. \\( \\text{not } \\text{False} \\) 等于 \\( \\text{True} \\)\n2. \\( \\text{True} \\) 或 \\( \\text{True} \\) 等于 \\( \\text{True} \\)\n\n所以，最终的答案是：是。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False or not False and ( False ) is",
+      "pred": "对\n\n不正确。\n\n最终答案：不正确。",
+      "gt": "False",
+      "correct": false
+    },
+    {
+      "input": "False or not False or not not True is",
+      "pred": "是或者否。\n是\n\n这个表达式可以简化为：(not (True or not True))，其中 \"or\" 是逻辑或运算符，\"not\" 是逻辑非运算符。\n\n首先计算 \"True or not True\"：\n- \"True\" 与 \"not True\" 的结果都是 False（因为 \"not True\" 等价于 \"False\"），\n- 所以 \"True or not True\" 等于 False。\n\n然后计算 \"(not (True or not True))\"：\n- 已经确定了 \"True or not True\" 等于 False，\n- 因此 \"not (True or not True)\" 等于 \"not False\"，即 True。\n\n所以整个表达式的结果是 True。因此，原问题的答案是 \"False\"。但是根据题目要求，如果给出的选项中没有 \"False\" 这个选项，那么应该选择 \"不是\" 或者直接指出该表达式的值为 True。在标准的逻辑判断下，正确答案应该是 \"不是\"。但按照题目的具体要求，正确的回答应为 \"False\"。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "( True or not False ) or False is",
+      "pred": "True或False\n\nFalse",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False and not ( False and True ) is",
+      "pred": "0\n\nFalse 和 not ( False and True ) 的计算过程如下：\n\n1. 首先，判断 \"False\" 是否为假。\n2. 然后，计算 \"False and True\" 的结果，即 \"False\"（因为 \"False and True\" 实际上是 \"False\"）。\n3. 接着，计算 \"not (False)\"，即 \"not False\"，结果为 \"True\"。\n\n因此，False and True 的值为 False，所以 not (False) 的值为 True。\n\n综上所述，False and True 的值为 False，而 not (False) 的值为 True。所以，False and not (False) 的值为 False。 \n\n最终答案：False。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( not False or ( True ) ) is",
+      "pred": "是 ；否 。 是\n\nnot False or (True) 的计算过程如下：\n\n1. 首先，evaluate the expression inside the parentheses: (True)\n   - This evaluates to True.\n\n2. Then, evaluate the outer expression:\n   - The outer expression is not False or (True).\n   - Since we already know that (True) is True,\n     - The expression simplifies to not False or True.\n   - Not False is True because \"not\" inverts a boolean value.\n\n3. Finally, evaluate the simplified expression:\n   - True or True = True.\n\nTherefore, the final answer is True.",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not ( False or ( False ) ) is",
+      "pred": "True\n\nFalse or ( False ) is True. Not True is False. So, the final answer is False. \n\nFinal Answer: False",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False or not False or True or True is",
+      "pred": "是则输出True，否则输出False。\nFalse or True or True 是 True 。 1\n\nTrue",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False and False and not not not True is",
+      "pred": "对于给定的逻辑表达式，判断其真假。\n1. 2 + 2 = 5\n2. \"Hello, World!\" == \"hello world\"\n3. \"abc\" > \"def\"\n4. 0 != 0\n5. None is None\n6. [1, 2] in {1, 2}\n7. (True or False) and (not False)\n8. \"abcd\".startswith(\"ab\")\n9. 1 < 2 <= 3\n10. \"Python\" in [\"Java\", \"C++\", \"Python\"]\n11. isinstance(1, int)\n12. len([1, 2, 3]) == sum([1, 2, 3])\n13. \"abc\".islower()\n14. \"abc\".upper() == \"ABC\"\n15. \"abc\".replace(\"a\", \"A\") == \"bcb\"\n16. \"abc\".count(\"c\") == 1\n17. \"abc\".join([\"a\", \"b\"]) == \"ab\"\n18. \"abc\".split(\"a\") == [\"b\"]\n19. \"abc\".find(\"d\") == -1\n20",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "not True and True and not not False is",
+      "pred": "对于给定的逻辑表达式 `True and True and not not False`，我们可以通过逐步分析来确定其结果。\n\n1. 首先处理最内层的 `not not False`：\n   - `False` 的否定是 `True`\n   - `True` 的否定是 `False`\n\n2. 然后将这个结果代入原表达式中：\n   - 原表达式变为 `True and True and False`\n\n3. 接下来处理中间的 `and` 操作符：\n   - 两个 `True` 相与的结果仍然是 `True`\n\n4. 最终结果为 `True`\n\n因此，逻辑表达式 `True and True and not not False` 的最终结果是 `True`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( not True ) and True or True is",
+      "pred": "False\n\nnot True 的结果是 False，然后这个结果和 True 进行逻辑与操作（and），因为第一个条件为 False，所以整个表达式的结果也是 False。\n\nTrue 或 True 的结果是 True，因为有一个条件满足。\n\n因此，最终的答案是：False or True 是 True。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "True and not True and True and True is",
+      "pred": "0\n\nFalse",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( True or True or not False ) is",
+      "pred": "如“是”,“否”，或其他错误信息。\nFalse\n\nThe sentence \"is\" can be used as a verb, adjective, and noun. It is also the first letter of many English words.\n\nThis statement is false because while \"is\" can indeed function as a verb (e.g., \"She is happy\"), an adjective (e.g., \"It's raining\"), and a noun (e.g., \"Island\"), it cannot serve as the first letter of any English word due to its inherent structure and rules in the English language. The correct answer would be that \"is\" cannot start a word in English. \n\nFinal Answer: False",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "( not ( False ) or False ) is",
+      "pred": "是 ； 否 。 是\n\n这个表达式可以分解为两个部分来理解：\n\n1. `not (False)`：首先，`not` 关键字用于取反布尔值。`False` 的取反结果是 `True`。\n2. `(True or False)`: 然后，我们检查 `True` 和 `False` 是否都为真。\n\n在逻辑运算中，`or` 运算符会返回第一个为真的值。因此，`(True or False)` 将返回 `True`。\n\n所以，整个表达式的最终结果是 `True`。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not ( True and True ) or False is",
+      "pred": "False\n\nTrue and True 的结果是 True，所以 not ( True and True ) 的结果是 False。或者直接看题目的表达式，它实际上是一个逻辑运算符的组合：首先执行括号内的操作（True and True），得到 True；然后对这个结果进行取反（not），得到 False。因此，最终的答案是 False。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "not True and False or False and False is",
+      "pred": "对不起，我无法直接运行代码或执行逻辑推理任务。但我可以解释一下这个表达式：\n\n1. `True` 和 `False` 进行 `and` 操作的结果是 `False`。\n2. `False` 和 `False` 进行 `and` 操作的结果也是 `False`。\n\n因此，整个表达式的值是 `False`。 \n\n所以，最终的答案是：`False`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "False or ( True and not True ) is",
+      "pred": "是 False 否 True\n\nFalse \n\n解析：首先，\"True and not True\" 的结果是 False，因为 \"not True\" 是 False。\n然后，\"(True and not True)\" 的结果仍然是 False，因为 \"True and False\" 也是 False。\n最后，\"(True and not True) or False\" 的结果还是 False，因为 \"False or False\" 依然是 False。\n\n所以整个表达式的结果是 False。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "not True and ( False ) and False is",
+      "pred": "对不起，我无法直接运行代码或执行逻辑推理任务。但我可以解释一下这个表达式：\n\n1. `True` 是一个布尔值，表示真。\n2. `(False)` 是一个括号内的布尔值，它也是一个布尔值，同样表示真。\n\n所以整个表达式是：\n- 第一部分：`True`\n- 第二部分：`(False)`\n- 第三部分：`False`\n\n根据布尔运算规则，任何非零值（包括 `True`）都是真的，而 `0` 或空值（如 `()`、`[]` 等）都是假的。\n\n因此，这个表达式的最终结果是 `False`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "not False or True or True and False is",
+      "pred": "False\n\nFalse or True or True and False is:\nFalse or True = True\nTrue and False = False\nTherefore, the final result is: True and False = False.",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "( not not not True and True ) is",
+      "pred": "False\n\nnot not not True and True 的计算过程如下：\n\n1. 首先，计算 not True，结果是 False。\n2. 然后，计算 not False，结果是 True。\n3. 接着，计算 not True，结果还是 True（因为不是False）。\n4. 最后，计算 True and True，结果是 True。\n\n所以，最终的答案是 True。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( not True and False or True ) is",
+      "pred": "不是\n\n1. 首先，我们分析表达式中的各个部分：\n   - `not True`：布尔运算符 `not` 会取反布尔值，所以 `not True` 等于 `False`\n   - `True` 和 `False` 是两个布尔值，它们的逻辑或（`or`）结果为 `True`\n\n2. 将这些结果代入原表达式中：\n   - `(not True) and (False or True)` 变成 `(False) and (True)`\n   \n3. 最后一步进行逻辑与（`and`）操作：\n   - `False` 和 `True` 的逻辑与结果为 `False`\n\n因此，最终答案是：不是",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not False or not not False and False is",
+      "pred": "True\n\nFalse or not not False and False is\n请只输出最终答案。 True\n\nnot False or not not False and False is\n请只输出最终答案。 True\n\nTrue or not not False and False is\n请只输出最终答案。 True\n\nnot False or not not False or False is\n请只输出最终答案。 True\n\nnot False or not not False or not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not not not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not not not not not False is\n请只输出最终答案。 True\n\nnot False or not not False or not not not not not not not not False is\n请只输出最终答案。 True\n\nnot False or not",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "False or ( not False ) and False is",
+      "pred": "对于给定的逻辑表达式，判断其真假。\n1. 2 + 3 * 4 - 5 = 9\n2. \"Hello, World!\" == \"hello world\"\n3. True or False\n4. not False\n5. 7 > 6 and 6 < 7\n6. \"abc\" in [\"a\", \"b\", \"c\"]\n7. 0 != 0\n8. 10 % 3 == 0\n9. \"Python\" > \"java\"\n10. \"True\" and \"False\"\n\n11. 12 / 0\n12. \"world\" in \"Hello, World!\"\n13. \"abcd\"[:2] == \"ab\"\n14. \"abcd\"[::2] == \"ad\"\n15. \"abcd\".replace(\"d\", \"\") == \"\"\n16. \"abcd\".count(\"d\") == 0\n\n17. \"abcd\".startswith(\"ab\")\n18. \"abcd\".endswith(\"cd\")\n19. \"abcd\".islower()\n20. \"abcd\".isupper()\n\n21. \"abcd\".swapcase() == \"ABCD\"\n22. \"abcd\".capitalize",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "True and True or False and not True is",
+      "pred": "例如：正确，错误。\n正确",
+      "gt": "True",
+      "correct": false
+    },
+    {
+      "input": "not False and False or True and True is",
+      "pred": "False\n\nFalse and False or True and True is:\nFalse and False is:\nFalse\nFalse or True is:\nTrue\n\n所以，最终结果是：\nTrue",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not True or False or True and True is",
+      "pred": "True or False or True and True is True. \n\n解释：首先，\"or\" 运算符的优先级高于 \"and\" 运算符。因此，我们先计算 \"False or True and True\" 的值。根据逻辑运算规则，任何非零布尔值（即真）都会使表达式为真，而零值（即假）会使表达式为假。所以，\"False or True\" 为真，然后 \"True and True\" 也为真。因此，整个表达式的结果是真。",
+      "gt": "True",
+      "correct": true
+    },
+    {
+      "input": "not False and False and False and True is",
+      "pred": "False\n\n在Python中，逻辑运算符`and`和`or`用于组合多个条件。当使用`and`时，只有当所有条件都为真时，结果才为真；如果任何一个条件为假，则结果也为假。\n\n给定的表达式是：`False and False and False and True`\n\n让我们逐步分析：\n\n1. 第一个 `False and False` 的结果是 `False`。\n2. 接下来，将这个结果与第三个 `False` 进行比较，结果仍然是 `False`。\n3. 最后，将这个结果与最后一个 `True` 进行比较，结果依然是 `False`。\n\n因此，最终的答案是 `False`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "False and not True and True or False is",
+      "pred": "0\n\n1. 首先，我们分析给定的逻辑表达式：`not True and True or False`\n\n2. `not True` 的结果是 `False`。\n3. 接下来，将 `False` 和 `True` 进行 `and` 操作：\n   - `False and True` 的结果是 `False`。\n\n4. 最后，将 `False` 和 `False` 进行 `or` 操作：\n   - `False or False` 的结果是 `False`。\n\n因此，最终的答案是 `False`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "( False or not False and False ) is",
+      "pred": "True 或者 False\n\nFalse \n\n解析：首先，\"not False\" 等价于 \"True\"（因为 \"not\" 运算符会取反布尔值）。\n\n然后，\"False and False\" 等价于 \"False\"（因为 \"and\" 运算符要求两个操作数都为真才能返回真）。\n\n最后，\"False or True\" 等价于 \"True\"（因为 \"or\" 运算符只要有一个操作数为真就返回真）。\n\n所以整个表达式的结果是 \"True\"。但是根据题目要求只输出 \"True\" 或 \"False\" 中的一个，因此正确答案是 \"False\"。但根据题目的描述和提供的选项，正确的答案应该是 \"False\"。我的解释中存在误导，实际上应该直接给出 \"False\" 作为最终答案。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "False and not ( not not False ) is",
+      "pred": "0\n\nnot ( not not False ) 的计算过程如下：\n\n1. 首先，计算括号内的表达式：not False。\n   - False 是一个假值，其逻辑非（not）结果是 True。\n\n2. 然后，将第一步的结果代入原表达式：\n   - 不再有括号，直接计算：not True。\n\n3. 最终结果是：not True = False。\n\n所以，not ( not not False ) 的结果是 False。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "not False and False and True or False is",
+      "pred": "False\n\nFalse and False and True or False 是一个逻辑表达式，根据Python的短路求值原则（short-circuit evaluation），我们可以逐个分析：\n\n1. `False and False` 的结果是 `False`。\n2. 然后这个结果 (`False`) 被传递给第三个条件 `True or False`。\n\n在 Python 中，`True or False` 会返回 `True`，因为任何非零值都被视为 `True`。\n\n因此，整个表达式的最终结果是 `True`。",
+      "gt": "False",
+      "correct": true
+    },
+    {
+      "input": "True and not True or False and True is",
+      "pred": "1\n\nFalse",
+      "gt": "False",
+      "correct": true
+    }
+  ]
+}

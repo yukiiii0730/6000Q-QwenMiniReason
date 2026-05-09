@@ -1,0 +1,222 @@
+{
+  "subset": "snarks",
+  "accuracy": 0.5,
+  "total": 30,
+  "correct": 15,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    0,
+    3,
+    4,
+    10,
+    18,
+    19,
+    25,
+    26,
+    30,
+    35,
+    36,
+    41,
+    58,
+    65,
+    72,
+    86,
+    92,
+    94,
+    96,
+    104,
+    112,
+    114,
+    120,
+    130,
+    137,
+    144,
+    145,
+    155,
+    175,
+    176
+  ],
+  "details": [
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) He's a generous person, trying to promote a charity stream that has raised millions to help kids in need\n(B) He's a terrible person, trying to promote a charity stream that has raised millions to help kids in need",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses positive language and implies generosity.\n- Option B uses negative language but describes the same scenario.\n\nStep 2: Determine if there is sarcasm.\n- Sarcasm involves irony or understatement to convey an opposite meaning than what is stated directly.\n\nStep 3: Analyze the options further.\n- Option A does not contain any irony or understatement.\n- Option B contains irony (\"terrible person\" implying \"generous\") which suggests sarcasm.\n\nFinal Answer: (B) is sarcastic.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) You are mistaken when you say that he should have just let them get away for assaulting him\n(B) You are right when you say that he should have just let them get away for assaulting him",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has an underlying negative sentiment towards the suggestion to let them get away.\n- Option B has a positive sentiment towards the suggestion.\n\nStep 2: Determine which option uses sarcasm based on its tone and context.\n- Option A expresses disappointment or frustration with the idea, indicating sarcasm.\n- Option B does not express any sarcasm as it aligns with the suggested action.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) He didn't threaten, he only urged; totally different\n(B) He didn't threaten, he only pleaded; totally different",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses \"totally different\" to emphasize that there's a difference between what was threatened and what was actually done.\n- Option B also uses \"totally different,\" but in this case, it suggests that the action (urging or pleading) was not as serious or important as the threat.\n\nStep 2: Determine which option is sarcastic.\n- Option A implies that the action taken was significantly different from the threat, suggesting sarcasm because it exaggerates the difference.\n- Option B does not imply sarcasm since it doesn't suggest any irony or mockery about the actions.\n\nFinal Answer: The sarcastic statement is Option A.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Working at a restaurant has made me an amazing chef\n(B) Working at a McDonald's has made me an amazing chef",
+      "pred": "Step 1: Analyze the context and tone of each option.\n- Option A uses \"amazing\" to describe working as a chef in a restaurant.\n- Option B also uses \"amazing,\" but it describes working at McDonald's.\n\nStep 2: Identify the sarcasm in Option B.\n- The use of \"amazing\" here implies that the person does not actually enjoy their job or feels no sense of accomplishment from it.\n- This suggests a sarcastic comment about working at McDonald's.\n\nStep 3: Confirm the sarcasm in Option A.\n- While \"amazing\" might be used positively for some people, it could also imply frustration if they dislike their work.\n- However, this is less clear than Option B because \"amazing\" can have positive connotations depending on the individual.\n\nFinal Answer: (B) Working at a McDonald's has made me an amazing chef.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) This website is well known to post falsehoods and spread false rumors. Rock-solid source if you ask me\n(B) This website is well known to post falsehoods and spread false rumors. Suspicious source if you ask me",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has an aggressive tone with \"rock-solid\" implying it's trustworthy.\n- Option B has a more neutral tone but still implies skepticism.\n\nStep 2: Determine which option uses sarcasm.\n- Option A uses sarcasm because it suggests the website is trustworthy when it clearly isn't.\n- Option B does not use sarcasm as it maintains its skeptical tone without irony or mockery.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Violence is a perfect way to unleash your frustrations\n(B) Exercise is a perfect way to unleash your frustrations",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses \"perfect\" and suggests that violence is an effective method for releasing frustration.\n- Option B also uses \"perfect,\" but it implies that exercise might be more effective than violence.\n\nStep 2: Determine if there's any sarcasm in either option.\n- Option A does not contain irony or mockery; it simply states a fact about how people express their frustrations.\n- Option B contains irony because it suggests that exercising can release frustration better than violence, which is absurd given that physical activity generally requires energy expenditure.\n\nFinal Answer: (B) Exercise is a perfect way to unleash your frustrations.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Good thing things aren't more expensive now than they were eight years ago\n(B) Good thing things aren't more expensive now than they were eight days ago",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has a neutral tone and does not contain sarcasm.\n- Option B contains an exaggeration that implies something is better when it isn't.\n\nStep 2: Determine if there's any irony or mockery in the option.\n- Option B uses hyperbole to express dissatisfaction with current prices, implying they should be higher.\n\nFinal Answer: (B) is sarcastic because it expresses disappointment about current prices using hyperbole.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) You're welcome my dear friend. Always glad to feed the elephants, that woefully endangered species\n(B) You're welcome my dear friend. Always glad to feed the trolls, that woefully endangered species",
+      "pred": "Step 1: Identify the context and tone of each option.\n- Option A uses \"woefully endangered\" in a positive way, which could be seen as sarcastic.\n- Option B also uses \"woefully endangered,\" but it's used in a neutral or slightly negative context.\n\nStep 2: Analyze the sarcasm in Option A.\n- The phrase \"that woefully endangered species\" implies that feeding elephants is not a serious concern, making the statement ironic.\n\nStep 3: Compare Options A and B for sarcasm.\n- Option A has more potential for sarcasm due to its use of irony.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) So he's planning to continue leaving useless space junk in orbit literally just because he can. What a horrible person\n(B) So he's planning to continue leaving useless space junk in orbit literally just because he can. What a brilliant person",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has an angry and frustrated tone.\n- Option B has a slightly more positive but still somewhat critical tone.\n\nStep 2: Determine which option uses sarcasm.\n- Sarcasm involves irony or understatement that implies something different from what is said.\n- Option A expresses frustration with someone who is doing something negative (leaving space junk), implying they should not be allowed to do it.\n- Option B suggests admiration for someone who is doing something good (continuing to leave space junk), implying they should be encouraged to do so.\n\nStep 3: Conclude based on the analysis.\nOption A is sarcastic because it expresses anger at someone for doing something bad when the speaker actually admires them for doing something bad.\n\nAnswer: (A)",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) The two minute wait in line is too long for me, I think i'll just leave\n(B) The two hour wait in line is too long for me, I think i'll just leave",
+      "pred": "Step 1: Analyze the context and tone of each option.\n- Option A suggests that the person finds the wait acceptable because they plan to leave anyway.\n- Option B expresses frustration with the long wait.\n\nStep 2: Identify which option uses sarcasm.\n- Option A does not use sarcasm; it's a straightforward expression of tolerance.\n- Option B uses sarcasm as it implies the opposite of what is being said (long lines are short).\n\nFinal Answer: (B) The two hour wait in line is too long for me, I think I'll just leave.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Hey genocide is clearly the most rational decision\n(B) Hey compromise is clearly the most rational decision",
+      "pred": "1. Identify the tone of each option.\n2. Determine if any option uses sarcasm or irony.\n3. Choose the option that contains sarcasm.\n\nFinal answer: (A) is sarcastic because it implies that genocide is the \"most rational\" choice when in reality, genocide is not considered rational.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) I personally don't believe the 7 time felon that just got done murdering a random woman wouldn't lie\n(B) I personally don't believe the 7 time felon that just got done murdering a random woman would lie",
+      "pred": "Step 1: Identify the context and tone of each option.\n- Option A uses \"wouldn't\" in the past tense to express disbelief about lying.\n- Option B uses \"wouldn't\" in the present tense to express disbelief about lying.\n\nStep 2: Determine which option expresses sarcasm based on its tone.\n- Option A's use of \"wouldn't\" implies a serious or factual statement, not a mocking one.\n- Option B's use of \"wouldn't\" suggests a mocking or ironic statement, implying disbelief at something absurdly unlikely.\n\nStep 3: Conclude which option is sarcastic.\nOption B is sarcastic because it expresses disbelief with an ironic twist, suggesting mockery.\n\nAnswer: (B)",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) You mean you're only into bullies with narcissistic personality disorder?\n(B) You mean you're not into bullies with narcissistic personality disorder?",
+      "pred": "Step 1: Identify the tone of each option.\nOption A uses \"bullies\" in a derogatory way, implying that the speaker disapproves of them.\nOption B asks about someone's attitude towards bullies, but does not use any negative language.\n\nStep 2: Determine which option uses sarcasm.\nSarcasm involves irony or understatement to convey an opposite meaning than what is stated directly.\n\nStep 3: Conclude based on the analysis.\nOption A is sarcastic because it implies disapproval of bullies using a derogatory term.\n\nAnswer: (A)",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Muslims love celebrating Christmas\n(B) Muslims love celebrating Eid",
+      "pred": "To determine which statement is sarcastic, let's analyze each option:\n\n1. **Option (A): \"Muslims love celebrating Christmas\"**\n   - This statement suggests that Muslims enjoy celebrating Christmas, implying it is something they do.\n   - However, in reality, Muslims generally do not celebrate Christmas because it falls on the same day as their religious holiday of Eid al-Fitr.\n\n2. **Option (B): \"Muslims love celebrating Eid\"**\n   - This statement also suggests that Muslims enjoy celebrating Eid, implying it is something they do.\n   - In fact, Muslims generally do not celebrate Eid because it falls on the same day as their religious holiday of Ramadan.\n\nBoth options suggest that Muslims enjoy celebrating these holidays, but this is incorrect. Therefore, both statements can be considered sarcastic because they imply a positive attitude towards an activity that is actually not part of Muslim culture or practice.\n\n**Final Answer:** Both options A and B are sarcastic.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Armed revolutionaries have not been making a lot of change for middle class Americans lately\n(B) Armed revolutionaries have been making a lot of change for middle class Americans lately",
+      "pred": "Step 1: Identify the tone and context in each option.\n- Option A suggests that armed revolutionaries haven't made much progress for middle-class Americans recently.\n- Option B suggests that armed revolutionaries have been making significant changes for middle-class Americans.\n\nStep 2: Determine which option uses sarcasm or irony.\n- Option A implies that there has been little change from armed revolutionaries to middle-class Americans, but it's presented as if they've made a lot of progress.\n- Option B directly states that armed revolutionaries have been making a lot of change for middle-class Americans.\n\nStep 3: Conclude based on the analysis.\nOption A is sarcastic because it presents an ironic situation where armed revolutionaries claim to be making progress when in reality, they're not.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) It's easy to get into politics, all you have to do to is be outrageous\n(B) It's easy to get into politics, all you have to do to is be outrageous",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has an underlying positive sentiment that seems genuine and encouraging.\n- Option B also has an underlying positive sentiment but uses \"all you have to do\" in a way that implies it's not really true.\n\nStep 2: Determine if there's sarcasm in either option.\n- Option A does not contain any irony or mockery, so it cannot be sarcastic.\n- Option B contains irony (sarcastic humor), implying that being outrageous isn't actually necessary for getting into politics.\n\nFinal Answer: The sarcastic statement is Option B.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Bought the stock at $10.50 and sold at $100. Such profits being made\n(B) Bought the stock at $1050 and sold at $100. Such profits being made",
+      "pred": "Step 1: Identify the context of the statements.\n- Statement A involves buying stocks for $10.50 and selling them for $100.\n- Statement B involves buying stocks for $1050 and selling them for $100.\n\nStep 2: Analyze the sarcasm in each statement.\n- In Statement A, the person is making significant profits from their investment, which is presented as an achievement.\n- In Statement B, the person is also making significant profits, but this time it's implied that they have lost money due to the high initial purchase price.\n\nStep 3: Determine if either statement contains sarcasm.\n- Both statements can be considered sarcastic because they present the opposite outcome (profit or loss) than what was actually achieved.\n\nFinal Answer: Both statements are sarcastic.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Concrete plates. Very beautiful\n(B) Stained-glass plates. Very beautiful",
+      "pred": "To determine which statement is sarcastic, let's analyze each option:\n\n1. **Option A: \"Concrete plates. Very beautiful\"**\n   - This statement suggests that the concrete plates are very beautiful.\n   - The sarcasm here lies in the expectation of beauty when they are actually made of concrete.\n\n2. **Option B: \"Stained-glass plates. Very beautiful\"**\n   - This statement also suggests that the stained-glass plates are very beautiful.\n   - There is no indication of sarcasm in this statement as it does not imply anything negative about the plates.\n\nAfter analyzing both options, we can conclude that Option A contains sarcasm because it implies that the concrete plates should be beautiful but instead are described as being made of concrete.\n\n**Final Answer:** (A) Concrete plates. Very beautiful",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) They're losing to a team with a terrible record. I for one am shocked\n(B) They're losing to a team with a winning record. I for one am shocked",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has an underlying positive sentiment despite the negative situation described.\n- Option B expresses disappointment and sarcasm.\n\nStep 2: Determine which option uses sarcasm.\nOption B contains sarcasm because it expresses surprise at the loss while implying that the team should be proud of their performance.\n\nFinal Answer: (B) is sarcastic.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Everyone knows that ignorance of the law excuses nobody from following the law\n(B) Everyone knows ignorance of the law excuses you from following the law",
+      "pred": "Step 1: Identify the tone and context in each option.\nOption A has an informal tone but does not use sarcasm.\nOption B uses sarcasm as it implies that ignorance of the law should excuse someone to break the law.\n\nStep 2: Determine if there's any irony or mockery involved.\nOption B contains irony because it suggests that ignorance of the law should excuse breaking the law, which is absurd.\n\nFinal Answer: (B) is sarcastic.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) It's not addiction if it's legal, right?\n(B) It's not suspicious if it's legal, right?",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses \"right\" in a casual and slightly dismissive manner.\n- Option B also uses \"right,\" but with a more formal tone.\n\nStep 2: Determine which option has sarcasm.\n- Option A implies that legality doesn't matter because it's not considered an issue.\n- Option B suggests that legality does matter because it's not considered suspicious.\n\nStep 3: Conclude based on the analysis.\nOption A is sarcastic because it implies that legality isn't important due to its casual tone.\n\nAnswer: (A) It's not addiction if it's legal, right?",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Yeah war is tragic\n(B) Yeah war is pacifying",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses \"Yeah\" and describes war as \"tragic.\"\n- Option B also uses \"Yeah\" but describes war as \"pacifying.\"\n\nStep 2: Determine if there's an intended irony or sarcasm in the options.\n- In Option A, the use of \"yeah\" suggests agreement with the idea that war is tragic, which could be seen as ironic because it implies the speaker disagrees with this perspective.\n- In Option B, the use of \"yeah\" again suggests agreement, but here it seems to imply that war is not actually pacifying.\n\nStep 3: Conclude based on the analysis.\nOption A contains sarcasm, while Option B does not contain any form of sarcasm.\n\nFinal Answer: (A)",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) It means if small businesses start struggling, the government ramps up their spending to help out\n(B) It means if small businesses start struggling, the government ramps up their taxes to help out",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A has a neutral and supportive tone.\n- Option B has an accusatory and negative tone.\n\nStep 2: Determine which option uses sarcasm.\n- Sarcasm involves irony or understatement that implies the opposite of what is said.\n\nStep 3: Analyze the options further.\n- Option A does not contain any irony or implied contradiction.\n- Option B contains a hidden implication that contradicts its literal meaning.\n\nFinal Answer: (B) is sarcastic because it suggests that the government should increase taxes on small businesses when they are already struggling, implying that increasing taxes would be beneficial.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Yeah, the amount of injuries on the squad and lack of consistent O-line play had everything to do with this\n(B) Yeah, the amount of injuries on the squad and lack of consistent O-line play had nothing to do with this",
+      "pred": "Step 1: Identify the tone in each option.\n- Option A uses \"everything to do with\" which implies causation or responsibility.\n- Option B uses \"had nothing to do with,\" suggesting that something was not responsible.\n\nStep 2: Determine if either option expresses sarcasm.\n- Option A does not express sarcasm because it suggests a cause-and-effect relationship.\n- Option B expresses sarcasm as it implies that the injuries and poor O-line performance were not due to those factors.\n\nFinal Answer: (B)",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) I'm a serious symphony fan so when I go I hope the crowd is dead silent and everyone is in their seats so I can pay extra good attention\n(B) I'm a serious hockey fan so when I go I hope the crowd is dead silent and everyone is in their seats so I can pay extra good attention",
+      "pred": "Step 1: Analyze each option to determine if it contains sarcasm.\nOption A suggests that the speaker wants the audience to be quiet because they want to listen carefully, which implies sarcasm.\nOption B does not contain any indication of sarcasm.\n\nStep 2: Identify the sarcastic statement based on the analysis.\nThe sarcastic statement is Option A.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Oh no the cleats with the new spikes didn't solve the problem?\n(B) Oh no the cleats with the new spikes didn't solve every problem?",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses \"Oh no\" and mentions that the spikes did not solve the problem, which implies frustration or disappointment.\n- Option B also uses \"Oh no,\" but it asks if the spikes solved every problem, suggesting a more positive attitude.\n\nStep 2: Determine if there's sarcasm in either option.\n- Option A has an underlying negative sentiment (frustration), making it likely to be sarcastic.\n- Option B seems neutral or slightly positive, so it might not be sarcastic.\n\nFinal Answer: The sarcastic statement is Option A.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Soggy fries covered in bacon grease sounds unhealthy\n(B) Soggy fries covered in bacon grease sounds delicious",
+      "pred": "1. Identify the tone of each option.\n2. Determine which option uses sarcasm by finding irony or humor that goes against expectations.\n3. Option (A) describes something as \"unhealthy\" when it's actually described as \"delicious.\"\n4. Option (B) does not contain any irony or humor.\n\nTherefore, the sarcastic statement is:\n\nAnswer: (A)",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) I'm just 800 points from 1k, this is easy\n(B) I'm just 8 points from 1k, this is easy",
+      "pred": "Step 1: Analyze the first option (A): \"I'm just 800 points from 1k, this is easy.\"\n- This statement seems straightforward and does not contain any sarcasm.\n- It appears to be an honest assessment of one's position in relation to achieving a goal.\n\nStep 2: Analyze the second option (B): \"I'm just 8 points from 1k, this is easy.\"\n- The phrase \"just 8 points\" implies that reaching 1000 points is relatively simple or achievable.\n- However, the word \"easy\" suggests that the task is trivial or unimportant.\n- This could be interpreted as sarcastic because it implies that the speaker believes they have already achieved their goal without actually having done so.\n\nFinal Answer: Statement B is sarcastic.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) With new designs coming ten times slower than their competitors, Honda will soon be at the top of the market\n(B) With new designs coming ten times faster than their competitors, Honda will soon be at the top of the market",
+      "pred": "Step 1: Identify the context and tone.\n- Option A suggests that Honda's design improvements are slow, implying they are lagging behind competitors.\n- Option B suggests that Honda's design improvements are fast, implying they are ahead of competitors.\n\nStep 2: Determine if there is sarcasm in either option.\n- In Option A, the suggestion that Honda will soon be at the top of the market implies that they are currently not there, which is ironic given the description of their design improvements as \"ten times slower.\"\n- In Option B, the suggestion that Honda will soon be at the top of the market implies that they are currently there or about to become so, which is consistent with the description of their design improvements as \"ten times faster.\"\n\nStep 3: Conclude based on the analysis.\nOption A contains sarcasm because it suggests that Honda is not where they should be (at the top), when in fact, they are described as being significantly behind their competitors.\n\nAnswer: Option A is sarcastic.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which statement is sarcastic?\nOptions:\n(A) Generalizing half the population and acting like women can't think for themselves will totally win you points with the ladies\n(B) Generalizing half the population and acting like women can't think for themselves will totally lose you points with the ladies",
+      "pred": "Step 1: Identify the tone of each option.\n- Option A uses an exaggerated and dismissive tone to suggest that generalizing about women's intelligence will be effective.\n- Option B also uses an exaggerated and dismissive tone but in a different context.\n\nStep 2: Determine if there is sarcasm in each option.\n- Option A contains sarcasm because it suggests that being dismissive about women's intelligence will actually work, which is absurd.\n- Option B does not contain any sarcasm as it simply states a fact without irony or mockery.\n\nFinal Answer: (A) is sarcastic.",
+      "gt": "(A)",
+      "correct": true
+    }
+  ]
+}

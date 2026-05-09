@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" font-family="Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <linearGradient id="gradSFT" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.05"/>
+    </linearGradient>
+    <linearGradient id="gradDPO" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:0.05"/>
+    </linearGradient>
+    <linearGradient id="gradEval" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">Qwen-Reasoning-Enhance: 系统架构</text>
+
+  <!-- === Phase 1: Data Preparation === -->
+  <rect x="20" y="50" width="260" height="250" rx="8" fill="url(#gradSFT)" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="150" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e40af">数据准备（CPU）</text>
+
+  <rect x="35" y="90" width="230" height="35" rx="5" fill="white" stroke="#93c5fd" stroke-width="1"/>
+  <text x="150" y="112" text-anchor="middle" font-size="11" fill="#1e3a5f">GSM8K / OpenR1 / OrcaMath / NuminaMath / Magpie</text>
+
+  <rect x="35" y="135" width="230" height="35" rx="5" fill="white" stroke="#93c5fd" stroke-width="1"/>
+  <text x="150" y="157" text-anchor="middle" font-size="11" fill="#1e3a5f">SHA-1 去重 + 长度过滤 → ~38k 样本</text>
+
+  <rect x="35" y="180" width="230" height="35" rx="5" fill="white" stroke="#93c5fd" stroke-width="1"/>
+  <text x="150" y="202" text-anchor="middle" font-size="11" fill="#1e3a5f">Teacher CoT 生成（Qwen3-235B）</text>
+
+  <rect x="35" y="225" width="230" height="35" rx="5" fill="white" stroke="#93c5fd" stroke-width="1"/>
+  <text x="150" y="247" text-anchor="middle" font-size="11" fill="#1e3a5f">错误分类（Qwen-Flash, 5 类）</text>
+
+  <rect x="35" y="265" width="230" height="25" rx="5" fill="white" stroke="#93c5fd" stroke-width="1"/>
+  <text x="150" y="282" text-anchor="middle" font-size="11" fill="#1e3a5f">Targeted DPO 数据构建</text>
+
+  <!-- === Phase 2: SFT Training === -->
+  <rect x="310" y="50" width="270" height="250" rx="8" fill="url(#gradSFT)" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="445" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e40af">SFT 五段课程（GPU）</text>
+
+  <rect x="325" y="90" width="240" height="30" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="445" y="110" text-anchor="middle" font-size="10" fill="#1e3a5f">Stage A: GSM8K 7.5k (lr=5e-5, 800 steps)</text>
+
+  <rect x="325" y="125" width="240" height="30" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="445" y="145" text-anchor="middle" font-size="10" fill="#1e3a5f">Stage B1: OpenR1 10k (lr=4e-5, 1000 steps)</text>
+
+  <rect x="325" y="160" width="240" height="30" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="445" y="180" text-anchor="middle" font-size="10" fill="#1e3a5f">Stage B2: OrcaMath 15k (lr=4e-5, 1200 steps)</text>
+
+  <rect x="325" y="195" width="240" height="30" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="445" y="215" text-anchor="middle" font-size="10" fill="#1e3a5f">Stage B3: NuminaMath 8k (lr=3e-5, 600 steps)</text>
+
+  <rect x="325" y="230" width="240" height="30" rx="5" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="445" y="250" text-anchor="middle" font-size="10" fill="#1e3a5f">Stage C: Magpie 3k (lr=2e-5, 300 steps)</text>
+
+  <text x="445" y="285" text-anchor="middle" font-size="10" fill="#64748b">DoRA r=16, α=32 | Unsloth 2x | BF16</text>
+
+  <!-- === Phase 3: DPO === -->
+  <rect x="610" y="50" width="270" height="145" rx="8" fill="url(#gradDPO)" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="745" y="75" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e">DPO 偏好优化（GPU）</text>
+
+  <rect x="625" y="90" width="240" height="30" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="745" y="110" text-anchor="middle" font-size="10" fill="#78350f">Standard DPO（argilla distilabel 5k）</text>
+
+  <rect x="625" y="125" width="240" height="30" rx="5" fill="#fef3c7" stroke="#fbbf24" stroke-width="1"/>
+  <text x="745" y="145" text-anchor="middle" font-size="10" fill="#78350f">Teacher-Guided DPO（Qwen3-235B chosen）</text>
+
+  <rect x="625" y="160" width="240" height="30" rx="5" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+  <text x="745" y="180" text-anchor="middle" font-size="10" font-weight="bold" fill="#78350f">★ Error-Type-Targeted DPO</text>
+
+  <!-- === Phase 4: Evaluation === -->
+  <rect x="610" y="210" width="270" height="90" rx="8" fill="url(#gradEval)" stroke="#10b981" stroke-width="1.5"/>
+  <text x="745" y="235" text-anchor="middle" font-size="13" font-weight="bold" fill="#065f46">评测验证</text>
+
+  <rect x="625" y="248" width="70" height="25" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="660" y="265" text-anchor="middle" font-size="10" fill="#065f46">GSM8K</text>
+  <rect x="705" y="248" width="70" height="25" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="740" y="265" text-anchor="middle" font-size="10" fill="#065f46">MATH</text>
+  <rect x="785" y="248" width="70" height="25" rx="4" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="820" y="265" text-anchor="middle" font-size="10" fill="#065f46">BBH-27</text>
+
+  <!-- === Arrows between phases === -->
+  <line x1="280" y1="175" x2="310" y2="175" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="580" y1="175" x2="610" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="745" y1="195" x2="745" y2="210" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- === Results Table === -->
+  <rect x="20" y="320" width="860" height="280" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="450" y="348" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">实验结果总览</text>
+
+  <!-- Table Header -->
+  <rect x="40" y="360" width="820" height="28" rx="4" fill="#1e293b"/>
+  <text x="180" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">实验组</text>
+  <text x="370" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">SFT 数据</text>
+  <text x="530" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">DPO 策略</text>
+  <text x="660" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">GSM8K</text>
+  <text x="760" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">MATH</text>
+  <text x="830" y="379" text-anchor="middle" font-size="11" fill="white" font-weight="bold">BBH</text>
+
+  <!-- Row 1: Baseline -->
+  <rect x="40" y="392" width="820" height="25" fill="#f1f5f9"/>
+  <text x="180" y="409" text-anchor="middle" font-size="10" fill="#334155">Baseline 1.5B</text>
+  <text x="370" y="409" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="530" y="409" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="660" y="409" text-anchor="middle" font-size="10" fill="#334155">62.5%</text>
+  <text x="760" y="409" text-anchor="middle" font-size="10" fill="#334155">45.0%</text>
+  <text x="830" y="409" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+
+  <!-- Row 2: Group A SFT -->
+  <rect x="40" y="420" width="820" height="25" fill="white"/>
+  <text x="180" y="437" text-anchor="middle" font-size="10" fill="#334155">Group A SFT</text>
+  <text x="370" y="437" text-anchor="middle" font-size="10" fill="#64748b">LoRA 单段 38k</text>
+  <text x="530" y="437" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="660" y="437" text-anchor="middle" font-size="10" fill="#334155">63.5%</text>
+  <text x="760" y="437" text-anchor="middle" font-size="10" fill="#334155">44.5%</text>
+  <text x="830" y="437" text-anchor="middle" font-size="10" fill="#334155">38.5%</text>
+
+  <!-- Row 3: Group A DPO -->
+  <rect x="40" y="448" width="820" height="25" fill="#fef2f2"/>
+  <text x="180" y="465" text-anchor="middle" font-size="10" fill="#dc2626">Group A DPO ↓</text>
+  <text x="370" y="465" text-anchor="middle" font-size="10" fill="#64748b">LoRA 单段 38k</text>
+  <text x="530" y="465" text-anchor="middle" font-size="10" fill="#64748b">Standard</text>
+  <text x="660" y="465" text-anchor="middle" font-size="10" fill="#dc2626">59.5%</text>
+  <text x="760" y="465" text-anchor="middle" font-size="10" fill="#16a34a">51.3%</text>
+  <text x="830" y="465" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+
+  <!-- Row 4: Group B SFT -->
+  <rect x="40" y="476" width="820" height="25" fill="white"/>
+  <text x="180" y="493" text-anchor="middle" font-size="10" fill="#334155">Group B SFT</text>
+  <text x="370" y="493" text-anchor="middle" font-size="10" fill="#64748b">DoRA 五段 38k</text>
+  <text x="530" y="493" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="660" y="493" text-anchor="middle" font-size="10" fill="#334155">62.0%</text>
+  <text x="760" y="493" text-anchor="middle" font-size="10" fill="#334155">44.0%</text>
+  <text x="830" y="493" text-anchor="middle" font-size="10" fill="#334155">38.8%</text>
+
+  <!-- Row 5: Group B DPO -->
+  <rect x="40" y="504" width="820" height="25" fill="#f0fdf4"/>
+  <text x="180" y="521" text-anchor="middle" font-size="10" fill="#16a34a">Group B DPO</text>
+  <text x="370" y="521" text-anchor="middle" font-size="10" fill="#64748b">DoRA 五段 38k</text>
+  <text x="530" y="521" text-anchor="middle" font-size="10" fill="#64748b">Standard</text>
+  <text x="660" y="521" text-anchor="middle" font-size="10" fill="#334155">62.0%</text>
+  <text x="760" y="521" text-anchor="middle" font-size="10" fill="#16a34a">47.5%</text>
+  <text x="830" y="521" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+
+  <!-- Row 6: Group D Targeted DPO -->
+  <rect x="40" y="532" width="820" height="25" fill="#fffbeb"/>
+  <text x="180" y="549" text-anchor="middle" font-size="10" font-weight="bold" fill="#d97706">Group D Targeted DPO</text>
+  <text x="370" y="549" text-anchor="middle" font-size="10" fill="#64748b">DoRA 五段 38k</text>
+  <text x="530" y="549" text-anchor="middle" font-size="10" fill="#d97706">★ Error-Type-Targeted</text>
+  <text x="660" y="549" text-anchor="middle" font-size="10" font-weight="bold" fill="#d97706">64.5%</text>
+  <text x="760" y="549" text-anchor="middle" font-size="10" fill="#334155">44.0%</text>
+  <text x="830" y="549" text-anchor="middle" font-size="10" fill="#334155">37.4%</text>
+
+  <!-- Row 7: Teacher SFT -->
+  <rect x="40" y="560" width="820" height="25" fill="#eff6ff"/>
+  <text x="180" y="577" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563eb">Teacher SFT</text>
+  <text x="370" y="577" text-anchor="middle" font-size="10" fill="#2563eb">1409 teacher CoT</text>
+  <text x="530" y="577" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+  <text x="660" y="577" text-anchor="middle" font-size="10" font-weight="bold" fill="#2563eb">65.0%</text>
+  <text x="760" y="577" text-anchor="middle" font-size="10" fill="#334155">43.5%</text>
+  <text x="830" y="577" text-anchor="middle" font-size="10" fill="#64748b">—</text>
+
+  <!-- Key insight -->
+  <text x="450" y="598" text-anchor="middle" font-size="11" fill="#1e40af" font-weight="bold">核心结论：数据质量 > 数据数量 — 1409 条 teacher CoT 超越 38k 混合数据</text>
+</svg>

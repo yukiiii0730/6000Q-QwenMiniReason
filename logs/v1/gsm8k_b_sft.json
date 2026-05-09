@@ -1,0 +1,11 @@
+{
+  "accuracy": 0.2967,
+  "total": 0,
+  "correct": 0,
+  "lm_eval_accuracy": 0.2966666666666667,
+  "details": [],
+  "model": "outputs/sft_merged_fp16",
+  "benchmark": "gsm8k",
+  "eval_method": "lm-evaluation-harness",
+  "limit": 500
+}

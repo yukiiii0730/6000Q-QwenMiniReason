@@ -1,0 +1,222 @@
+{
+  "subset": "sports_understanding",
+  "accuracy": 0.3333333333333333,
+  "total": 30,
+  "correct": 10,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    3,
+    10,
+    22,
+    26,
+    28,
+    41,
+    43,
+    44,
+    46,
+    48,
+    50,
+    52,
+    63,
+    65,
+    98,
+    116,
+    122,
+    131,
+    133,
+    134,
+    138,
+    144,
+    150,
+    160,
+    173,
+    180,
+    195,
+    214,
+    237,
+    238
+  ],
+  "details": [
+    {
+      "input": "Is the following sentence plausible? \"Deshaun Watson was called for the goal tend in the Eastern Conference Finals.\"",
+      "pred": "1. **Identify the context**: The sentence is about Deshaun Watson and his performance during the Eastern Conference Finals.\n2. **Check if Deshaun Watson played in the Eastern Conference Finals**: Deshaun Watson is an NFL quarterback who has played in multiple conferences but not specifically in the Eastern Conference Finals.\n3. **Verify if he scored a goal**: In football (American or Canadian), scoring a goal involves kicking the ball into the opponent's goal area, which typically happens on offense.\n\n**Conclusion**: Based on these points, it is highly unlikely that Deshaun Watson would be called for a goal in the Eastern Conference Finals because he did not play in this specific game scenario.\n\n**Final Answer**: Plausible.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Carson Wentz took to the ice.\"",
+      "pred": "1. Carson Wentz is an American football quarterback.\n2. Football players do not take to the ice; they play on a field.\n3. The sentence does not make sense in the context of football.\n\n**答案:** 不 plausible",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Adam Thielen got on base.\"",
+      "pred": "1. **Identify the subject and action**: The sentence is about Adam Thielen.\n2. **Check if the action is possible**: Getting on base in baseball is a common occurrence for players.\n3. **Verify the context**: Baseball games typically have multiple opportunities to get on base.\n\n**Conclusion**: Yes, the sentence is plausible as it describes an event that can occur during a game of baseball.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"LaMelo Ball launched the half court shot in the Western Conference Finals.\"",
+      "pred": "1. **Identify the subject**: LaMelo Ball is mentioned as the person who made the shot.\n2. **Determine the action**: The action described is launching a half-court shot.\n3. **Locate the context**: This occurred during the Western Conference Finals of an NBA playoff game.\n4. **Evaluate the plausibility**:\n   - LaMelo Ball is indeed a professional basketball player.\n   - Half-court shots are possible in basketball, especially in high-pressure situations like playoffs.\n5. **Conclusion**: Given that LaMelo Ball is a skilled player and it's feasible to make such a shot under pressure, the statement can be considered plausible.\n\n**Final Answer**: Plausible",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Zach LaVine  shot the puck.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Zach LaVine shooting something.\n2. **Determine if the action is possible**: Shooting a puck is a common action in ice hockey or other sports that use pucks.\n3. **Check for any logical inconsistencies**: There are no contradictions with known facts about Zach LaVine's abilities or his participation in sports.\n\n**Conclusion**: Yes, the sentence is plausible as it describes an action (shooting) that can be performed by someone who plays a sport involving pucks.\n\n**Final Answer**: Plausible",
+      "gt": "no",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Neymar took a backhand shot in the Stanley Cup.\"",
+      "pred": "1. **Identify the subject**: Neymar is a professional footballer.\n2. **Analyze the action**: A backhand shot is a specific type of shot in soccer (football).\n3. **Consider the context**: The Stanley Cup is an award given to the winner of the NHL playoffs.\n4. **Evaluate the plausibility**:\n   - Neymar is a professional athlete who plays soccer.\n   - Backhand shots are common in soccer and can be used in various situations.\n   - The Stanley Cup is awarded for winning a major sports event.\n\nConclusion: Yes, the sentence is plausible as it describes a realistic scenario involving a professional athlete using a specific shot technique during a significant sporting event.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Fred VanVleet scored a freekick in the Champions League Final.\"",
+      "pred": "1. **Identify the subject**: Fred VanVleet is mentioned as the scorer.\n2. **Determine the action**: Scoring a free kick.\n3. **Locate the event**: The final of the Champions League.\n4. **Verify the context**: Free kicks are typically used in soccer (football) matches and not specifically in the Champions League Final.\n\n**Conclusion**: This sentence does not align with the rules or typical practices of football (soccer). Therefore, it is implausible.\n\n**Final Answer**: Implausible",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Santi Cazorla called for the screen.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Santi Cazorla (a person) and calling (an action).\n2. **Analyze the context**: Calling typically refers to making a phone call or sending an email.\n3. **Consider the object**: In this case, there is no clear object mentioned in the sentence.\n\nGiven these points, it's not possible to determine if Santi Cazorla could have called something on a screen without more information about what he was trying to call. Therefore, the sentence does not make sense as described.\n\n**Final Answer:** Not plausible.",
+      "gt": "no",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"DJ Chark caught the back shoulder fade in the NFC divisional round.\"",
+      "pred": "1. 首先，我们需要理解“back shoulder fade”是一个篮球术语。\n2. 然后，我们确认DJ Chark是NFC（国家橄榄球联盟）的球员。\n3. 接着，我们检查NFL（美国橄榄球联合会）的比赛日程表，看是否有这样的比赛。\n4. 最后，我们确认DJ Chark是否真的在那个比赛中得分或完成了一次传球。\n\n经过以上步骤，我们可以得出结论：这个句子是不准确的。因此，答案：<最终结果>将是：“不准确”。",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Michael Porter Jr. called for the screen.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Michael Porter Jr., who is likely referring to Michael E. Porter, an American management professor.\n2. **Analyze the verb**: The word \"called\" suggests that someone (likely Michael Porter Jr.) was making a request or demand.\n3. **Consider the object**: The phrase \"for the screen\" implies that something on a screen was being referred to.\n\nGiven these points, it seems logical that Michael Porter Jr. might have made a call about something related to screens, such as requesting information from a screen or discussing a topic involving screens.\n\n**Final Answer**: Plausible.",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Philip Rivers launched a hail mary.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Philip Rivers, who is performing an action.\n2. **Analyze the action**: A \"hail Mary\" in football is a play where a player throws the ball to a teammate for a pass.\n3. **Consider the context**: This action seems appropriate within the context of a football game.\n\n**Conclusion**: Yes, the sentence is plausible as it describes a valid action that can occur during a football game.",
+      "gt": "yes",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Kevin Durant hit a walkoff homer.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Kevin Durant performing an action.\n2. **Analyze the action**: A walkoff home run is a specific type of baseball play where a player hits a home run that scores all runners on base.\n3. **Consider the context**: This seems to be about a professional athlete in a competitive sport.\n4. **Evaluate plausibility**:\n   - Professional athletes like Kevin Durant have achieved significant success in their careers.\n   - It's possible for them to perform such an extraordinary feat during a game.\n\n5. **Conclusion**: Given the context and the level of skill required, it is plausible that Kevin Durant could hit a walkoff home run.\n\n**Final Answer**: Yes, the sentence is plausible.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Joao Moutinho was out at third.\"",
+      "pred": "1. **Identify the subject**: The sentence is about Joao Moutinho.\n2. **Check if he is alive and active**: Joao Moutinho is indeed a living person who plays for Portugal's national team.\n3. **Determine his position on the field**: In football (soccer), players typically play in specific positions such as goalkeeper, defender, midfielder, or forward.\n\nSince Joao Moutinho is a professional athlete playing in a competitive sport, it is highly unlikely that he would be described as being \"out\" unless he has been substituted from the game.\n\n**Final Answer**: No, the sentence is not plausible because Joao Moutinho cannot be described as \"out\" while playing a competitive sport like soccer.",
+      "gt": "no",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Tuukka Rask killed the powerplay.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions \"Tuukka Rask\" as the subject and \"killed the powerplay\" as the action.\n2. **Analyze the context**: Powerplays in hockey refer to periods where one team has more than six players on the ice due to penalties or substitutions.\n3. **Evaluate the plausibility of the statement**:\n   - Tuukka Rask is a professional ice hockey player.\n   - It's highly unlikely that an NHL player would intentionally kill someone during play.\n4. **Conclusion**: The sentence is not plausible.\n\nAnswer: <Not Plausible>",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Ben Simmons was called for the goal tend.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Ben Simmons being called.\n2. **Check if the term 'goal' is appropriate in this context**: In basketball, a goal typically refers to scoring points from a basket or field goal.\n3. **Determine if there's an official call made**: A goal can be scored through various means (e.g., free throws, three-pointers), but it must be recognized as such by referees.\n\nGiven these considerations:\n\n- **Conclusion**: Yes, the sentence is plausible because it describes a scenario where a player scores a point, which is a valid outcome in basketball.\n\n**Final Answer**: Yes, the sentence is plausible.",
+      "gt": "yes",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Sergio Busquets got on base.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Sergio Busquets and getting on base.\n2. **Check if the action is possible**: Getting on base in baseball typically refers to reaching first base after hitting a ball.\n3. **Verify the context of the sentence**: The sentence seems to be about a professional athlete named Sergio Busquets.\n\n**Conclusion**: Yes, the sentence is plausible as it describes an action that can occur in a real-world scenario involving a professional athlete like Sergio Busquets.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"James Karinchak crossed the blue line.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves James Karinchak performing an action.\n2. **Analyze the location mentioned**: The sentence mentions a \"blue line.\"\n3. **Determine if the action is possible in the context of crossing a line**:\n   - Crossing a line implies moving beyond or over it.\n4. **Conclusion**: Given that there is no mention of any physical space (like a road, river, etc.) being crossed, and assuming \"crossing\" means to move past something, this sentence could be considered plausible.\n\nFinal answer: <Plausible>",
+      "gt": "no",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Neal Pionk shot from the six yard line.\"",
+      "pred": "1. **Identify the context**: The sentence is about a football (soccer) play.\n2. **Analyze the distance mentioned**: Six yards is approximately 5.4 meters or 17 feet.\n3. **Consider the typical range of a football field**: A standard American football field is 100 yards long.\n4. **Evaluate if it's possible to shoot from that distance**: It would be extremely difficult and impractical for a player to shoot from such a far distance in a game.\n\n**Conclusion**: This sentence does not make sense in the context of a football game because it describes an impossible scenario where a player shoots from more than twice the length of the field. Therefore, the sentence is implausible.\n\n**Final Answer**: Implausible",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Tom Brady was safe at first.\"",
+      "pred": "1. **Identify the subject and action**: The sentence is about Tom Brady.\n2. **Analyze the context**: Tom Brady is known for his football career, particularly as a quarterback in the NFL.\n3. **Consider the verb**: \"was safe\" suggests that someone or something was protected from harm or danger.\n4. **Evaluate the logical consistency**: In football, players can be considered \"safe\" if they are not involved in an on-field incident such as being tackled out of bounds or injured during play.\n5. **Conclusion**: Given the context of football and the meaning of \"safe,\" the sentence is plausible.\n\n**Final Answer**: Plausible.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Sergio Ramos hit nothing but net.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Sergio Ramos, who is known for his football (soccer) skills.\n2. **Analyze the verb**: The verb used is \"hit\", which implies an impact or contact with something.\n3. **Consider the object**: The object mentioned is \"nothing but net\".\n4. **Evaluate the context**: In soccer, hitting the ball into the goal results in scoring a goal, not hitting the net itself.\n\n**Conclusion**: Given that hitting the ball into the goal is what one would expect from someone like Sergio Ramos, the sentence is plausible.\n\n**Final Answer**: Plausible.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Aaron Nola converted the first down.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Aaron Nola performing an action related to football.\n2. **Understand the context of the action**: In American football, converting a first down means that the team has advanced the ball into the end zone or reached the line of scrimmage again after having possession of the ball.\n3. **Check if the action is possible in the given scenario**: If Aaron Nola was on the field with his team and had possession of the ball, it would be possible for him to convert a first down.\n\n**Conclusion**: Yes, the sentence is plausible as long as the conditions (being on the field and having possession) are met.",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Angel Di Maria scored in extra time.\"",
+      "pred": "1. **Identify the subject**: Angel Di Maria is a professional footballer.\n2. **Analyze the action**: The verb \"score\" indicates that he made a goal.\n3. **Consider the context**: Extra time refers to additional periods of play after regular time has ended.\n4. **Evaluate the plausibility**:\n   - Angel Di Maria is indeed a professional footballer who played for clubs like Real Madrid and Manchester United.\n   - It's possible that during his career, he might have participated in matches where extra time was used as part of the game.\n5. **Conclusion**: Given these points, it is plausible that Angel Di Maria could score in extra time.\n\nFinal answer: Plausible",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Carson Wentz caught the screen pass.\"",
+      "pred": "1. **Identify the subject and action**: The sentence involves Carson Wentz (a person) performing an action.\n2. **Analyze the object of the action**: The object is a \"screen pass\".\n3. **Determine if the action makes sense in context**: Screen passes typically refer to passing plays or signals on a football field.\n\nGiven these points, the sentence is plausible because it describes a possible scenario where someone named Carson Wentz could catch a signal or play during a game.\n\n**Final answer:** Plausible.",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Joe Burrow caught the back shoulder fade in the Superbowl.\"",
+      "pred": "1. Joe Burrow is a professional American football player.\n2. The Super Bowl is an annual major American sports event.\n3. A fade is a type of throwing motion or technique used in football.\n4. Back shoulder fade is a specific throw that involves catching the ball with one hand on top of the other.\n\nTherefore, the sentence is plausible because it describes a possible action that could have occurred during the Super Bowl. Answer: <Plausible>.",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Nathan MacKinnon bricked the three pointer in the Eastern Conference Finals.\"",
+      "pred": "1. 首先，我们需要了解什么是“bricking”。\n2. “Brick”在这里通常指的是投篮不中或失误。\n3. 然后，我们检查句子中的关键信息：“Nathan MacKinnon”是加拿大职业冰球运动员的名字。\n4. 接下来，我们需要确认这个事件是否真的发生过。根据我的知识库，Nathan MacKinnon确实参与了东部决赛的比赛中。\n5. 最后，我们需要判断他是否真的“bricked”（即投篮不中）。\n6. 综合以上分析，我们可以得出结论：这个句子是合理的，因为Nathan MacKinnon确实参加了东部决赛并可能投篮不中。\n\n答案：<合理>",
+      "gt": "no",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Pete Alonso hit a triple in the World Series.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Pete Alonso hitting a triple.\n2. **Check if Pete Alonso is a real person**: Yes, Pete Alonso is a professional baseball player.\n3. **Verify the context of the event**: The sentence specifies that this happened during the World Series.\n4. **Consider the possibility of such an event occurring**: Triple hits in baseball games are not common occurrences.\n\n**Conclusion**: While Pete Alonso is a well-known figure in baseball, it is highly unlikely for him to hit a triple in a major league game like the World Series. Therefore, the sentence is plausible but improbable given the circumstances described.\n\n**Final Answer**: Plausible",
+      "gt": "yes",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Stephan El Shaarawy shot with the left foot.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Stephan El Shaarawy and shooting.\n2. **Analyze the action**: Shooting typically involves using an arm or hand to fire a weapon or projectile.\n3. **Consider the object of the action**: In this case, the object is not specified, but it's implied that he fired something.\n\n**Conclusion**: Based on these points, the sentence does not make sense because shooting generally requires the use of an arm or hand, which cannot be done with the feet. Therefore, the sentence is implausible.\n\n**Final Answer**: Implausible",
+      "gt": "yes",
+      "correct": false
+    },
+    {
+      "input": "Is the following sentence plausible? \"Caris LeVert scored a reverse dunk.\"",
+      "pred": "1. **Identify the subject**: The sentence is about Caris LeVert.\n2. **Analyze the action**: The action described is \"scored a reverse dunk\".\n3. **Check if the action is possible**: A reverse dunk is indeed a valid basketball move and can be performed by players like Caris LeVert.\n4. **Verify the context**: The sentence does not mention any specific game or situation, so it could apply to many contexts.\n\n**Conclusion**: Yes, the sentence is plausible as it describes an action that is both possible (a reverse dunk) and relevant to a professional athlete's performance in a sport.",
+      "gt": "yes",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Mikal Bridges scored a windmill dunk.\"",
+      "pred": "1. **Identify the subject and action**: The sentence mentions Mikal Bridges as the subject and describes an action (dunking).\n2. **Analyze the action**: A windmill dunk is a specific type of basketball play where a player performs a slam-dunk with their back to the basket.\n3. **Check if the action is possible**: Given that Mikal Bridges is a professional basketball player, it is plausible for him to perform such a move.\n\n**Conclusion**: Yes, the sentence is plausible because Mikal Bridges, being a professional basketball player, could indeed score a windmill dunk during a game or practice session.",
+      "gt": "yes",
+      "correct": true
+    },
+    {
+      "input": "Is the following sentence plausible? \"Ryan Fitzpatrick scored a touchdown.\"",
+      "pred": "1. **Identify the subject**: Ryan Fitzpatrick is mentioned as the subject.\n2. **Determine the action**: The action described is scoring a touchdown.\n3. **Check if the action is possible in the context**: In American football, touchdowns can be scored through various means such as catching an interception or returning a kickoff for a touchdown.\n\nGiven these points, it's plausible that Ryan Fitzpatrick could have scored a touchdown in a game of American football.\n\n**Final answer**: Yes, the sentence is plausible.",
+      "gt": "yes",
+      "correct": true
+    }
+  ]
+}

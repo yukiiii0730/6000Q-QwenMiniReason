@@ -1,0 +1,222 @@
+{
+  "subset": "navigate",
+  "accuracy": 0.5333333333333333,
+  "total": 30,
+  "correct": 16,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    3,
+    7,
+    30,
+    31,
+    40,
+    60,
+    70,
+    72,
+    93,
+    101,
+    107,
+    116,
+    119,
+    121,
+    139,
+    140,
+    151,
+    152,
+    154,
+    161,
+    163,
+    181,
+    192,
+    196,
+    201,
+    213,
+    231,
+    245,
+    248,
+    249
+  ],
+  "details": [
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 1 step right. Take 3 steps left. Take 2 steps right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward\" and \"Take 1 step right.\"\n2. Face forward after taking the first step.\n3. Continue facing forward as instructed.\n4. Take another step right (total of 2 steps).\n5. Turn around because you have taken more steps than required.\n\nTherefore, the answer is: <No>.",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 6 steps forward. Take 7 steps backward. Take 7 steps backward. Take 8 steps forward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 6 steps forward.\n3. Take 7 steps backward.\n4. Take 7 steps backward.\n5. Take 8 steps forward.\n\nSince you end up facing forward and have taken more steps in one direction than the other, you will not be at the starting point after following these instructions.\n\nAnswer: No",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 7 steps. Take 7 steps. Take 10 steps. Take 1 step. Turn left. Take 7 steps.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: Take 7 steps, then take 7 steps again.\n2. After taking 7 steps and then another 7 steps, you have covered a total of 14 steps.\n3. Then, take 10 steps in one direction.\n4. Next, turn left.\n5. Finally, take 7 more steps.\n\nSince you end up at a different location than your starting point after following all the given instructions, the answer is:\n\nNo",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps forward. Take 5 steps right. Take 7 steps left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 4 steps forward.\n3. Turn around and take 5 steps right.\n4. Turn around again and take 7 steps left.\n\nSince you end up facing the opposite direction from where you started, you have not returned to the starting point.\n\nAnswer: No",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 8 steps left. Take 6 steps right. Take 10 steps right. Take 2 steps left. Take 5 steps left. Take 1 step left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start at the beginning and take 8 steps left.\n3. Turn around and face forward again.\n4. Take 6 steps right.\n5. Take 10 steps right.\n6. Turn around and face forward again.\n7. Take 2 steps left.\n8. Turn around and face forward again.\n9. Take 5 steps left.\n10. Turn around and face forward again.\n11. Take 1 step left.\n\nAfter following all the steps, you will be back at the starting point because you have turned around multiple times and taken equal numbers of steps in opposite directions. Therefore, the answer is:\n\nYes",
+      "gt": "Yes",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 6 steps. Take 2 steps. Take 6 steps.\nOptions:\n- Yes\n- No",
+      "pred": "1. Start at the beginning of your journey.\n2. Follow the instructions: take 6 steps, then 2 steps, and finally another 6 steps.\n3. After completing all the steps as per the instructions, check if you have returned to the starting point.\n\nSince following the given instructions will result in taking a total of \\(6 + 2 + 6 = 14\\) steps, which is not equal to zero (the number of steps taken minus one), you **will** return to the starting point.\n\nTherefore, the answer is: **Yes**.",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 8 steps backward. Take 2 steps backward. Take 10 steps forward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n   - This means your direction remains consistent.\n\n2. Take 8 steps backward.\n   - Your position moves further away from the starting point.\n\n3. Take 2 steps backward.\n   - Your position continues to move further away from the starting point.\n\n4. Take 10 steps forward.\n   - Your position returns closer to the starting point.\n\n5. Check if you return to the starting point.\n   - After taking 10 steps forward and then moving back in various directions, you will not be at the starting point.\n\nAnswer: No",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 5 steps. Take 5 steps. Take 2 steps. Turn around. Take 8 steps. Take 4 steps.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: Take 5 steps, then take 5 more steps.\n2. After taking 5 steps and turning around, take 8 steps.\n3. Finally, take 4 more steps.\n\nSince you end up at the same place where you started after following all the steps, the answer is:\n\nYes",
+      "gt": "Yes",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 7 steps. Turn around. Take 10 steps. Take 2 steps. Turn around. Take 5 steps. Turn left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: take 7 steps forward, turn around, and then take 10 steps in the opposite direction (backward), taking 2 steps backward, turning around again, and finally taking 5 more steps in the same direction as before but this time turning left.\n\n2. After completing all the steps, check if you have returned to your starting point.\n\n3. Since we followed the instructions exactly as given without any deviation or misinterpretation of the directions, it is clear that after following the steps, you would indeed be back at the starting point.\n\nTherefore, the answer is: Yes.",
+      "gt": "Yes",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Turn around. Turn right. Take 7 steps. Turn right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Turn around.\"\n2. After turning around, turn right.\n3. Take 7 steps forward.\n4. Then, turn right.\n\nFinal answer: No",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 5 steps right. Take 7 steps left. Take 8 steps right. Take 6 steps left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward\" and \"Take 5 steps right.\"\n2. Face forward and take 5 steps right.\n3. Now facing forward again, take 7 steps left.\n4. Facing forward again, take 8 steps right.\n5. Finally, facing forward again, take 6 steps left.\n\nSince we end up at the starting point after following all the steps, the answer is:\n\nYes",
+      "gt": "Yes",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 7 steps backward. Take 6 steps forward. Take 6 steps backward. Take 7 steps forward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 7 steps backward and then take 6 steps forward.\n3. Take another 6 steps backward and finally take 7 steps forward.\n\nSince you end up facing the same direction as when you started (forward), but have moved away from your starting point, the answer is:\n\nNo",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 3 steps forward. Take 3 steps backward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 3 steps forward.\n3. Take 3 steps backward.\n\nSince you end up facing the same direction and have not returned to the starting point, the answer is:\n\nNo.",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps right. Take 5 steps right. Take 9 steps left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start facing forward and take 4 steps right.\n3. Continue facing forward and take 5 more steps right.\n4. Now, turn around (since we need to face forward again).\n5. Face forward and take 9 steps left.\n\nSince you end up at the starting point after following all the steps, the answer is:\n\nYes",
+      "gt": "Yes",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 9 steps left. Take 5 steps right. Take 2 steps left. Take 2 steps right. Take 6 steps forward. Take 10 steps backward. Take 1 step forward. Take 6 steps left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start at the beginning and move according to the directions given.\n3. Move 9 steps left.\n4. Move 5 steps right.\n5. Move 2 steps left.\n6. Move 2 steps right.\n7. Move 6 steps forward.\n8. Move 10 steps backward.\n9. Move 1 step forward.\n10. Move 6 steps left.\n\nAfter following all the steps:\n\n1. The final position is not directly back to the starting point because of the backward movement (10 steps).\n2. Therefore, the answer is **No**.",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 8 steps left. Take 8 steps right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 8 steps left and then take 8 steps right.\n3. The final position is not at the starting point.\n\nAnswer: No",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 9 steps. Turn left. Turn left. Take 9 steps.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: take 9 steps and turn left twice.\n2. After taking the first 9 steps, turn left again.\n3. Continue walking in this direction until you reach the end of your path.\n4. The final step is to turn right at the end of your path.\n\nTherefore, the answer is: <No>.",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 3 steps forward. Take 9 steps backward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 3 steps forward.\n3. Take 9 steps backward.\n\nSince you end up facing forward and have taken more steps than you started with (3 + 9 = 12), you **do not** return to the starting point.\n\nAnswer: No",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 10 steps right. Take 3 steps forward. Take 8 steps right. Take 2 steps right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start at the beginning and take 10 steps right.\n3. Turn around and face forward again.\n4. Take 3 steps forward.\n5. Turn around and face forward again.\n6. Take 8 steps right.\n7. Turn around and face forward again.\n8. Take 2 steps right.\n\nAfter following all the instructions, you will be back at the starting point because you have completed one full cycle of turning around and facing forward after each set of steps taken in the same direction. Therefore, the answer is:\n\nYes",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 5 steps backward. Take 8 steps forward. Take 7 steps forward. Take 5 steps backward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 5 steps backward.\n3. Take 8 steps forward.\n4. Take 7 steps forward.\n5. Take 5 steps backward.\n\nAfter following all the steps:\n\n- Start position is at the beginning of your journey.\n- After taking 5 steps backward and then 5 steps forward, you end up back where you started (0 steps from the start).\n- Then, after taking 8 steps forward and then 7 steps forward, you again reach the same starting point (0 steps from the start).\n\nTherefore, the answer is: **Yes**.",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 1 step. Take 7 steps. Take 1 step.\nOptions:\n- Yes\n- No",
+      "pred": "1. Start with the first instruction: \"Take 1 step.\"\n2. Move forward 1 step according to the instruction.\n3. The next instruction is \"Take 7 steps.\" \n4. According to this instruction, take 7 more steps from your current position.\n5. After taking 7 steps, check if you have returned to the starting point.\n\nSince we haven't been given any information about where the starting point is or how many total steps it would be necessary to reach that point again, we cannot definitively determine whether you will return to the starting point after following all three instructions.\n\nTherefore, the answer is: <No>.",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 10 steps. Take 4 steps. Take 7 steps. Take 1 step. Take 2 steps. Take 10 steps.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: Take 10 steps, then take 4 steps, then take 7 steps, then take 1 step, then take 2 steps, and finally take 10 more steps.\n2. Sum up all the steps taken: \\(10 + 4 + 7 + 1 + 2 + 10 = 34\\) steps.\n3. Since the total number of steps is not zero, you have not returned to the starting point.\n\nAnswer: No",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 10 steps backward. Take 9 steps backward. Take 9 steps backward. Take 9 steps left. Take 10 steps right. Take 3 steps right. Take 3 steps forward. Take 9 steps right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start at the beginning and move 10 steps backward.\n3. Turn around and continue moving 9 steps backward.\n4. Continue turning around and moving 9 steps backward.\n5. Move 9 steps left.\n6. Move 10 steps right.\n7. Move 3 steps right.\n8. Move 3 steps forward.\n9. Move 9 steps right.\n\nAfter following all the instructions, you will be back at the starting point.\n\nAnswer: Yes",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 10 steps forward. Take 8 steps left. Take 3 steps backward. Take 7 steps right. Take 2 steps forward. Take 4 steps forward. Take 10 steps forward.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n   - Start facing forward.\n\n2. Take 10 steps forward.\n   - Move 10 units in the direction of your initial orientation.\n\n3. Take 8 steps left.\n   - Turn left and move 8 units.\n\n4. Take 3 steps backward.\n   - Move back 3 units from where you were after taking 8 steps.\n\n5. Take 7 steps right.\n   - Turn right and move 7 units.\n\n6. Take 2 steps forward.\n   - Move forward 2 units.\n\n7. Take 4 steps forward.\n   - Move forward 4 more units.\n\n8. Take 10 steps forward.\n   - Move forward another 10 units.\n\nAfter completing all the steps:\n\n9. Check if you have returned to the starting point.\n   - Verify that you are still facing forward and at the same position as when you started.\n\nFinal check:\n- If you end up exactly where you began without any changes in direction or distance traveled, then yes, you have returned to the starting point.\n\nTherefore, the answer is: **Yes**.",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Take 4 steps. Turn around. Take 4 steps. Turn around. Turn right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: Take 4 steps forward and turn around.\n2. Continue with the next step: Take another 4 steps in the opposite direction of your previous turn (since turning around means going back).\n3. Repeat the final instruction: Turn right.\n\nAfter following all the steps as instructed:\n\n- You have taken two sets of 4 steps each (forward then backward) without returning to the starting point.\n- The last instruction is \"Turn right,\" which does not indicate that you should return to the starting point.\n\nTherefore, the answer is: **No**.",
+      "gt": "Yes",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 4 steps left. Take 3 steps forward. Take 1 step right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 4 steps left.\n3. Face forward again after taking those steps.\n4. Take 3 steps forward.\n5. Face forward again after taking those steps.\n6. Take 1 step right.\n7. Check if you have returned to the starting point.\n\nSince you always face forward and take steps in that direction, you will not return to the starting point unless you change your direction or stop following the instructions.\n\nAnswer: No",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 10 steps right. Take 7 steps backward. Take 3 steps left. Take 8 steps backward. Take 3 steps backward. Take 8 steps right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Start at the beginning and take 10 steps right.\n3. Turn around (face backwards) and take 7 steps backward.\n4. Face forward again and take 3 steps left.\n5. Turn around and face backwards and take 8 steps backward.\n6. Turn around one more time and face forward and take 3 steps backward.\n7. Turn around one last time and face forward and take 8 steps right.\n\nAfter following all the steps:\n\n- The final position is not directly back to the starting point because of the turns taken during the journey.\n- Therefore, the answer is **No**.",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Turn left. Take 9 steps. Take 3 steps. Turn right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: turn left and take 9 steps.\n2. After turning left, continue straight for 9 steps.\n3. Then, turn right after taking 3 more steps.\n\nSince the final step is to turn right, not to the starting point, the answer is:\n\nNo",
+      "gt": "No",
+      "correct": true
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 10 steps backward. Take 8 steps backward. Take 10 steps forward. Take 7 steps backward. Take 1 step forward. Take 7 steps right. Take 1 step left. Take 1 step right.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 10 steps backward.\n3. Take 8 steps backward.\n4. Take 10 steps forward.\n5. Take 7 steps backward.\n6. Take 1 step forward.\n7. Take 7 steps right.\n8. Take 1 step left.\n9. Take 1 step right.\n\nAfter following all the steps, you will be back at the starting point because you always faced forward and your movements canceled out each other in terms of distance and direction. Therefore, the answer is:\n\nYes",
+      "gt": "No",
+      "correct": false
+    },
+    {
+      "input": "If you follow these instructions, do you return to the starting point? Always face forward. Take 7 steps backward. Take 10 steps right. Take 4 steps forward. Take 1 step left.\nOptions:\n- Yes\n- No",
+      "pred": "1. Follow the instructions: \"Always face forward.\"\n2. Take 7 steps backward.\n3. Take 10 steps right.\n4. Take 4 steps forward.\n5. Take 1 step left.\n\nAfter following all the steps:\n\n- Start at (0, 0).\n- Move 7 steps backward: (-7, 0).\n- Move 10 steps right: (-7, 10).\n- Move 4 steps forward: (-3, 10).\n- Move 1 step left: (-4, 10).\n\nThe final position is (-4, 10), which is not the starting point (0, 0). Therefore, **No**.",
+      "gt": "No",
+      "correct": true
+    }
+  ]
+}

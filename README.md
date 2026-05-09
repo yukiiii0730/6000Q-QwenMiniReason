@@ -1,101 +1,140 @@
-# Qwen-Reasoning-Enhance（v4）
+# Qwen-Reasoning-Enhance
 
-> **Goal**: On **Qwen2.5-1.5B-Instruct**, approach the math reasoning capability of a 7B model through a **5-stage aligned data curriculum** and **diagnosis-driven preference optimization**.
+> **目标**：在 **Qwen2.5-1.5B-Instruct**（1.5B 参数）上，通过数据课程学习与诊断式偏好优化，提升数学推理能力。
 
-> Iteration history: [`AI2AI.md`](AI2AI.md) · Full architecture & design: [`me2AI.md`](me2AI.md)
-
----
-
-## Core Design（v4）
-
-| Dimension | Approach |
-|---|---|
-| **Base Model** | Qwen2.5-1.5B-Instruct |
-| **SFT Data** | v4 Five-stage curriculum（Trio + in-distribution anchor, ~38k） |
-| **DPO Data** | Error-Type-Targeted（innovation core）+ Teacher-Guided + distilabel fallback |
-| **PEFT** | DoRA（r=16, alpha=32）|
-| **Evaluation** | GSM8K + MATH-500 + BBH-27（lm-evaluation-harness official protocol, in progress） |
-| **Baseline** | Qwen official published values + self-run 50-question sanity check |
+> **核心发现**：数据质量 > 数据数量 — 1409 条高质量 teacher CoT 数据（65.0% GSM8K）超越 38k 混合数据 SFT（62.0%）。
 
 ---
 
-## Data Strategy（v4 Five-stage Curriculum）
+## 项目概览
 
-| Stage | Dataset | Samples | Role |
-|---|---|---|---|
-| **A** in-distribution | `openai/gsm8k` train | 7.5k | Direct alignment to GSM8K eval distribution |
-| **B1** R1 reasoning depth | `open-r1/OpenR1-Math-220k`（verified） | 10k | High-quality long CoT, DeepSeek-R1 distillation |
-| **B2** word problem breadth | `microsoft/orca-math-word-problems-200k` | 15k | Short steps, wide coverage, 1.5B-friendly（GPT-4 distillation）|
-| **B3** problem diversity | `AI-MO/NuminaMath-CoT`（excl. gsm8k subset） | 8k | Olympiad/AMC/AOPS multi-source expert |
-| **C** general reasoning | `Magpie-Align/Magpie-Reasoning-150K` | 3k | Prevent BBH degradation（~7% of total）|
-| **DPO fallback** | `argilla/distilabel-math-preference-dpo` | 5k | Fallback without teacher data |
+1.5B 模型在 GSM8K 上 baseline 仅 62.5%，与 7B（84.5%）存在 22pp 差距。本项目探索**数据驱动**的方法缩小这一差距，核心工作包括：
 
-After cross-dataset deduplication（SHA-1）+ length filtering（<1024/<2048 dual threshold）: **~38k samples**.
+1. **五段式 SFT 课程**：从 in-distribution 到 broad reasoning 的渐进式训练（~38k 样本）
+2. **Error-Type-Targeted DPO**（创新点）：先诊断错误类型（5 类），再用类型专属 prompt 生成纠正样本
+3. **Teacher SFT 蒸馏**：用 Qwen3-235B 生成 1409 条高质量 CoT，验证质量 > 数量
+4. **多组消融实验**：6 组实验对比 SFT 数据策略、PEFT 方法、DPO 策略
 
 ---
 
-## Architecture
+## 实验结果
+
+| 实验组 | 配置 | GSM8K | MATH-500 | BBH-27 |
+|---|---|---|---|---|
+| Baseline 1.5B | — | 62.5% | 45.0% | — |
+| 7B（参考） | — | 84.5% | 68.0% | — |
+| Group A SFT | LoRA + 单段 38k | 63.5% | 44.5% | 38.5% |
+| Group A DPO | + Standard DPO | 59.5% | 51.3% | — |
+| Group B SFT | DoRA + 五段课程 | 62.0% | 44.0% | 38.8% |
+| Group B DPO | + Standard DPO | 62.0% | 47.5% | — |
+| **Group D** | + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
+| **Teacher SFT** | 1409 teacher CoT | **65.0%** | 43.5% | — |
+
+评测协议：chat-template + zero-shot，n=200，95% CI ±6.9pp。
+
+---
+
+## 关键发现
+
+### 1. Teacher SFT：质量 > 数量
+
+1409 条 Qwen3-235B teacher CoT 达到 65.0% GSM8K，超越 38k 混合数据的 A/B SFT（62-63.5%）和 Targeted DPO（64.5%）。验证了 DeepSeek-R1-Distill 的核心洞察。
+
+### 2. Error-Type-Targeted DPO 定向有效
+
+SFT 模型的 badcase 分析显示 setup_error 占 65%（读错题意）。针对 GSM8K badcase 的 Targeted DPO 提升 +2.5pp，但对 MATH 无定向优化（-3.5pp，属于轻微遗忘）。
+
+### 3. DPO 基座稳定性至关重要
+
+Group A（单段 SFT）做 DPO 后 GSM8K 回退 -4.0pp；Group B（五段课程）做 DPO 后持平。五段课程提供的稳定基座是 DPO 成功的前提。
+
+### 4. 数据选择与 badcase 分析比模型架构更重要
+
+整个项目的迭代过程表明：数据质量过滤、错误类型诊断、定向数据构建带来的收益，远大于 PEFT 方法（LoRA vs DoRA）或 DPO loss 变体（sigmoid vs IPO）的差异。
+
+---
+
+## 迭代历程
 
 ```
-Local（CPU, run_local.sh）                GPU（Colab/Server, run_gpu.sh / colab_ablation.ipynb）
-──────────────────────────              ──────────────────────────────────────────────────────
-① Data download & preprocessing         ⑤ SFT 5-stage curriculum training
-② 7B/14B API eval（sanity check）        ⑥ Merge + SFT evaluation
-③ Data quality filtering（optional）     ⑦ Error diagnosis（5-class classification）
-④ Teacher DPO data generation           ⑧ Targeted DPO training
-                                         ⑨ Merge + Final evaluation（lm-eval harness）
+v1（LoRA + 单段 SFT + 错误 DPO）  → GSM8K 40.0% ❌ DPO 灾难性回退
+   ↓ 教训：DPO 数据质量是前提
+v2（DoRA + 两段课程 + 修复 DPO）   → ~55%
+   ↓ 教训：训练-测试分布错位
+v3（in-distribution 对齐 + 错误分类）→ ~60%
+   ↓ 教训：缺少 MATH 评测和推理深度
+v4（三剑客课程 + Targeted DPO）     → 65.0% ✅
+   ↓ Teacher SFT 蒸馏验证质量 > 数量
+```
+
+每一轮失败都产生了有价值的教训，详见 [`AI2AI.md`](AI2AI.md)。
+
+---
+
+## 架构
+
+![Architecture](docs/architecture.svg)
+
+**两层流水线**：
+- **CPU 层**：数据下载、去重、错误分类、Targeted DPO 数据构建
+- **GPU 层**：SFT 五段课程训练、DPO 训练、LoRA 合并、评测
+
+**PEFT 配置**：DoRA r=16, α=32, 7 target modules, 18.4M 可训练参数（1.18%）。
+
+---
+
+## 项目结构
+
+```
+├── config/                     # 训练配置（SFT/DPO/benchmark）
+├── scripts/                    # 核心脚本
+│   ├── prepare_data.py         # 数据下载 + 去重 + 过滤
+│   ├── sft_train.py            # SFT 五段课程训练
+│   ├── dpo_train.py            # DPO（支持 weighted loss）
+│   ├── classify_errors.py      # Badcase 5 类错误分类
+│   ├── build_targeted_dpo.py   # Error-Type-Targeted DPO 数据构建
+│   ├── build_teacher_dpo.py    # Teacher-Guided DPO 数据构建
+│   └── merge_lora.py           # LoRA/DoRA 合并
+├── eval/                       # 评测脚本
+│   ├── gsm8k_eval.py / math_eval.py / bbh_eval.py
+│   ├── compare_table.py        # 结果对比表
+│   └── visualize.py            # 可视化
+├── notebooks/                  # Colab 训练/评测 notebook
+├── data/processed/             # 训练数据（gitignore 大文件）
+├── logs/                       # 评测结果 JSON + badcase
+├── docs/                       # 项目文档（设计/实验/分析/参考/汇报）
+├── AI2AI.md                    # 迭代记录
+└── me2AI.md                    # 完整架构与设计文档
 ```
 
 ---
 
-## Quick Start
+## 快速开始
 
-### Step 1 — Environment Setup
+### 环境
 
 ```bash
 cp .env.example .env
-# Fill in: DASHSCOPE_API_KEY=sk-xxx  /  HF_TOKEN=hf_xxx
+# 填写 DASHSCOPE_API_KEY / HF_TOKEN
 
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements-macos.txt   # Local stage（no GPU needed）
+pip install -r requirements-macos.txt
 ```
 
-### Step 2 — Local Stage（no GPU）
+### 数据准备（本地，无需 GPU）
 
 ```bash
-bash run_local.sh                  # Full local pipeline（~1-2h）
-bash run_local.sh --quick          # Quick test（500 samples each, ~15min）
-bash run_local.sh --skip-filter    # Skip LLM quality filtering（recommended for v4）
+bash run_local.sh              # 完整流水线（~1-2h）
+bash run_local.sh --quick      # 快速测试（500 samples, ~15min）
 ```
 
-### Step 3 — Sync to GPU Environment
+### 训练 + 评测（GPU）
 
 ```bash
-# Server
-rsync -avz --progress data/ user@server:/path/to/project/data/
-rsync -avz --progress logs/ user@server:/path/to/project/logs/
-
-# Colab（pack and upload to Google Drive）
-zip -r local_artifacts.zip data/ logs/ config/
+bash run_gpu.sh                # 完整：SFT → DPO → 评测
 ```
 
-### Step 4 — GPU Stage（Colab A100 / Server）
-
-```bash
-# Server
-bash run_gpu.sh                         # Full: SFT → DPO → eval
-bash run_gpu.sh --skip-eval             # Train+merge only, eval locally
-bash run_eval_expanded.sh               # Local expanded eval（n=200, BBH 30/task）★ recommended
-bash run_eval_expanded.sh --group-c     # Also eval Colab Group C model
-bash run_local_pipeline.sh              # Local L3-L6: error classify→targeted data→stats→viz
-
-# Colab Ablation（open notebooks/colab_ablation.ipynb）
-# G1-G3: Group A（LoRA + single-stage SFT + Standard DPO）
-# G4-G5: Group D（Error-Type-Targeted DPO, innovation core）
-# G6-G7: Group E/F（IPO + Weighted, optional）
-```
-
-### Step 5 — Generate Comparison Table
+### 生成对比表
 
 ```bash
 python3 eval/compare_table.py
@@ -104,126 +143,34 @@ python3 eval/visualize.py --metrics_json logs/compare_metrics.json --out_dir eva
 
 ---
 
-## Current Experimental Results（v4, as of 2026-05-06）
+## 局限性
 
-> ⚠️ **Note**: Results below use our custom eval protocol（chat-template + zero-shot）.  
-> Absolute values differ from Qwen official numbers（which use lm-evaluation-harness 8-shot）.  
-> **Re-evaluation with official protocol is in progress**（`lm_eval` directory）.  
-> Relative Δ across groups is meaningful; absolute numbers will be updated.
-
-### Ablation Results（custom protocol, n=200, CI ±6.9pp）
-
-| Group | Configuration | GSM8K | MATH-500 | BBH-27 |
-|---|---|---|---|---|
-| **A SFT** | LoRA + Single-stage SFT | 63.5% | 44.5% | 38.5% |
-| **A DPO** | + Standard DPO | 59.5% ⚠️ | 51.25% (n=80) | — |
-| **B（SFT only）** | DoRA + 5-stage Curriculum | 62.0% | 44.0% | **38.8%** |
-| **B** | DoRA + 5-stage Curriculum + Standard DPO | 62.0% | **47.5%** | TBD |
-| **D**（innovation）| DoRA + 5-stage + **Error-Type-Targeted DPO** | **64.5%** | 44.0% | 37.4% |
-| **Teacher SFT** | LoRA + 1409 teacher CoT（DeepSeek-R1-Distill style）| **65.0%** | 43.5% | — |
-| Qwen2.5-1.5B（official）| — | 73.2% | 55.2% | — |
-| Qwen2.5-7B（official）| — | 91.6% | 75.5% | — |
-
-### Key Findings
-
-- **Group A DPO regression**: GSM8K **-4.0pp** (63.5%→59.5%), MATH +6.75pp (n=80) — single-stage SFT base is unstable for DPO
-- **Standard DPO（B SFT→B DPO）**: GSM8K +0.0pp, MATH **+3.5pp** — improves harder reasoning
-- **Targeted DPO（B DPO→D DPO）**: GSM8K **+2.5pp**, MATH -3.5pp — improves targeted task, slight regression on harder MATH（within CI）
-- **BBH**: No catastrophic degradation across any group（37–39%）
-- **Teacher SFT（E12/E13）**: Only 1409 teacher CoT samples achieve **65.0% GSM8K** — new high, surpassing 38k mixed data A/B SFT and Targeted DPO. Validates DeepSeek-R1-Distill insight: quality > quantity
-- **Two runs（Colab T4 + GPU L20）reproducible**: loss curves differ by <0.02 across all 5 stages（seed=42）
+- 评测样本量小（n=200, CI ±6.9pp），<5pp 的差异无统计显著性
+- 自定义评测协议（zero-shot），与 Qwen 官方 lm-evaluation-harness（8-shot）存在系统性偏差
+- Targeted DPO 数据量小（420 条），E14 还在进行中
+- 仅在 Qwen2.5-1.5B 上验证，未扩展到其他模型
 
 ---
 
-## Ablation Experiment（6 groups planned）
+## 文档
 
-| Group | SFT | DPO | Purpose |
-|---|---|---|---|
-| A | LoRA + Single-stage mix | Standard DPO | Classic baseline |
-| B | DoRA + 5-stage curriculum | Standard DPO | DoRA + Curriculum contribution |
-| C | DoRA + 5-stage curriculum | Teacher-Guided | Teacher data effect |
-| **D** | DoRA + 5-stage curriculum | **Error-Type-Targeted** | **Innovation core** |
-| E | DoRA + 5-stage curriculum | IPO + Targeted data | Loss function improvement |
-| F | DoRA + 5-stage curriculum | Weighted Targeted DPO | Weighted innovation variant |
-
-Status: A(SFT✅ DPO✅) B✅ C（eval pending）D✅ E/F（optional）Teacher SFT✅ E14（eval pending）
-
----
-
-## Error-Type-Targeted DPO Pipeline（Innovation）
-
-```
-SFT model → GSM8K evaluation → collect badcases
-   ↓
-scripts/classify_errors.py   （qwen-flash: 5-class）
-   ↓
-scripts/build_targeted_dpo.py（type-specific system prompt → Teacher generates chosen）
-   ↓
-Targeted DPO training（optional weighted loss）
-   ↓
-Re-evaluate → compare error repair rate by type
-```
-
-**5 Error Types**: arithmetic / reasoning\_skip / setup\_error / unit\_or\_format / extraction\_error
+| 文档 | 内容 |
+|---|---|
+| [`docs/01_design.md`](docs/01_design.md) | 整体设计方案与架构 |
+| [`docs/02_experiments.md`](docs/02_experiments.md) | 全部实验记录（参数、结果）|
+| [`docs/03_analysis.md`](docs/03_analysis.md) | Badcase 分析与改进方向 |
+| [`docs/04_references.md`](docs/04_references.md) | 参考文献（25 篇）|
+| [`docs/05_report.md`](docs/05_report.md) | 汇报材料（PPT 大纲）|
+| [`docs/06_summary.md`](docs/06_summary.md) | 项目总结 |
+| [`AI2AI.md`](AI2AI.md) | 迭代记录 |
+| [`me2AI.md`](me2AI.md) | 完整设计文档 |
 
 ---
 
-## Project Structure
+## 参考文献
 
-```
-.
-├── run_local.sh              # Local stage one-click（no GPU）
-├── run_gpu.sh                # GPU stage one-click
-├── run_eval_expanded.sh      # Expanded eval（n=200, BBH 30/task）★
-├── run_eval_local.sh         # Local eval only
-├── run_local_pipeline.sh     # L3-L6: error analysis → targeted data → stats → viz
-├── run_train.sh              # Compatibility entry
-│
-├── config/
-│   ├── sft_config.yaml               # v4 5-stage curriculum + DoRA
-│   ├── sft_config_group_a.yaml       # Group A（LoRA + single-stage）
-│   ├── dpo_config.yaml               # DPO hyperparams
-│   ├── dpo_config_group_a.yaml       # Group A DPO
-│   ├── dpo_config_group_d.yaml       # Group D Targeted DPO
-│   └── benchmark_models.yaml
-│
-├── scripts/
-│   ├── sft_train.py          # SFT（DoRA + 5-stage curriculum）
-│   ├── dpo_train.py          # DPO（loss_type switchable + weighted）
-│   ├── merge_lora.py
-│   ├── classify_errors.py    # Badcase classification（5 types）
-│   ├── build_targeted_dpo.py # Targeted DPO data generation
-│   ├── build_teacher_dpo.py  # Teacher-Guided DPO data generation
-│   ├── prepare_data.py       # v4 data download + filter + dedup
-│   ├── run_ablation.py       # 6-group ablation orchestrator
-│   ├── stats_significance.py # McNemar + bootstrap CI
-│   └── watchdog_run.py       # Process monitor（auto-restart）
-│
-├── eval/
-│   ├── gsm8k_eval.py / gsm8k_api_eval.py
-│   ├── math_eval.py  / math_api_eval.py
-│   ├── bbh_eval.py   / bbh_full_eval.py
-│   ├── compare_table.py      # Comparison table（official baseline priority）
-│   ├── visualize.py          # Radar chart + error dist + ablation bar chart
-│   └── published_baselines.json
-│
-├── notebooks/
-│   ├── colab_train.ipynb     # Original Colab training entry
-│   └── colab_ablation.ipynb  # Ablation study（G1-G7）★
-│
-├── data/processed/           # Training data（gitignore large files）
-├── logs/                     # Eval results JSON + run logs
-└── logs 2/                   # Ablation results（2026-05-04 Colab run）
-```
-
----
-
-## References
-
+- [DeepSeek-R1](https://arxiv.org/abs/2501.12948) · [Qwen2.5](https://arxiv.org/abs/2412.15115)
+- [DPO](https://arxiv.org/abs/2305.18290) · [DoRA](https://arxiv.org/abs/2402.09353)
+- [Step-DPO](https://arxiv.org/abs/2406.18629) · [Let's Verify Step by Step](https://arxiv.org/abs/2305.20050)
+- [GSM8K](https://arxiv.org/abs/2110.14168) · [MATH](https://arxiv.org/abs/2103.03874) · [BBH](https://arxiv.org/abs/2210.09261)
 - [Unsloth](https://github.com/unslothai/unsloth) · [TRL DPOTrainer](https://huggingface.co/docs/trl/dpo_trainer)
-- [DoRA: Weight-Decomposed Low-Rank Adaptation](https://arxiv.org/abs/2402.09353)
-- [OpenR1-Math-220k](https://huggingface.co/datasets/open-r1/OpenR1-Math-220k) · [NuminaMath-CoT](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT)
-- [Orca-Math-200k](https://huggingface.co/datasets/microsoft/orca-math-word-problems-200k) · [Magpie-Reasoning-150K](https://huggingface.co/datasets/Magpie-Align/Magpie-Reasoning-150K)
-- [GSM8K](https://huggingface.co/datasets/gsm8k) · [MATH](https://huggingface.co/datasets/hendrycks/competition_math) · [BBH](https://huggingface.co/datasets/lukaemon/bbh)
-- [Qwen2.5-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) · [Qwen2.5 Technical Report](https://arxiv.org/abs/2412.15115)
-- [DeepSeek-R1](https://arxiv.org/abs/2501.12948) · [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)

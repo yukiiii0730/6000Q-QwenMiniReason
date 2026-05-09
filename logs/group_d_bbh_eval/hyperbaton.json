@@ -1,0 +1,222 @@
+{
+  "subset": "hyperbaton",
+  "accuracy": 0.6,
+  "total": 30,
+  "correct": 18,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    4,
+    14,
+    17,
+    31,
+    57,
+    74,
+    79,
+    87,
+    90,
+    98,
+    104,
+    109,
+    121,
+    128,
+    129,
+    130,
+    131,
+    143,
+    150,
+    154,
+    162,
+    170,
+    182,
+    185,
+    208,
+    220,
+    226,
+    237,
+    244,
+    246
+  ],
+  "details": [
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) pyramidal American glass exercise surfboard\n(B) glass exercise American pyramidal surfboard",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the subject of the sentence.\n2. Determine if the adjectives should be in their natural or inverted order based on their meaning and grammatical rules.\n\nLet's analyze each option:\n\n(A) \"pyramidal American glass exercise surfboard\"\n- The word \"pyramidal\" is an adjective describing the shape of the board.\n- \"American\" is a noun modifying the adjective \"pyramidal\".\n- \"glass\" is another adjective describing the material of the board.\n- \"exercise\" is a verb modifying the adjective \"glass\".\n- \"surfboard\" is a noun modifying the adjective \"exercise\".\n\nThis order makes sense because it follows the typical structure where adjectives precede the nouns they modify.\n\n(B) \"glass exercise American pyramidal surfboard\"\n- This order does not make logical sense because \"American\" should come before \"pyramidal\" as it modifies both \"glass\" and \"exercise\", but \"pyramidal\" modifies only \"glass\".\n\nTherefore, the correct order for this sentence would be: \"glass exercise American pyramidal surfboard\"\n\nFinal answer: (B) \"glass exercise American pyramidal surfboard\"",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) nice American computer\n(B) American nice computer",
+      "pred": "To determine which sentence has the correct adjective order, we need to understand that adjectives typically come before the noun they modify in English.\n\nLet's analyze each option:\n\n(A) \"nice American computer\"\n- Adjective: \"nice\" (comes before the noun)\n- Noun: \"American computer\"\n\nThis is a correct order because adjectives precede nouns.\n\n(B) \"American nice computer\"\n- Adjective: \"nice\" (comes after the noun)\n- Noun: \"American computer\"\n\nThis is incorrect because adjectives should come before the noun they modify.\n\nTherefore, the correct answer is:\n\nAnswer: A",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) lovely midsize green Filipino sock\n(B) Filipino midsize lovely green sock",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and identify the one with the correct placement of adjectives.\n\nStep 1: Identify the adjectives in each sentence.\n- Sentence (A): \"lovely midsize green Filipino sock\"\n- Sentence (B): \"Filipino midsize lovely green sock\"\n\nStep 2: Determine if they should be placed before or after the noun.\n- In English, adjectives typically come after the noun they modify unless they are at the beginning of the sentence or part of an introductory phrase.\n\nStep 3: Compare the two sentences and identify the one with the correct placement of adjectives.\n- Sentence (A) places the adjectives after the noun, which is incorrect according to English grammar rules.\n- Sentence (B) places the adjectives before the noun, which is correct according to English grammar rules.\n\nTherefore, the correct answer is that Sentence (B) has the correct adjective order.\n\nAnswer: <Final result: Sentence (B)>",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) Russian huge repulsive archaic triangular ship\n(B) repulsive huge archaic triangular Russian ship",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and identify the one with the correct placement of adjectives.\n\nLet's analyze both options:\n\n**Option A:**\n- Adjectives: \"huge\", \"repulsive\", \"archaic\", \"triangular\"\n- Placement: \"Russian huge repulsive archaic triangular ship\"\n\n**Option B:**\n- Adjectives: \"repulsive\", \"huge\", \"archaic\", \"triangular\"\n- Placement: \"repulsive huge archaic triangular Russian ship\"\n\nIn English, adjectives typically come before the noun they modify. Therefore, the correct order for Option A is \"Russian huge repulsive archaic triangular ship\" because it places all the adjectives before the noun.\n\nThe final answer is: <Russian huge repulsive archaic triangular ship>.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) exercise old-fashioned steel midsize Congolese match\n(B) midsize old-fashioned Congolese steel exercise match",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine the correct placement of adjectives based on their typical usage and grammatical rules.\n\nLet's analyze each option:\n\nOption (A): \"exercise old-fashioned steel midsize Congolese match\"\n- Adjectives: old-fashioned, steel, midsize, Congolese, match\n\nOption (B): \"midsize old-fashioned Congolese steel exercise match\"\n- Adjectives: midsize, old-fashioned, Congolese, steel, exercise, match\n\nStep-by-step analysis:\n\n1. In English, adjectives typically come before the noun they modify. This is known as the \"adjective position.\"\n2. The word \"match\" appears twice in both options but should be considered separately because it can function as either an adjective or a noun depending on context.\n3. Let's place the adjectives according to this rule:\n   - Option (A): \"old-fashioned steel midsize Congolese exercise match\"\n   - Option (B): \"old-fashioned steel midsize Congolese exercise match\"\n\n4. Compare the two options:\n   - Option (A) follows the correct adjective order.\n   - Option (B) does not follow the correct adjective order.\n\nTherefore, the correct answer is that Option (A) has the correct adjective order.\n\nAnswer: <old-fashioned steel midsize Congolese exercise match>",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) circular Pakistani exercise steel mysterious black old surfboard\n(B) mysterious old circular black Pakistani steel exercise surfboard",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the subject of the sentence.\n2. Determine if the adjectives should be in alphabetical order or if they can be placed anywhere within the sentence.\n\nLet's analyze each option:\n\n**Option A:**\n- Subject: \"mysterious old circular black Pakistani steel exercise surfboard\"\n- Adjectives: \"mysterious\", \"old\", \"circular\", \"black\", \"Pakistani\", \"steel\", \"exercise\", \"surfboard\"\n\nThe adjectives in this sentence do not follow an alphabetical order. They appear as follows:\n1. mysterious\n2. old\n3. circular\n4. black\n5. Pakistani\n6. steel\n7. exercise\n8. surfboard\n\nSince the adjectives are not in alphabetical order, this is incorrect.\n\n**Option B:**\n- Subject: \"mysterious old circular black Pakistani steel exercise surfboard\"\n- Adjectives: \"mysterious\", \"old\", \"circular\", \"black\", \"Pakistani\", \"steel\", \"exercise\", \"surfboard\"\n\nAgain, the adjectives in this sentence do not follow an alphabetical order. They appear as follows:\n1. mysterious\n2. old\n3. circular\n4. black\n5. Pakistani\n6. steel\n7. exercise\n8. surfboard\n\nSince the adjectives are not in alphabetical order, this is also incorrect.\n\nAfter analyzing both options, it becomes clear that neither option provides a correctly ordered list of adjectives. Therefore, there seems to be a mistake in the question itself because no sentence with correct adjective order exists among the given options.\n\nGiven the analysis, the final answer is:\n\nAnswer: <No correct sentence found based on provided options>.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) midsize purple Russian gold snorkeling sock\n(B) gold Russian midsize purple snorkeling sock",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each option.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nStep 1: Identify the adjectives in each option.\nOption A: midsize purple Russian gold snorkeling sock\nOption B: gold Russian midsize purple snorkeling sock\n\nStep 2: Determine if they should be placed before or after the noun.\nIn English, adjectives typically come after the noun they modify. This is known as the postpositional case.\n\nStep 3: Compare the options and select the one with the correct placement of adjectives.\nOption A: \"midsize purple Russian gold snorkeling sock\" - The adjectives are correctly ordered (postpositional).\nOption B: \"gold Russian midsize purple snorkeling sock\" - The adjectives are incorrectly ordered (prepositional).\n\nTherefore, Option A has the correct adjective order.\n\nAnswer: <A>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) little pink Indonesian drinking repulsive dog\n(B) repulsive little pink Indonesian drinking dog",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and choose the one with the correct placement of adjectives.\n\nLet's analyze both options:\n\n**Option A:**\n- Adjectives: little, pink, Indonesian, drinking, repulsive, dog\n- Placement: little (before), pink (after), Indonesian (before), drinking (after), repulsive (after), dog (after)\n\n**Option B:**\n- Adjectives: repulsive, little, pink, Indonesian, drinking, dog\n- Placement: repulsive (before), little (after), pink (after), Indonesian (after), drinking (after), dog (after)\n\nIn Option A, the adjectives \"little\" and \"pink\" come before the noun \"dog,\" while in Option B, the adjectives \"repulsive\" and \"little\" come before the noun \"dog.\" \n\nTherefore, the correct order is that the adjectives should come after the nouns when listing them together.\n\nThe final answer is: **(A)**",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) nice midsize brand-new drinking surfboard\n(B) drinking nice brand-new midsize surfboard",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and identify the one with the correct placement of adjectives.\n\nLet's analyze both options:\n\n**Option A:**\n- Adjectives: nice (adjective), midsize (adjective), brand-new (adjective), drinking (verb), surfboard (noun)\n- Correct placement: nice, midsize, brand-new, drinking, surfboard\n\n**Option B:**\n- Adjectives: nice (adjective), drinking (verb), brand-new (adjective), midsize (adjective), surfboard (noun)\n- Incorrect placement: nice, drinking, brand-new, midsize, surfboard\n\nThe correct order for an adjective phrase is typically as follows: **[degree] [participle]**. In this case, \"nice\" is the degree, and \"brand-new\" is the participle describing the state of the drinker.\n\nTherefore, the correct sentence is Option A.\n\nAnswer: <Final result: Option A>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) big square ship\n(B) square big ship",
+      "pred": "To determine which sentence has the correct adjective order, we need to understand that in English, adjectives typically come before the noun they modify.\n\nLet's analyze each option:\n\n(A) \"big square ship\"\n- Adjective: \"big\" (comes before the noun)\n- Noun: \"ship\"\n\nThis is a correct order because it follows the typical adjective-noun placement rule.\n\n(B) \"square big ship\"\n- Adjective: \"square\" (comes after the noun)\n- Noun: \"ship\"\n\nThis is incorrect because adjectives should precede the nouns they modify.\n\nTherefore, the sentence with the correct adjective order is:\n\nFinal answer: A. big square ship",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) repulsive normal-size green old-fashioned cardboard surfboard\n(B) repulsive normal-size old-fashioned green cardboard surfboard",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine if the adjectives are placed correctly according to English grammar rules.\n\nLet's analyze both options:\n\nOption A: \"repulsive normal-size green old-fashioned cardboard surfboard\"\n- Adjectives: repulsive, normal-size, green, old-fashioned, cardboard, surfboard\n\nOption B: \"repulsive normal-size old-fashioned green cardboard surfboard\"\n- Adjectives: repulsive, normal-size, old-fashioned, green, cardboard, surfboard\n\nStep 1: Compare the positions of the adjectives in each option.\nIn Option A, all adjectives except for \"normal-size\" come before the noun \"surfboard.\"\nIn Option B, all adjectives except for \"old-fashioned\" come before the noun \"surfboard.\"\n\nStep 2: Check if the placement is correct based on English grammar rules.\nEnglish typically places adjectives after the noun they modify unless they precede it and indicate size or quantity (like \"big,\" \"small,\" \"long,\" etc.).\n\nOption A follows this rule because \"normal-size\" modifies \"surfboard\" without indicating size or quantity.\n\nOption B does not follow this rule because \"old-fashioned\" indicates size (\"large\") but comes before \"green,\" which should be modified by \"old-fashioned.\"\n\nTherefore, Option A has the correct adjective order.\n\nFinal answer: Answer: <A>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) new walking Turkish green sock\n(B) new green Turkish walking sock",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nLet's analyze both sentences:\n\n**Sentence (A):**\n- Adjectives: new, green, Turkish, walking, sock\n- Placement: The adjectives \"new,\" \"green,\" \"Turkish,\" and \"walking\" come before the noun \"sock.\"\n\n**Sentence (B):**\n- Adjectives: new, green, Turkish, sock, walking\n- Placement: The adjectives \"new,\" \"green,\" \"Turkish,\" and \"sock\" come before the noun \"walking.\"\n\nBoth sentences have the same number of adjectives and the same order for the first four adjectives. However, the placement of the last two adjectives is different.\n\nSince the question asks about the correct adjective order, and there is no mention of any other words that could change the order, we can conclude that both sentences have the correct adjective order based on the given information.\n\nTherefore, the final answer is: <final result>.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) massive cardboard good Thai sweater\n(B) good massive Thai cardboard sweater",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement.\n\nLet's analyze both sentences:\n\nSentence (A): \"massive cardboard good Thai sweater\"\n- Adjectives: massive, cardboard, good, Thai, sweater\n- Placement: Before the nouns\n\nSentence (B): \"good massive Thai cardboard sweater\"\n- Adjectives: good, massive, Thai, cardboard, sweater\n- Placement: After the nouns\n\nThe correct order for adjectives is typically as follows:\n1. Size/Shape (e.g., large, small)\n2. Color (e.g., red, blue)\n3. Material (e.g., plastic, wood)\n4. Origin/Country (e.g., American, Japanese)\n5. Type of object (e.g., book, pen)\n\nIn this case, the correct order would be:\n1. Size/Shape (massive)\n2. Material (cardboard)\n3. Country/Origin (Thai)\n4. Type of material (sweater)\n\nTherefore, the correct answer is Sentence (A).\n\nAnswer: A",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) square massive sweater\n(B) massive square sweater",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine if the adjectives should be placed before or after the noun they modify.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nStep 1: Identify the words in each option.\nOption A: \"square massive sweater\"\nOption B: \"massive square sweater\"\n\nStep 2: Determine if the adjectives should be placed before or after the noun they modify.\n- In English, adjectives typically come after the nouns they modify unless they are at the beginning of the sentence (adjective phrase).\n\nStep 3: Compare the options and select the one with the correct placement of adjectives.\n- Option A: \"square massive sweater\" - The adjective \"massive\" comes after the noun \"sweater,\" so this is incorrect.\n- Option B: \"massive square sweater\" - The adjective \"massive\" comes before the noun \"square,\" so this is correct.\n\nTherefore, the sentence with the correct adjective order is:\n\nFinal answer: (B) massive square sweater",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) Mexican paper baby\n(B) paper Mexican baby",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjective and noun in each option.\n2. Determine if the adjective comes before or after the noun.\n3. Compare the options.\n\nOption (A): \"Mexican paper baby\"\n- Adjective: Mexican\n- Noun: paper baby\n\nOption (B): \"paper Mexican baby\"\n- Adjective: paper\n- Noun: Mexican baby\n\nIn English, adjectives typically come after the nouns they modify. Therefore, Option (A) is the correct one because it follows this rule.\n\nAnswer: A. Mexican paper baby",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) Japanese silver square awful motorcycle\n(B) awful square Japanese silver motorcycle",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the subject of the sentence.\n2. Determine if the adjectives should be in their natural or inverted order based on their meaning.\n\nLet's analyze each option:\n\n**Option A:**\n- Subject: \"Japanese silver square awful motorcycle\"\n- Adjectives: \"Japanese\", \"silver\", \"square\", \"awful\"\n\nThe word \"awful\" is an intensifier and typically comes before other descriptive words. Therefore, it should come after \"square\".\n\nSo, the correct order for this sentence would be: \"awful square Japanese silver motorcycle.\"\n\n**Option B:**\n- Subject: \"awful square Japanese silver motorcycle\"\n- Adjectives: \"awful\", \"square\", \"Japanese\", \"silver\"\n\nHere, \"awful\" is not an adjective but an intensifier. It does not fit with the typical placement of adjectives. The correct order should be: \"awful Japanese square silver motorcycle.\"\n\nTherefore, Option A correctly places the adjectives according to their meanings.\n\nAnswer: <Final result: Option A>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) wonderful large triangular Bangladeshi eating computer\n(B) triangular eating large wonderful Bangladeshi computer",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nLet's analyze both sentences:\n\nSentence (A): \"wonderful large triangular Bangladeshi eating computer\"\n- Adjectives: wonderful, large, triangular, Bangladeshi, eating\n- Placement: Correct\n\nSentence (B): \"triangular eating large wonderful Bangladeshi computer\"\n- Adjectives: triangular, eating, large, wonderful, Bangladeshi\n- Placement: Incorrect\n\nThe correct order for adjectives is as follows:\n1. Size/Shape (if applicable)\n2. Color\n3. Origin/Country\n4. Material\n5. Purpose/Function\n6. Other descriptive words\n\nIn this case, the correct order would be: \"wonderful large triangular Bangladeshi eating computer\"\n\nTherefore, the final answer is: <Final result>.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) purple new enormous drinking awful motorcycle\n(B) awful enormous new purple drinking motorcycle",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine if the adjectives should be placed before or after the noun they modify.\n3. Compare the options and select the one with the correct adjective placement.\n\nLet's analyze each option:\n\nOption (A): \"purple new enormous drinking awful motorcycle\"\n- Adjectives: purple, new, enormous, drinking, awful\n- The adjectives should come before the noun they modify. So, the correct order would be: \"purple new enormous drinking awful motorcycle\"\n\nOption (B): \"awful enormous new purple drinking motorcycle\"\n- Adjectives: awful, enormous, new, purple, drinking\n- In this case, the adjectives are already in the correct order for a noun phrase. However, it is not a complete sentence because it lacks a subject and verb.\n\nAfter analyzing both options, Option (A) correctly places the adjectives before the noun, making it the correct choice.\n\nTherefore, the final answer is: Answer: A",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) nice old Bangladeshi red hiking shoe\n(B) nice old red Bangladeshi hiking shoe",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each option.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nStep 1: Identify the adjectives in each option.\nOption A: \"nice old Bangladeshi red hiking shoe\"\nOption B: \"nice old red Bangladeshi hiking shoe\"\n\nStep 2: Determine if they should be placed before or after the noun.\nIn English, adjectives typically come after the noun they modify. This is known as the postpositional case.\n\nStep 3: Compare the options and select the one with the correct placement of adjectives.\nOption A correctly places the adjectives after the noun, while Option B does not follow this rule.\n\nTherefore, the correct answer is Option A.\n\nAnswer: <A>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) tiny new triangular gray walking car\n(B) triangular new gray tiny walking car",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine if the adjectives should be placed before or after the noun they modify.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nLet's analyze each option:\n\nOption (A): \"tiny new triangular gray walking car\"\n- Adjectives: tiny, new, triangular, gray, walking\n- The adjectives should come before the noun they modify. So, it is not in the correct order.\n\nOption (B): \"triangular new gray tiny walking car\"\n- Adjectives: triangular, new, gray, tiny, walking\n- The adjectives should come before the noun they modify. So, it is also not in the correct order.\n\nSince neither option follows the correct adjective order, there seems to be an error in the question itself. However, based on the given options, none of them have the correct adjective order.\n\nTherefore, the answer is: <None of the above>.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) archaic spherical hiking match\n(B) archaic hiking spherical match",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement.\n\nLet's analyze both sentences:\n\n**Sentence (A): archaic spherical hiking match**\n- Adjectives: archaic, spherical, hiking\n- Placement: Correct\n\n**Sentence (B): archaic hiking spherical match**\n- Adjectives: archaic, hiking, spherical\n- Placement: Incorrect\n\nThe correct order for an adjective phrase is typically as follows: \"adjective + noun\" or \"adjective + article + noun.\" In this case, the correct order would be \"archaic spherical hiking match.\"\n\nTherefore, the final answer is: archaic spherical hiking match.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) mysterious lead orange walking surfboard\n(B) mysterious orange lead walking surfboard",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and identify the one with the correct placement of adjectives.\n\nLet's analyze both options:\n\nOption (A): \"mysterious lead orange walking surfboard\"\n- Adjectives: mysterious, lead, orange, walking, surfboard\n- Correct order for adjectives is: [mysterious, lead, orange]\n\nOption (B): \"mysterious orange lead walking surfboard\"\n- Adjectives: mysterious, orange, lead, walking, surfboard\n- Incorrect order for adjectives: [mysterious, lead, orange] should come first\n\nAfter comparing both options, it is clear that Option (A) correctly places the adjectives before the noun.\n\nTherefore, the final answer is: Answer: A",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) old snorkeling little green sweater\n(B) little old green snorkeling sweater",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Check if they are placed correctly according to English grammar rules.\n\nLet's analyze both options:\n\n**Option A:**\n- Adjectives: \"old\", \"little\", \"green\"\n- Correct placement: \"old\", \"little\", \"green\"\n\n**Option B:**\n- Adjectives: \"little\", \"old\", \"green\"\n- Incorrect placement: \"little\" should come before \"old\". The correct order is \"little\", \"old\", \"green\".\n\nTherefore, Option A has the correct adjective order.\n\nAnswer: <A>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) tiny rubber pyramidal knife\n(B) tiny pyramidal rubber knife",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the subject of the sentence.\n2. Determine if the adjectives should be in their natural or inverted order based on their meaning.\n\nLet's analyze each option:\n\n(A) tiny rubber pyramidal knife\n- The word \"tiny\" is an adjective describing the size of the knife.\n- \"Pyramidal\" describes the shape of the knife.\n- \"Rubber\" describes the material of the knife.\n\nThe correct order for adjectives would be: (tiny) rubber pyramidal knife.\n\n(B) tiny pyramidal rubber knife\n- \"Tiny\" and \"pyramidal\" describe the shape and size of the knife respectively.\n- \"Rubber\" describes the material of the knife.\n\nIn this case, the correct order for adjectives would be: tiny pyramidal rubber knife.\n\nSince both options have the same structure but different meanings, neither option is entirely correct because they do not follow the standard English adjective order where the more specific description comes first.\n\nTherefore, there is no single correct answer among the given options as they all incorrectly place the adjective \"rubber\" before its corresponding noun \"knife.\"\n\nFinal Answer: Neither option A nor B is correct according to standard English grammar rules.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) awful purple normal-size eating knife\n(B) awful normal-size purple eating knife",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option.\n2. Determine if the adjectives should be placed before or after the noun they modify.\n3. Compare the options and select the one with the correct adjective placement.\n\nLet's analyze both options:\n\nOption A: \"awful purple normal-size eating knife\"\n- Adjectives: awful, purple, normal-size, eating\n- The adjectives come after the noun they modify (eating).\n\nOption B: \"awful normal-size purple eating knife\"\n- Adjectives: awful, normal-size, purple, eating\n- The adjectives come before the noun they modify (knife).\n\nSince the correct placement of adjectives is that they should precede the nouns they modify, Option A has the correct adjective order.\n\nTherefore, the final answer is: Answer: <Option A>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) silver medium-size dog\n(B) medium-size silver dog",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each option.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement.\n\nStep 1: Identify the adjectives in each option.\nOption A: \"silver medium-size dog\"\nOption B: \"medium-size silver dog\"\n\nStep 2: Determine if they should be placed before or after the noun.\n- In English, adjectives typically come before the noun they modify.\n- Therefore, both options should have their adjectives before the nouns.\n\nStep 3: Compare the options and select the one with the correct placement.\nBoth options correctly place the adjectives before the nouns, so either is acceptable.\n\nSince both options are correct, there is no definitive answer based on this criterion alone. However, if we were to choose between them, Option A would be slightly more common in English because it follows the standard adjective-noun order more closely.\n\nFinal Answer: Neither option (A) nor (B) is incorrect; however, Option A is generally preferred due to its adherence to standard English grammar rules.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) old-fashioned circular green cardboard exercise computer\n(B) old-fashioned green exercise circular cardboard computer",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the words in each option that can be considered as adjectives.\n2. Check if the adjectives are placed correctly according to English grammar rules.\n\nLet's analyze both options:\n\nOption (A): \"old-fashioned circular green cardboard exercise computer\"\n- Adjectives: old-fashioned, circular, green, cardboard, exercise, computer\n\nOption (B): \"old-fashioned green exercise circular cardboard computer\"\n- Adjectives: old-fashioned, green, exercise, circular, cardboard, computer\n\nStep 1: Identify the words that can be considered as adjectives.\n- In Option (A), \"exercise\" and \"computer\" are not proper nouns and can be considered as adjectives.\n- In Option (B), \"exercise,\" \"circular,\" and \"cardboard\" are not proper nouns and can be considered as adjectives.\n\nStep 2: Check if the adjectives are placed correctly according to English grammar rules.\n- In Option (A), the adjectives are placed correctly: \"old-fashioned\" comes before \"green.\"\n- In Option (B), the adjectives are also placed correctly: \"old-fashioned\" comes before \"green.\"\n\nSince both options have their adjectives placed correctly, but Option (A) uses more appropriate adjectives for its context (\"exercise\" and \"computer\"), it is the better choice.\n\nAnswer: <Option A>",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) archaic enormous awful exercise sock\n(B) awful enormous archaic exercise sock",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each option.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement of adjectives.\n\nStep 1: Identify the adjectives in each option.\nOption A: \"archaic, enormous, awful, exercise, sock\"\nOption B: \"awful, enormous, archaic, exercise, sock\"\n\nStep 2: Determine if they should be placed before or after the noun.\nIn English, adjectives typically come after the noun they modify. However, there is an exception when dealing with numbers, articles (like \"a\" or \"an\"), and some other words that can precede or follow the noun.\n\nOption A: The adjectives \"archaic,\" \"enormous,\" \"awful,\" and \"exercise\" would normally come after the noun \"sock.\" But since \"sock\" is not a common word that follows this rule, it's more likely to be a typo or misread.\nOption B: The adjectives \"awful,\" \"enormous,\" \"archaic,\" and \"exercise\" would also normally come after the noun \"sock.\"\n\nStep 3: Compare the options and select the one with the correct placement of adjectives.\nSince Option A does not have any adjectives following the noun \"sock,\" it is less likely to be correct. Therefore, Option B is the correct choice.\n\nFinal answer: Answer: <Option B>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) mysterious medium-size old prismlike red Vietnamese silver sock\n(B) silver red Vietnamese prismlike mysterious old medium-size sock",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the two sentences and identify the one with the correct placement of adjectives.\n\nLet's analyze both options:\n\n**Option A:**\n- Adjectives: mysterious, medium-size, old, prism-like, red, Vietnamese, silver, sock\n\n**Option B:**\n- Adjectives: silver, red, Vietnamese, prism-like, mysterious, old, medium-size, sock\n\nStep 1: Identify the adjectives.\n- Option A: mysterious, medium-size, old, prism-like, red, Vietnamese, silver, sock\n- Option B: silver, red, Vietnamese, prism-like, mysterious, old, medium-size, sock\n\nStep 2: Determine if they should be placed before or after the noun.\n- In English, adjectives typically come after the noun they modify unless they are at the beginning of the sentence (adjective clause).\n\nStep 3: Compare the two sentences and identify the one with the correct placement of adjectives.\n\nIn Option A, all adjectives are placed correctly after the nouns they modify.\n\nIn Option B, the adjectives \"silver,\" \"red,\" \"Vietnamese,\" and \"mysterious\" are placed incorrectly because they should come before the nouns they modify. The correct order would be: \"silver red Vietnamese mysterious.\"\n\nTherefore, the correct answer is that **Option A** has the correct adjective order.\n\nAnswer: <Final result: Option A>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Which sentence has the correct adjective order:\nOptions:\n(A) enormous terrible typing chair\n(B) terrible enormous typing chair",
+      "pred": "To determine which sentence has the correct adjective order, we need to follow these steps:\n\n1. Identify the adjectives in each sentence.\n2. Determine if they should be placed before or after the noun.\n3. Compare the options and select the one with the correct placement.\n\nStep 1: Identify the adjectives in each sentence.\n- Sentence (A): \"enormous terrible typing chair\"\n- Sentence (B): \"terrible enormous typing chair\"\n\nStep 2: Determine if they should be placed before or after the noun.\n- In English, adjectives typically come before the noun they modify.\n- Therefore, the correct order for both sentences is: \"terrible enormous typing chair\" and \"enormous terrible typing chair\".\n\nStep 3: Compare the options and select the one with the correct placement.\nBoth options have the correct adjective order. However, option B uses the word \"terrible\" twice, which might not be considered standard in some contexts.\n\nFinal answer: Both options A and B have the correct adjective order. Since there's no specific context that would make one more appropriate than the other, either can be used. But if we strictly follow the rule of placing adjectives before the noun, then both are correct. If we consider the second occurrence of \"terrible\" as less common, then Option A might be preferred due to its brevity. \n\nHowever, since the question asks for the correct sentence based on the given options, and considering the typical usage where adjectives precede nouns, **Option B** is the most conventional choice.",
+      "gt": "(B)",
+      "correct": true
+    }
+  ]
+}

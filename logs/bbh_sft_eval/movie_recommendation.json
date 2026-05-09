@@ -1,0 +1,222 @@
+{
+  "subset": "movie_recommendation",
+  "accuracy": 0.4,
+  "total": 30,
+  "correct": 12,
+  "sampling_mode": "stratified",
+  "seed": 42,
+  "sample_indices": [
+    0,
+    10,
+    23,
+    32,
+    52,
+    60,
+    71,
+    82,
+    93,
+    94,
+    95,
+    100,
+    103,
+    115,
+    121,
+    132,
+    136,
+    149,
+    161,
+    168,
+    173,
+    174,
+    175,
+    177,
+    184,
+    191,
+    197,
+    200,
+    202,
+    249
+  ],
+  "details": [
+    {
+      "input": "Find a movie similar to Batman, The Mask, The Fugitive, Pretty Woman:\nOptions:\n(A) The Front Page\n(B) Maelstrom\n(C) The Lion King\n(D) Lamerica",
+      "pred": "1. **Identify the common elements**: Both \"Batman\", \"The Mask\", and \"The Fugitive\" are movies with a detective theme.\n2. **Analyze each option**:\n   - (A) \"The Front Page\": This is an American newspaper publisher scandal novel published in 1935. It has nothing to do with detectives or mystery.\n   - (B) \"Maelstrom\": A term used in physics for a swirling mass of water or air. Not related to any detective story.\n   - (C) \"The Lion King\": An animated Disney film about lions from Africa. While it's a fantasy, it doesn't fit the detective genre.\n   - (D) \"Lamerica\": This is not a recognized movie title but seems like a typo or misspelling.\n3. **Conclusion**: After analyzing all options, none match the criteria of being a detective movie.\n\n**Final Answer**: None of the given options match the criteria.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Forrest Gump, Pulp Fiction, The Fugitive, Dances with Wolves:\nOptions:\n(A) Dragonheart 3 The Sorcerer's Curse\n(B) Chi-Raq\n(C) Stargate\n(D) Tae Guk Gi The Brotherhood of War",
+      "pred": "1. **Identify the common theme**: The options provided include movies from different genres and time periods.\n2. **Consider the themes in each option**:\n   - **Dragonheart (A)**: A fantasy film about a dragon rider.\n   - **The Sorcerer's Curse (A)**: An action-adventure film set in medieval Europe.\n   - **Chi-Raq (B)**: A documentary-style film on the Riyaq community in London.\n   - **Stargate (C)**: A science fiction film involving space travel.\n   - **Tae Guk Gi The Brotherhood of War (D)**: A South Korean drama series based on a historical event.\n\n3. **Compare the themes**:\n   - **Forrest Gump**: A coming-of-age story.\n   - **Pulp Fiction**: A crime comedy.\n   - **The Fugitive**: A mystery thriller.\n   - **Dances with Wolves**: A war drama.\n   \n4. **Match the themes to the options**:\n   - **Dragonheart (A)**: Fantasy (similar to Forrest Gump).\n   - **The Sorcerer's Curse (A)**: Action-adventure (similar to Pulp Fiction).\n   - **Chi-Raq (B)**: Documentary-style (similar to Pulp Fiction).\n   - **Stargate (C)**: Science fiction (similar to Pulp Fiction).\n   - **Tae Guk Gi The Brotherhood of War (D)**: Drama (similar to Pulp Fiction).\n\n5. **Select the most appropriate match**:\n   - **Option B (Chi-Raq)** seems to be the closest as it is a documentary-style film that could fit well into the \"documentary\" genre or style.\n\n6. **Final answer**: Answer: <Chi-Raq>.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Spider-Man, Spider-Man 2, The Matrix, Independence Day:\nOptions:\n(A) Jurassic World Fallen Kingdom\n(B) The Fifth Element\n(C) Across the Universe\n(D) Insomnia",
+      "pred": "1. **Identify the genre**: Spider-Man and Spider-Man 2 are both superhero movies, while The Matrix is an action sci-fi film, and Independence Day is a science fiction war film.\n2. **Compare with options**:\n   - (A) Jurassic World: This is a dinosaur-themed adventure film, not related to superheroes or action genres.\n   - (B) The Fifth Element: This is a French science fiction comedy, which does not match any of the given films.\n   - (C) Across the Universe: This is a space opera, but it's not a superhero or action film.\n   - (D) Insomnia: This is a psychological thriller, not related to superheroes or action genres.\n3. **Conclusion**: None of the provided options match the genre and style of the given films.\n\nAnswer: <None of the options match the genre and style of the given films>.",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to The Fugitive, Braveheart, Schindler's List, The Lion King:\nOptions:\n(A) Mad City\n(B) The Scorpion King\n(C) The Shawshank Redemption\n(D) City of Men",
+      "pred": "1. **Identify the genre**: The movies mentioned (The Fugitive, Braveheart, Schindler's List, and The Lion King) are all historical or action films.\n2. **Consider the themes**: These films often deal with themes such as heroism, justice, and survival.\n3. **Evaluate each option**:\n   - **Mad City**: This is an American comedy film from 2015, which does not fit the historical or action genres.\n   - **The Scorpion King**: This is a 2016 action-comedy film that also doesn't match the historical or action genres.\n   - **The Shawshank Redemption**: This is a 1994 drama film about prison life, which aligns well with the themes of heroism and survival found in the other options.\n   - **City of Men**: This is a 2017 British-American superhero film, which has no connection to the historical or action genres.\n\nBased on these considerations, the most suitable option for a movie similar to those listed is **(C) The Shawshank Redemption**.\n\nAnswer: <The Shawshank Redemption>",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Braveheart, The Usual Suspects, Crimson Tide, The Fugitive:\nOptions:\n(A) Get Shorty\n(B) The Firm\n(C) Pillow Talk\n(D) Hairspray",
+      "pred": "1. **Identify the genre**: First, we need to determine if these movies fall into the same genre or have any common themes.\n2. **Genre analysis**:\n   - Braveheart: Historical/Action\n   - The Usual Suspects: Mystery/Thriller\n   - Crimson Tide: Action/Adventure\n   - The Fugitive: Action/Thriller\n3. **Common theme and genre identification**: All four options seem to be action/thriller genres.\n\n4. **Compare with other options**:\n   - **Get Shorty**: Crime/Drama (not an action/thriller)\n   - **The Firm**: Legal Drama (not an action/thriller)\n   - **Pillow Talk**: Comedy (not an action/thriller)\n   - **Hairspray**: Musical/Humor (not an action/thriller)\n\n5. **Conclusion**: Based on the genre and thematic similarity, all options except for one can be ruled out as they do not fit the criteria of being in the same genre or having a similar plot.\n\n6. **Final answer**: Since none of the given options perfectly match the criteria, it seems there might be a mistake in the question itself or the provided options. However, based on the information given, no correct option is available from the choices provided.\n\nAnswer: <No Correct Option Provided>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to The Usual Suspects, Braveheart, Pulp Fiction, Schindler's List:\nOptions:\n(A) The Cabinet of Dr Caligari\n(B) The Shawshank Redemption\n(C) Spider-Man 2\n(D) Taxi",
+      "pred": "1. **Identify the genre**: The movies mentioned (The Usual Suspects, Braveheart, Pulp Fiction, and Schindler's List) are all action or crime films.\n2. **Consider the themes**: These films often deal with complex characters, philosophical questions, and historical events.\n3. **Look for options that fit these criteria**:\n   - Option A: \"The Cabinet of Dr Caligari\" is an art film from Germany, not an action or crime film.\n   - Option B: \"The Shawshank Redemption\" is a drama about prison life, which fits well with the themes of the other films.\n   - Option C: \"Spider-Man 2\" is an action film but does not align with the themes of the other films.\n   - Option D: \"Taxi\" is a comedy, which does not match the tone of the other films.\n\n4. **Conclusion**: Based on the analysis, the most suitable option is \"The Shawshank Redemption\".\n\nAnswer: <The Shawshank Redemption>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Star Wars Episode IV - A New Hope, The Usual Suspects, Star Wars Episode V - The Empire Strikes Back, Pulp Fiction:\nOptions:\n(A) Fargo\n(B) Conan the Barbarian\n(C) Wisdom\n(D) The Crew",
+      "pred": "1. **Identify the genre**: All these movies are from different genres (epic space adventure, psychological thriller, epic space adventure, and crime comedy respectively).\n2. **Compare themes**: Look for common themes or elements in all four movies.\n3. **Consider plot structures**: Analyze how each movie is structured and what kind of story it tells.\n4. **Evaluate pacing and style**: Compare how fast-paced or slow-paced each movie feels.\n\nAfter analyzing, we can conclude that none of the options perfectly match the criteria given. However, if we were to choose one based on some similarity, option (A) Fargo might be the closest as it also has an epic space adventure theme and a complex narrative structure. \n\n**Final Answer: Fargo**",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Braveheart, Dances with Wolves, The Shawshank Redemption, The Usual Suspects:\nOptions:\n(A) 3000 Miles to Graceland\n(B) Crimson Tide\n(C) Best Men\n(D) A Very Harold & Kumar 3D Christmas",
+      "pred": "1. **Identify the genre**: All these movies are historical dramas or war films.\n2. **Consider the themes and style**: They all have strong characters, intense action sequences, and dramatic storytelling.\n3. **Look for common elements**: These movies often feature complex characters, moral dilemmas, and epic battles.\n\nBased on this analysis, the most suitable option is (A) 3000 Miles to Graceland, as it also fits the criteria of being an epic war film with strong character development and dramatic conflict.",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Braveheart, Apollo 13, Schindler's List, Pulp Fiction:\nOptions:\n(A) Ruby Sparks\n(B) The Last Klezmer Leopold Kozlowski\n(C) His Life and Music\n(D) Circus\n(E) Dances with Wolves",
+      "pred": "Step 1: Identify the common theme or genre among the given movies.\n- Braveheart is an historical war film.\n- Apollo 13 is an action science fiction disaster film.\n- Schindler's List is an Holocaust drama.\n- Pulp Fiction is a crime comedy.\n\nStep 2: Look for a movie that fits this theme or genre.\n- Among the options provided, \"Ruby Sparks\" seems to be a light-hearted romantic comedy, which does not match any of the genres mentioned above.\n\nStep 3: Eliminate incorrect options based on the identified theme.\n- Option (A) Ruby Sparks can be eliminated as it is a romantic comedy.\n- Option (B) The Last Klezmer Leopold Kozlowski is also a romantic comedy, so it can be eliminated.\n- Option (C) His Life and Music is about music, not related to the themes of the other films.\n- Option (D) Circus is a circus-themed movie, but it doesn't fit the historical or dramatic themes of the other films.\n- Option (E) Dances with Wolves is a historical war film, fitting one of the themes.\n\nStep 4: Confirm the final answer.\nThe most suitable option that matches the theme of the other films is:\n\nAnswer: E",
+      "gt": "(E)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to The Shawshank Redemption, Apollo 13, Terminator 2 Judgment Day, Dead Man Walking:\nOptions:\n(A) Frankenstein Unbound\n(B) Jon Stewart Has Left the Building\n(C) Clear and Present Danger\n(D) Little Giants",
+      "pred": "Step 1: Identify the common elements between the given movies.\n- The Shawshank Redemption is about prison life.\n- Apollo 13 deals with space exploration and disaster.\n- Terminator 2 Judgment Day involves time travel and conflict.\n- Dead Man Walking is about a murder trial.\n\nStep 2: Analyze each option based on these common themes.\n- Option (A): Frankenstein Unbound - This is an adaptation of Mary Shelley's novel \"Frankenstein\" and focuses on scientific experimentation and the consequences of creating life. It does not fit well with the other options in terms of genre or subject matter.\n- Option (B): Jon Stewart Has Left the Building - This is a parody of Jon Stewart's show and does not relate to any of the given films.\n- Option (C): Clear and Present Danger - This is a film about a group of friends who become involved in a political conspiracy during World War II. While it has some thematic similarities, it doesn't align closely with the others.\n- Option (D): Little Giants - This is a documentary series that follows young entrepreneurs from around the world. It has no connection to the genres or themes of the given films.\n\nStep 3: Determine which option best fits the criteria for similarity.\nAfter analyzing all options, none perfectly match the criteria but we can infer that they share some thematic elements related to the genres mentioned. However, since there isn't a perfect match among the provided options, we need to choose one that most closely relates to the themes of the given films.\n\nFinal Answer: Based on the analysis, none of the provided options directly matches the criteria for similarity as accurately as the original question suggests. Therefore, the answer would be: <None of the above>.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Jurassic Park, The Silence of the Lambs, Batman, American Beauty:\nOptions:\n(A) Night of the Living Dead\n(B) Forrest Gump\n(C) Ghost Ship\n(D) Revenge for Jolly!",
+      "pred": "1. **Identify common themes**: Jurassic Park and The Silence of the Lambs both deal with suspense and horror. Batman is about crime-solving and heroism. American Beauty explores themes of love, family, and societal issues.\n2. **Consider genre diversity**: Options (A), (B), and (C) are all different genres: (A) Horror/Thriller, (B) Drama, (C) Mystery/Scary Story, (D) Comedy/Drama.\n3. **Match themes and genres**: Option (D) Revenge for Jolly! seems to be a comedy/drama, which aligns well with the themes of humor and drama found in American Beauty.\n\n**Final Answer**: D. Revenge for Jolly!",
+      "gt": "(B)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to The Lion King, The Fugitive, Terminator 2 Judgment Day, Toy Story:\nOptions:\n(A) Black Mirror\n(B) Aladdin\n(C) Super Mario Bros\n(D) The Stunt Man",
+      "pred": "1. **Identify the genre**: The given movies are from different genres: Disney animation (The Lion King), mystery/thriller (The Fugitive and Terminator 2), animated comedy (Toy Story), and action/adventure (Super Mario Bros).\n   \n2. **Compare with options**:\n   - Option A: Black Mirror is an anthology series that explores dark themes in science fiction.\n   - Option B: Aladdin is a Disney animated film based on a story from the Arabian Nights.\n   - Option C: Super Mario Bros is a video game, not a movie.\n   - Option D: The Stunt Man is a documentary about stunt performers.\n\n3. **Match the genre**: Among these, only Aladdin fits into the \"animated\" category, which aligns with the \"Disney animation\" of The Lion King.\n\n4. **Conclusion**: Based on the genre match, option B (Aladdin) is the most suitable choice for a movie similar to those listed.\n\nAnswer: <Aladdin>",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Schindler's List, The Lord of the Rings The Two Towers, Inception, The Dark Knight:\nOptions:\n(A) Couples Retreat\n(B) Those Magnificent Men in Their Flying Machines\n(C) Star Wars Episode IV - A New Hope\n(D) Friday After Next",
+      "pred": "1. **Identify the common theme**: All these movies are related to themes such as war, fantasy, and crime.\n2. **Consider the historical context**: \"Schindler's List\" is about the Holocaust, while \"The Lord of the Rings\" and \"Inception\" deal with complex philosophical questions, and \"The Dark Knight\" deals with moral dilemmas.\n3. **Evaluate each option**:\n   - **Couples Retreat**: This is a romantic comedy, not suitable for the described themes.\n   - **Those Magnificent Men in Their Flying Machines**: This is an aviation-themed film, which does not align well with the themes of war or fantasy.\n   - **Star Wars Episode IV - A New Hope**: While it is a classic space opera, it does not fit the themes of war or fantasy.\n   - **Friday After Next**: This is a coming-of-age story, which does not match the themes of war or fantasy.\n\n4. **Conclusion**: None of the options perfectly matches the themes of war, fantasy, and crime. However, if we were to choose from the given options, the closest match would be (A) Couples Retreat, but it is not appropriate for the described themes.\n\n5. **Final Answer**: Since none of the options perfectly match the themes, the answer cannot be determined from the given options.",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Don Juan DeMarco, Mr Holland's Opus, What's Eating Gilbert Grape, Pulp Fiction:\nOptions:\n(A) Get Shorty\n(B) Kolya\n(C) Death Wish 2\n(D) Gold Diggers of 1933",
+      "pred": "Step 1: Identify the genre and style of the movies in question.\n- \"Don Juan DeMarco\" is an action film.\n- \"Mr Holland's Opus\" is a drama.\n- \"What's Eating Gilbert Grape\" is a comedy.\n- \"Pulp Fiction\" is a crime thriller.\n\nStep 2: Look for common themes or elements among these genres that might help narrow down the options.\n- All four films have a mix of humor and violence.\n\nStep 3: Consider the directorial styles of each option.\n- \"Get Shorty\" has a gritty, realistic style.\n- \"Kolya\" has a more comedic approach.\n- \"Death Wish 2\" has a violent, action-oriented style.\n- \"Gold Diggers of 1933\" has a romantic comedy style.\n\nStep 4: Match the identified characteristics with the given options.\n- \"Get Shorty\" matches the gritty, realistic style of \"Don Juan DeMarco.\"\n- \"Kolya\" matches the comedic style of \"Mr Holland's Opus.\"\n- \"Death Wish 2\" matches the violent, action-oriented style of \"Pulp Fiction.\"\n- \"Gold Diggers of 1933\" matches the romantic comedy style of \"What's Eating Gilbert Grape.\"\n\nFinal Answer: The most suitable options based on the criteria provided would be (A) Get Shorty, (B) Kolya, (C) Death Wish 2, and (D) Gold Diggers of 1933. However, if we must choose one, the best match for the described criteria would be (A) Get Shorty.",
+      "gt": "(A)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to The Terminator, Toy Story, The Sixth Sense, Star Wars Episode VI - Return of the Jedi:\nOptions:\n(A) Indecent Proposal\n(B) Star Wars Episode V - The Empire Strikes Back\n(C) Gray's Anatomy\n(D) The Girl Next Door",
+      "pred": "1. **Identify common themes**: The movies mentioned (The Terminator, Toy Story, The Sixth Sense, and Star Wars Episode VI - Return of the Jedi) share elements such as futuristic settings, action sequences, psychological thriller elements, and sci-fi genres.\n2. **Evaluate each option**:\n   - **A. Indecent Proposal**: This is a comedy about a married couple who have an affair. It does not fit the sci-fi or action genre.\n   - **B. Star Wars Episode V - The Empire Strikes Back**: This is part of the original Star Wars trilogy and fits well with the sci-fi and action elements.\n   - **C. Gray's Anatomy**: This is a medical drama series that focuses on doctors at a fictional hospital in Washington D.C. It does not match the sci-fi or action genre.\n   - **D. The Girl Next Door**: This is a romantic comedy about two high school students who become involved when one moves into the other’s house. It does not fit the sci-fi or action genre.\n3. **Conclusion**: Based on the analysis, **Star Wars Episode V - The Empire Strikes Back** is the most suitable choice for a movie similar to those listed.\n\nAnswer: B",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Austin Powers International Man of Mystery, Star Wars Episode IV - A New Hope, Star Wars Episode V - The Empire Strikes Back, Mission Impossible:\nOptions:\n(A) The Impostors\n(B) Virunga\n(C) Self-criticism of a Bourgeois Dog\n(D) American Beauty",
+      "pred": "1. **Identify the genre and themes**: Both \"Austin Powers\" and \"Star Wars\" have elements of humor and action.\n2. **Consider the setting**: \"Mission Impossible\" is an espionage thriller set in various locations around the world.\n3. **Look for movies with similar themes or genres**:\n   - Option (A) \"The Impostors\" has a humorous tone and involves deception.\n   - Option (B) \"Virunga\" seems unrelated to these options.\n   - Option (C) \"Self-criticism of a Bourgeois Dog\" does not fit the theme of humor or action.\n4. **Compare the options**:\n   - \"The Impostors\" fits well as it is a comedy that involves deception, much like \"Austin Powers\".\n5. **Final decision**: Based on the analysis, \"The Impostors\" is the most suitable option.\n\nAnswer: <The Impostors>",
+      "gt": "(D)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Apollo 13, Jurassic Park, The Silence of the Lambs, Forrest Gump:\nOptions:\n(A) Somewhere\n(B) Batman\n(C) The Hot Chick\n(D) The Apartment",
+      "pred": "To find a movie similar to Apollo 13, let's analyze each option:\n\n1. **Apollo 13** is about a space mission that goes wrong and needs rescue.\n2. **Jurassic Park** is about dinosaurs on an island where they escape from their enclosure.\n3. **The Silence of the Lambs** is about a serial killer who kidnaps a young FBI trainee.\n4. **Forrest Gump** is about a man with a mild mental condition who travels around the world.\n\nNow, let's compare these options:\n\n- **Somewhere**: This doesn't seem related to any of the themes or genres mentioned.\n- **Batman**: While it’s a superhero film, it does not fit the theme of a space mission gone wrong.\n- **The Hot Chick**: This seems unrelated to any of the movies mentioned.\n- **The Apartment**: This is a comedy-drama about a married couple living in a small apartment.\n\nGiven this analysis, none of the options perfectly match the genre and theme of Apollo 13. However, if we were to choose based on the closest thematic similarity (though not perfect), **The Hot Chick** might be the most fitting choice as it deals with a romantic comedy, which could relate to the adventurous nature implied by the title \"Apollo 13.\"\n\nTherefore, the final answer would be: **C)**",
+      "gt": "(B)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Star Wars Episode V - The Empire Strikes Back, Star Wars Episode IV - A New Hope, Star Wars Episode VI - Return of the Jedi, The Matrix:\nOptions:\n(A) Baby's Day Out\n(B) Les Misérables\n(C) Terminator 2 Judgment Day\n(D) Dudley Do-Right",
+      "pred": "1. **Identify the common elements**: Both \"Star Wars\" and \"The Matrix\" are science fiction or action movies.\n2. **Compare with options**:\n   - (A) \"Baby's Day Out\" is about a baby learning to walk.\n   - (B) \"Les Misérables\" is an epic French musical drama.\n   - (C) \"Terminator 2 Judgment Day\" is another sci-fi film from the same franchise.\n   - (D) \"Dudley Do-Right\" is not related to any known movie.\n3. **Match the best option**: Among the choices, \"Terminator 2 Judgment Day\" shares the most in terms of genre and concept.\n\nFinal answer: C",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to The Fugitive, Terminator 2 Judgment Day, Aladdin, Toy Story:\nOptions:\n(A) The Edge of Love\n(B) Untitled Spider-Man Reboot\n(C) The Lion King\n(D) Daddy Day Camp",
+      "pred": "1. **Identify the genre**: The movies mentioned are all action or science fiction films.\n2. **Compare themes and settings**:\n   - **The Fugitive**: A classic thriller with a focus on escape and suspense.\n   - **Terminator 2: Judgment Day**: An action film set in the future where robots fight against humans.\n   - **Aladdin**: A Disney animated adventure about a young man who falls into a magical world.\n   - **Toy Story**: A Pixar animation about toys coming to life and forming an emotional bond with their human owners.\n3. **Choose a common theme or setting**: Both \"The Fugitive\" and \"Terminator 2: Judgment Day\" share a futuristic setting.\n\n4. **Select a movie that fits this description**: Among the options provided, \"The Lion King\" is the only option that matches both the setting (futuristic) and the action/thriller genre.\n\n5. **Final decision**: Based on the analysis, \"The Lion King\" seems like the most suitable choice for a movie similar to these.\n\nAnswer: <The Lion King>",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Fight Club, The Shawshank Redemption, Kill Bill Vol 1, Kill Bill Vol 2:\nOptions:\n(A) Sorority House Massacre\n(B) Evolution\n(C) Memento\n(D) Scooby-Doo Goes Hollywood",
+      "pred": "Step 1: Identify the common theme or genre in the given movies.\n- \"Fight Club\" is about rebellion and personal growth.\n- \"The Shawshank Redemption\" is about friendship and redemption.\n- \"Kill Bill Vol. 1\" and \"Kill Bill Vol. 2\" are action films with female protagonists.\n\nStep 2: Look for a movie that shares these themes or genres among the options provided.\n\nOption (A): \"Sorority House Massacre\" - This option does not fit any of the given themes or genres.\n\nOption (B): \"Evolution\" - This option is unrelated to the given movies.\n\nOption (C): \"Memento\" - This option is an independent film known for its unique narrative structure, but it doesn't align well with the rebellious and action-oriented nature of the other movies.\n\nOption (D): \"Scooby-Doo Goes Hollywood\" - This option is a children's comedy series, which is completely different from the given movies.\n\nStep 3: Determine the best match based on the identified common elements.\n\nFinal Answer: Based on the analysis, none of the given options perfectly matches the themes and genres of the original movies. However, if we were to choose the closest match, Option (C) \"Memento\" would be the most appropriate choice as it has a unique narrative structure and could potentially be considered a modern take on rebellion and personal growth through unconventional means.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Romancing the Stone, American Beauty, The Princess Bride, Star Wars Episode IV - A New Hope:\nOptions:\n(A) Save the Last Dance\n(B) Passion\n(C) Being John Malkovich\n(D) Trial and Error",
+      "pred": "1. **Identify the genre**: Both \"Romancing the Stone\" and \"American Beauty\" are romantic comedies.\n2. **Consider the themes**: \"The Princess Bride\" is also a romantic comedy with elements of fantasy.\n3. **Look for similarities in style or tone**: All these movies have a light-hearted, whimsical feel.\n\nGiven this analysis, let's evaluate each option:\n\n- **Option (A): Save the Last Dance** - This is an action-comedy film that does not fit well within the romantic comedy genre.\n- **Option (B): Passion** - This is a drama about a woman who falls in love with her best friend’s husband. It has no clear connection to the other options.\n- **Option (C): Being John Malkovich** - This is a surreal comedy-drama where John Malkovich plays multiple versions of himself. While it has a unique style, it doesn't align with the other films' genres.\n- **Option (D): Trial and Error** - This is a psychological thriller that explores the concept of fate through a series of accidents. It fits well as a romantic comedy due to its comedic elements and exploration of relationships.\n\nAfter evaluating all options, the most suitable choice is **Option (D)**: Trial and Error.",
+      "gt": "(C)",
+      "correct": true
+    },
+    {
+      "input": "Find a movie similar to Jurassic Park, Independence Day, Forrest Gump, Batman:\nOptions:\n(A) The Firm\n(B) Roger Dodger\n(C) Innocent Man\n(D) An\n(E) The Silence of the Lambs",
+      "pred": "1. **Identify common themes**: Jurassic Park is about dinosaurs and genetic engineering; Independence Day involves aliens invading Earth; Forrest Gump is about time travel and family; Batman is about crime fighting.\n2. **Consider genre**: All these movies fall under different genres (science fiction, action, drama).\n3. **Look for similarities in plot or setting**:\n   - Jurassic Park: Dinosaurs on an island\n   - Independence Day: Alien invasion\n   - Forrest Gump: Time travel through memory\n4. **Evaluate options**:\n   - Option A: \"The Firm\" is a legal thriller, not related to dinosaurs or aliens.\n   - Option B: \"Roger Dodger\" is a children's book series, not relevant to any of the mentioned films.\n   - Option C: \"Innocent Man\" is a film about a man who becomes a victim of a serial killer, not related to dinosaurs or aliens.\n   - Option D: \"An\" does not seem like a complete title.\n   - Option E: \"The Silence of the Lambs\" is a psychological thriller based on true events, involving a serial killer and FBI agent Clarice Starling.\n5. **Conclusion**: Based on the analysis, \"The Silence of the Lambs\" best fits the criteria as it deals with a serial killer and involves a character from the past, which aligns with the theme of time travel in \"Forrest Gump.\"\n\nAnswer: <Final result: \"The Silence of the Lambs\">",
+      "gt": "(E)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Forrest Gump, The Silence of the Lambs, Fargo, Seven:\nOptions:\n(A) Schindler's List\n(B) The Diary of Anne Frank\n(C) Cleanskin\n(D) Boy",
+      "pred": "1. **Identify common themes**: All these movies have elements of drama and character development.\n2. **Consider historical context**: They all deal with significant events or periods in history (Forrest Gump: Vietnam War; The Silence of the Lambs: 19th century America; Fargo: 1930s America; Seven: 1980s America).\n3. **Evaluate plot complexity**: They all involve complex characters and plots that require deep analysis.\n\nGiven this information, let's choose:\n\n**Final Answer:** C. Cleanskin",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to The Usual Suspects, Schindler's List, Braveheart, Dances with Wolves:\nOptions:\n(A) The Way of the Gun\n(B) Bully\n(C) Fiddler on the Roof\n(D) Batman",
+      "pred": "1. **Identify common themes**: The movies mentioned (The Usual Suspects, Schindler's List, Braveheart, and Dances with Wolves) all deal with historical events or have elements of mystery, violence, and heroism.\n2. **Consider genre diversity**: These films span different genres such as horror, drama, war, and adventure.\n3. **Look for options that fit these criteria**:\n   - Option A: \"The Way of the Gun\" is an action film set in World War II, which aligns well with the historical theme.\n   - Option B: \"Bully\" is not related to any of the mentioned films.\n   - Option C: \"Fiddler on the Roof\" is a musical comedy about Jewish life in Tsarist Russia, which does not match the historical or dramatic themes.\n   - Option D: \"Batman\" is a superhero film, but it doesn't fit the historical or dramatic themes.\n\n4. **Conclusion**: Based on the analysis, \"The Way of the Gun\" is the most suitable option because it fits the historical and adventurous themes while being a unique choice among the given options.\n\nAnswer: <The Way of the Gun>",
+      "gt": "(D)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Dances with Wolves, Crimson Tide, Braveheart, The Fugitive:\nOptions:\n(A) Rachel Getting Married\n(B) Howard the Duck\n(C) The Shawshank Redemption\n(D) The Post",
+      "pred": "1. **Identify the genre**: First, we need to determine if these movies fall into the same genre as \"Dances with Wolves\". \n   - \"Dances with Wolves\" is an historical war film.\n2. **Compare themes and settings**:\n   - All of the options (Rachel Getting Married, Howard the Duck, The Shawshank Redemption, The Post) have different genres or themes from \"Dances with Wolves\".\n3. **Consider the action elements**: \"Crimson Tide\", \"Braveheart\", and \"The Fugitive\" all involve some form of conflict or adventure that could be considered similar to the action in \"Dances with Wolves\".\n\n4. **Final decision**: Given the criteria, \"Crimson Tide\" seems like the most appropriate choice because it involves naval combat, which can be seen as a continuation of the adventurous theme present in \"Dances with Wolves\".\n\nAnswer: <Crimson Tide>",
+      "gt": "(C)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Catch Me If You Can, Shrek, Monsters, Inc, The Lion King:\nOptions:\n(A) Aladdin\n(B) Enter the Void\n(C) Contraband\n(D) No Small Affair",
+      "pred": "1. **Identify the genre and style of \"Catch Me If You Can\":** It is a thriller with an action-oriented plot.\n2. **Compare it to other options:** \n   - **Shrek**: A family-friendly animated film that does not fit the action-thriller genre.\n   - **Monsters, Inc**: Another animated film but also not in the same genre as \"Catch Me If You Can\".\n   - **The Lion King**: An animated musical epic set in Africa, which is different from the action-thriller genre.\n3. **Consider the similarity between \"Catch Me If You Can\" and \"Aladdin\":**\n   - Both are action-adventure films.\n   - They both have a protagonist who is on the run or trying to escape.\n4. **Conclusion:** Based on the comparison, \"Aladdin\" is the most suitable option for a movie similar to \"Catch Me If You Can\".\n\nAnswer: <Aladdin>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Jurassic Park, The Silence of the Lambs, Dances with Wolves, Seven:\nOptions:\n(A) Forrest Gump\n(B) Righteous Kill\n(C) Cheech and Chong's Up in Smoke\n(D) Blood The Last Vampire",
+      "pred": "1. **Identify common themes**: All these movies deal with suspense, mystery, or horror.\n2. **Consider genre diversity**: They span different genres (horror, thriller, drama).\n3. **Look for similarities in plot elements**:\n   - Suspenseful nature\n   - Psychological tension\n   - Unusual settings or characters\n4. **Evaluate options based on theme and genre**:\n   - **Forrest Gump**: A classic drama about a man’s life journey, not as dark or suspenseful as some other choices.\n   - **Righteous Kill**: Focuses on revenge rather than suspense.\n   - **Cheech and Chong's Up in Smoke**: Comedy, which is not aligned with the chosen themes.\n   - **Blood The Last Vampire**: Darker tone compared to the others.\n5. **Final selection**: Given the criteria, none perfectly match but considering the closest fit, **Dances with Wolves** seems like it might be the most appropriate choice.\n\nAnswer: <Dances with Wolves>",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Back to the Future, The Lord of the Rings The Fellowship of the Ring, Star Wars Episode VI - Return of the Jedi, Forrest Gump:\nOptions:\n(A) The Silence of the Lambs\n(B) Making the Grade\n(C) The Boy and the Beast\n(D) Vicky Cristina Barcelona",
+      "pred": "1. **Identify the genre**: Both \"Back to the Future\" and \"The Lord of the Rings: The Fellowship of the Ring\" are fantasy/epic adventure movies.\n2. **Consider the setting**: \"Forrest Gump\" is set in America during the 20th century.\n3. **Focus on the main characters**: \"Star Wars Episode VI - Return of the Jedi\" has Luke Skywalker as the protagonist.\n\nGiven these points, we need a movie with a similar theme (fantasy or epic), a similar setting (American), and a similar protagonist (Luke Skywalker).\n\n4. **Evaluate the options**:\n   - **A. The Silence of the Lambs**: This is a psychological thriller, not an epic adventure.\n   - **B. Making the Grade**: This is a comedy, not related to the trilogy mentioned.\n   - **C. The Boy and the Beast**: This is a horror film, not suitable for this context.\n   - **D. Vicky Cristina Barcelona**: This is a romantic comedy, not related to the trilogy mentioned.\n\n5. **Conclusion**: Based on the criteria, none of the given options perfectly match all aspects of the trilogy. However, if we were to choose from the provided options, the closest would be **(D) Vicky Cristina Barcelona**, but it's important to note that it doesn't quite fit the criteria.\n\n6. **Final Answer**: Given the constraints, there isn't a perfect match among the options. If forced to choose one, **(D) Vicky Cristina Barcelona** could be considered, though it might not fully align with the trilogy's themes and settings.",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Forrest Gump, The Shawshank Redemption, The Matrix, Star Wars Episode I - The Phantom Menace:\nOptions:\n(A) Fight Club\n(B) I Shot Jesse James\n(C) Out Cold\n(D) Blackrock",
+      "pred": "1. **Identify the common theme**: All these movies are about themes of friendship, prison life, and adventure.\n2. **Compare with \"Forrest Gump\"**:\n   - **Friendship**: Both have strong bonds between characters (Gump's relationship with his friend Bubba in \"Forrest Gump\", and the friendship between inmates in \"The Shawshank Redemption\").\n   - **Adventure**: \"Forrest Gump\" is an adventure story set on a train journey, while \"The Matrix\" features a complex world where humans fight against artificial intelligence.\n3. **Compare with \"The Shawshank Redemption\"**:\n   - **Prison Life**: Both involve characters who are incarcerated or imprisoned for various reasons (\"Forrest Gump\" as a child, \"The Shawshank Redemption\" as a prisoner).\n4. **Compare with \"The Matrix\"**:\n   - **Complex World**: \"The Matrix\" has a highly advanced technological society that is at war with its creators, which can be seen as a metaphorical representation of imprisonment or struggle.\n\n5. **Compare with \"Star Wars Episode I - The Phantom Menace\"**:\n   - **Space Adventure**: While not explicitly space-related, it does feature a young hero traveling through space (\"Forrest Gump\" also travels through space), but this is more of a plot device rather than a central theme.\n\n6. **Compare with \"Fight Club\"**:\n   - **Social Commentary**: Both deal with social issues like alienation and conformity (\"Forrest Gump\" deals with societal expectations and the American Dream).\n\n7. **Compare with \"I Shot Jesse James\"**:\n   - **Historical Context**: This film is based on real events from the Civil War era, dealing with historical figures and their lives (\"Forrest Gump\" deals with historical figures but in a different context\").\n\n8. **Compare with \"Blackrock\"**:\n   - **Financial Thriller**: It involves a high-stakes financial game involving money laundering, which could be considered a modern-day version of the \"American Dream\".\n\n9. **Final Comparison**:\n   - After comparing all options, \"Out Cold\" seems to best fit the themes of friendship, prison life, and adventure found in \"Forrest Gump\". \n\n**Answer: Out Cold**",
+      "gt": "(A)",
+      "correct": false
+    },
+    {
+      "input": "Find a movie similar to Schindler's List, The Shawshank Redemption, Terminator 2 Judgment Day, The Lion King:\nOptions:\n(A) The Red Turtle\n(B) Tarzan\n(C) Nothing But Trouble\n(D) Aladdin",
+      "pred": "1. **Identify the genre**: All these movies are related to drama or action genres.\n2. **Consider the themes and settings**:\n   - **Schindler's List**: Holocaust, WWII, survival.\n   - **The Shawshank Redemption**: Prison life, friendship, hope.\n   - **Terminator 2: Judgment Day**: Future society, artificial intelligence, revenge.\n   - **The Lion King**: African wildlife, childhood, family.\n3. **Compare with options**:\n   - **A. The Red Turtle**: Drama, love story, cultural exploration.\n   - **B. Tarzan**: Adventure, jungle, nature.\n   - **C. Nothing But Trouble**: Action, crime, mystery.\n   - **D. Aladdin**: Fantasy, magic, adventure.\n4. **Match the themes and settings**:\n   - **The Red Turtle** has elements of war (Holocaust), friendship, and cultural exploration, which aligns well with the themes in Schindler's List.\n5. **Conclusion**: The Red Turtle is the most suitable option for a movie similar to Schindler's List.\n\nAnswer: <The Red Turtle>",
+      "gt": "(D)",
+      "correct": false
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" font-family="Arial, sans-serif">
+  <rect width="600" height="320" fill="white"/>
+  <text x="300" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">E3 五段式 SFT Loss 曲线（Group B, seed=42）</text>
+
+  <!-- Axes -->
+  <line x1="60" y1="40" x2="60" y2="270" stroke="#94a3b8" stroke-width="1"/>
+  <line x1="60" y1="270" x2="570" y2="270" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- Y axis labels -->
+  <text x="55" y="270" text-anchor="end" font-size="9" fill="#64748b">0.0</text>
+  <text x="55" y="224" text-anchor="end" font-size="9" fill="#64748b">0.3</text>
+  <text x="55" y="178" text-anchor="end" font-size="9" fill="#64748b">0.6</text>
+  <text x="55" y="132" text-anchor="end" font-size="9" fill="#64748b">0.9</text>
+  <text x="55" y="86" text-anchor="end" font-size="9" fill="#64748b">1.2</text>
+  <text x="55" y="45" text-anchor="end" font-size="9" fill="#64748b">1.5</text>
+
+  <!-- Grid lines -->
+  <line x1="60" y1="224" x2="570" y2="224" stroke="#f1f5f9" stroke-width="0.5"/>
+  <line x1="60" y1="178" x2="570" y2="178" stroke="#f1f5f9" stroke-width="0.5"/>
+  <line x1="60" y1="132" x2="570" y2="132" stroke="#f1f5f9" stroke-width="0.5"/>
+  <line x1="60" y1="86" x2="570" y2="86" stroke="#f1f5f9" stroke-width="0.5"/>
+
+  <!-- Stage separators -->
+  <line x1="162" y1="40" x2="162" y2="270" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+  <line x1="264" y1="40" x2="264" y2="270" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+  <line x1="346" y1="40" x2="346" y2="270" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+  <line x1="408" y1="40" x2="408" y2="270" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4"/>
+
+  <!-- Stage labels -->
+  <text x="111" y="290" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="bold">A: GSM8K</text>
+  <text x="111" y="300" text-anchor="middle" font-size="8" fill="#64748b">800 steps</text>
+  <text x="213" y="290" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="bold">B1: OpenR1</text>
+  <text x="213" y="300" text-anchor="middle" font-size="8" fill="#64748b">1000 steps</text>
+  <text x="305" y="290" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="bold">B2: OrcaMath</text>
+  <text x="305" y="300" text-anchor="middle" font-size="8" fill="#64748b">1200 steps</text>
+  <text x="377" y="290" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="bold">B3: Numina</text>
+  <text x="377" y="300" text-anchor="middle" font-size="8" fill="#64748b">600 steps</text>
+  <text x="489" y="290" text-anchor="middle" font-size="9" fill="#3b82f6" font-weight="bold">C: Magpie</text>
+  <text x="489" y="300" text-anchor="middle" font-size="8" fill="#64748b">300 steps</text>
+
+  <!-- Loss curve (approximate from training data) -->
+  <!-- Stage A: 1.286 → 0.225 over 800 steps (x: 60-162) -->
+  <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+    points="60,106 70,130 80,155 95,175 110,195 125,210 140,220 155,245 162,255"/>
+
+  <!-- Stage B1: 0.952 → 0.641 over 1000 steps (x: 162-264) -->
+  <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+    points="162,138 175,148 190,155 205,162 220,167 235,172 250,175 264,178"/>
+
+  <!-- Stage B2: 0.549 → 0.347 over 1200 steps (x: 264-346) -->
+  <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+    points="264,187 275,192 285,198 295,203 305,208 315,212 325,216 335,220 346,223"/>
+
+  <!-- Stage B3: 0.616 → 0.531 over 600 steps (x: 346-408) -->
+  <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+    points="346,182 355,185 365,188 375,191 385,193 395,195 408,197"/>
+
+  <!-- Stage C: 0.623 → 0.517 over 300 steps (x: 408-570) -->
+  <polyline fill="none" stroke="#3b82f6" stroke-width="2.5"
+    points="408,181 435,186 460,191 485,195 510,198 535,200 555,202 570,203"/>
+
+  <!-- Key data points -->
+  <circle cx="60" cy="106" r="3" fill="#3b82f6"/>
+  <text x="60" y="100" text-anchor="middle" font-size="8" fill="#1e40af">1.286</text>
+  <circle cx="162" cy="255" r="3" fill="#3b82f6"/>
+  <text x="162" y="265" text-anchor="middle" font-size="8" fill="#1e40af">0.225</text>
+  <circle cx="264" cy="178" r="3" fill="#3b82f6"/>
+  <text x="264" y="172" text-anchor="middle" font-size="8" fill="#1e40af">0.641</text>
+  <circle cx="346" cy="223" r="3" fill="#3b82f6"/>
+  <text x="346" y="235" text-anchor="middle" font-size="8" fill="#1e40af">0.347</text>
+  <circle cx="408" cy="197" r="3" fill="#3b82f6"/>
+  <text x="408" y="193" text-anchor="middle" font-size="8" fill="#1e40af">0.531</text>
+  <circle cx="570" cy="203" r="3" fill="#3b82f6"/>
+  <text x="570" y="215" text-anchor="middle" font-size="8" fill="#1e40af">0.517</text>
+
+  <!-- Y axis title -->
+  <text x="15" y="155" text-anchor="middle" font-size="10" fill="#475569" transform="rotate(-90,15,155)">Training Loss</text>
+</svg>
